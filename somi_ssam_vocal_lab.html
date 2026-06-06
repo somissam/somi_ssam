@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocal Lab · somi_ssam</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3d;--accent:#7c6af7;--accent2:#f76ac8;--accent3:#6af7c8;--counting:#f7c26a;--text:#e8e8f0;--text2:#8888aa;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+button{font-family:inherit;cursor:pointer;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+.lab-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.lab-brand{display:flex;flex-direction:column;gap:1px;}
+.lab-brand .brand-title{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'DM Mono',monospace;}
+.lab-brand .brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
+.home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.82rem;transition:all 0.2s;}
+.home-link:hover{border-color:var(--accent);color:var(--text);}
+.pattern-select{max-width:600px;margin:0 auto;padding:28px 20px 60px;}
+.select-title{font-size:1.1rem;font-weight:700;margin-bottom:6px;}
+.select-desc{color:var(--text2);font-size:0.82rem;margin-bottom:24px;line-height:1.6;}
+.pattern-cards{display:flex;flex-direction:column;gap:12px;}
+.pattern-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;cursor:pointer;transition:all 0.2s;}
+.pattern-card:hover{border-color:var(--accent);transform:translateX(4px);}
+.pattern-card h3{font-size:0.95rem;font-weight:600;margin-bottom:4px;}
+.pattern-card p{color:var(--text2);font-size:0.78rem;line-height:1.5;}
+.pattern-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.meta-tag{font-size:0.68rem;padding:3px 9px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+#practice-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column;overflow-y:auto;}
+.prac-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.prac-header h2{font-size:0.95rem;font-weight:600;flex:1;}
+.back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:8px;font-size:0.8rem;transition:all 0.2s;}
+.back-btn:hover{border-color:var(--accent);color:var(--text);}
+.prac-body{display:flex;flex-direction:column;align-items:center;padding:24px 20px 52px;gap:22px;max-width:560px;margin:0 auto;width:100%;}
+.prac-body.vocal-expand{padding-top:20px;padding-bottom:52px;gap:18px;}
+.mode-tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.m-tab{padding:9px 22px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.88rem;transition:all 0.2s;}
+.m-tab.active{background:var(--accent);border-color:var(--accent);color:white;font-weight:600;}
+.m-tab.adv.active{background:var(--accent3);border-color:var(--accent3);color:#0a0a0f;}
+.vocal-beat-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;}
+.vocal-beat-section{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.vocal-beat-label{font-size:0.65rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;}
+.vocal-beat-row{display:flex;gap:12px;justify-content:center;}
+.vbn{font-family:'DM Mono',monospace;font-size:2.8rem;font-weight:700;color:var(--border);transition:color 0.08s,text-shadow 0.08s,transform 0.08s;min-width:42px;text-align:center;line-height:1;}
+.vbn.dim{color:rgba(124,106,247,0.2);}
+.vbn.active-cnt{color:var(--counting);text-shadow:0 0 24px rgba(247,194,106,0.8),0 0 48px rgba(247,194,106,0.4);transform:scale(1.15);}
+.vbn.active-pat{color:var(--accent2);text-shadow:0 0 24px rgba(247,106,200,0.8),0 0 48px rgba(247,106,200,0.4);transform:scale(1.15);}
+.vocal-label-box{background:var(--surface2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:364px;display:flex;flex-direction:row;align-items:center;padding:22px 16px;gap:14px;}
+.vlabel-key-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;width:64px;min-height:48px;overflow:hidden;}
+.vlabel-key-panel .vkp-midi{font-family:'DM Mono',monospace;font-size:1.7rem;font-weight:700;color:var(--accent3);line-height:1;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.vlabel-key-panel .vkp-dir{font-size:0.65rem;color:var(--text2);white-space:nowrap;min-height:1em;text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;}
+.vlabel-labels-area{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;flex:1;min-width:0;}
+.vlabel-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:1;min-width:0;}
+.vlabel-item{font-size:1.15rem;font-weight:700;color:var(--border);transition:color 0.08s,text-shadow 0.08s;padding:1px 2px;border-radius:4px;text-align:center;line-height:1.2;}
+.vlabel-item.eng{font-family:'DM Mono',monospace;font-size:1.7rem;line-height:1.1;}
+.vlabel-item.kor{font-size:1.15rem;}
+.vlabel-item.lit{color:var(--accent2);text-shadow:0 0 8px var(--accent2);}
+.info-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;text-align:center;width:100%;max-width:440px;min-height:96px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;}
+.info-box.vocal-mode{min-height:125px;height:auto;padding:16px 24px;}
+.info-action{font-size:2.1rem;font-weight:700;transition:all 0.2s;line-height:1.2;}
+.info-sub{font-size:0.85rem;color:var(--text2);}
+.scale-row{display:flex;gap:6px;justify-content:center;margin-top:4px;}
+.scale-note{font-size:0.95rem;font-weight:600;color:var(--border);transition:color 0.08s,text-shadow 0.08s;font-family:'DM Mono',monospace;}
+.scale-note.lit{color:var(--accent2);text-shadow:0 0 8px var(--accent2);}
+.timer-wrap{text-align:center;}
+.timer-row{display:flex;align-items:baseline;justify-content:center;gap:14px;}
+.timer-main{font-family:'DM Mono',monospace;font-size:3rem;font-weight:500;letter-spacing:4px;color:var(--text);}
+.timer-main.running{color:var(--accent3);}
+.timer-counter{font-family:'DM Mono',monospace;font-size:1rem;color:var(--text2);}
+.controls{display:flex;gap:14px;align-items:center;}
+.ctrl-btn{width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;font-size:1.3rem;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.ctrl-btn.reset{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.ctrl-btn.reset:hover{border-color:var(--counting);color:var(--counting);}
+.ctrl-btn.play{background:var(--accent);color:white;width:68px;height:68px;font-size:1.5rem;}
+.ctrl-btn.play:hover{background:#6a58e8;transform:scale(1.05);}
+.ctrl-btn.stop{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.ctrl-btn.stop:hover{border-color:#f76a6a;color:#f76a6a;}
+.vol-wrap{width:100%;max-width:360px;display:flex;flex-direction:column;gap:8px;}
+.vol-row{display:flex;align-items:center;gap:10px;font-size:0.78rem;color:var(--text2);}
+.vol-row span{min-width:70px;}
+.vol-row input{flex:1;cursor:pointer;}
+.basic-key-wrap{max-width:360px;margin:0 auto;}
+.basic-key-label{font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:8px;}
+.basic-key-row{display:flex;align-items:center;justify-content:center;gap:4px;}
+.basic-key-arrow{font-size:0.85rem;color:var(--text2);min-width:14px;text-align:center;flex-shrink:0;}
+.basic-key-btn{padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.72rem;cursor:pointer;transition:all 0.15s;min-width:34px;text-align:center;}
+.basic-key-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.basic-key-btn.selected{background:rgba(106,247,200,0.18);border-color:var(--accent3);color:var(--accent3);font-weight:700;}
+.basic-key-btn.sharp{color:var(--accent);}
+.basic-key-btn.sharp.selected{background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--accent);}
+.key-grid-wrap{width:100%;max-width:480px;margin:0 auto;}
+.key-grid-label{font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;}
+.key-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.key-grid-btn{padding:5px 0;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.72rem;cursor:pointer;transition:all 0.15s;width:36px;text-align:center;flex-shrink:0;}
+.key-grid-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.key-grid-btn.selected{background:rgba(106,247,200,0.18);border-color:var(--accent3);color:var(--accent3);font-weight:700;}
+.key-grid-btn.range-start{background:rgba(124,106,247,0.25)!important;border-color:var(--accent)!important;color:var(--accent)!important;font-weight:700;}
+.key-grid-btn.range-end{background:rgba(247,106,200,0.18)!important;border-color:var(--accent2)!important;color:var(--accent2)!important;font-weight:700;}
+.key-grid-btn.in-range{background:rgba(106,247,200,0.07);border-color:rgba(106,247,200,0.35);}
+.key-grid-btn.sharp{color:var(--accent);}
+.key-grid-btn.sharp.selected{background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--accent);}
+.seq-grid{display:flex;flex-wrap:wrap;gap:5px;}
+.seq-btn{padding:6px 9px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.75rem;cursor:pointer;transition:all 0.15s;min-width:42px;text-align:center;}
+.seq-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.seq-btn.selected{background:rgba(106,247,200,0.18);border-color:var(--accent3);color:var(--accent3);font-weight:700;}
+.adv-panel{display:flex;flex-direction:column;gap:14px;align-items:center;width:100%;}
+.adv-section-label{font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;}
+.adv-interval-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.adv-int-btn{padding:6px 0;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.78rem;cursor:pointer;transition:all 0.15s;width:44px;text-align:center;flex-shrink:0;}
+.adv-int-btn:hover:not(:disabled){border-color:var(--accent3);color:var(--accent3);}
+.adv-int-btn.active{background:rgba(106,247,200,0.18);border-color:var(--accent3);color:var(--accent3);font-weight:700;}
+.adv-int-btn:disabled{cursor:not-allowed;opacity:0.35;}
+.adv-range-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.adv-key-btn{padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.72rem;cursor:pointer;transition:all 0.15s;}
+.adv-key-btn.range-start{background:rgba(124,106,247,0.2);border-color:var(--accent);color:var(--accent);font-weight:700;}
+.adv-key-btn.range-end{background:rgba(247,106,200,0.2);border-color:var(--accent2);color:var(--accent2);font-weight:700;}
+.adv-key-btn.in-range{background:rgba(106,247,200,0.1);border-color:rgba(106,247,200,0.4);color:var(--accent3);}
+.adv-cur-key{font-family:'DM Mono',monospace;font-size:1.7rem;font-weight:700;color:var(--accent3);line-height:1;min-width:52px;text-align:center;}
+.adv-next-key{font-family:'DM Mono',monospace;font-size:0.85rem;font-weight:600;color:var(--text2);line-height:1;min-height:1.2em;text-align:center;white-space:nowrap;}
+.dir-btn-group{display:flex;gap:6px;flex-wrap:wrap;}
+.dir-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:0.8rem;cursor:pointer;transition:all 0.15s;}
+.dir-btn.active{background:rgba(106,247,200,0.18);border-color:var(--accent3);color:var(--accent3);font-weight:700;}
+.dir-btn:disabled{cursor:not-allowed;opacity:0.35;}
+.sub-dir-wrap{display:flex;gap:8px;margin-top:4px;padding-left:4px;}
+.sub-dir-label{display:flex;align-items:center;gap:5px;font-size:0.76rem;color:var(--text2);cursor:pointer;}
+.sub-dir-label input{accent-color:var(--accent3);}
+.tempo-wrap{display:flex;align-items:center;gap:14px;}
+.tempo-val{font-family:'DM Mono',monospace;font-size:1.55rem;font-weight:700;color:var(--accent3);width:112px;height:44px;line-height:44px;text-align:center;cursor:pointer;border-radius:8px;padding:0;transition:background 0.15s;}
+.tempo-val:hover{background:rgba(106,247,200,0.08);}
+.tempo-input{font-family:'DM Mono',monospace;font-size:1.55rem;font-weight:700;color:var(--accent3);width:112px;height:44px;text-align:center;background:var(--surface2);border:1px solid var(--accent3);border-radius:8px;padding:0;outline:none;box-sizing:border-box;}
+.tempo-btn{width:54px;height:54px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:1.55rem;cursor:pointer;transition:all 0.2s;}
+.tempo-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="lab-brand">
+    <div class="brand-title">Vocal Lab</div>
+    <div class="brand-sub">somi_ssam · 발성 연습 엔진</div>
+  </div>
+  <a class="home-link" href="index.html">← somi_ssam</a>
+</header>
+<div class="pattern-select" id="pattern-select">
+  <div class="select-title">발성 연습 패턴 선택</div>
+  <div class="select-desc">패턴을 선택하면 연습 모드가 열립니다.</div>
+  <div class="pattern-cards" id="pattern-cards"></div>
+</div>
+<div id="practice-screen">
+  <div class="prac-header">
+    <button class="back-btn" onclick="closePractice()">← 뒤로</button>
+    <h2 id="prac-title">발성 연습</h2>
+  </div>
+  <div class="prac-body" id="prac-body"></div>
+</div>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   ★ somi_ssam_vocal_lab.html  v7 (리팩토링 — 모드 완전 독립)
+   [ 섹션 A ] 발성 패턴 데이터
+   [ 섹션 B ] 모드 코드네임
+   [ 섹션 C ] 음계·코드네임·공용 유틸
+   [ 섹션 D ] 오디오 엔진 (Web Audio API)
+   [ 섹션 E-공용 ] 엔진 공용 상태 + 재생/정지/타이머
+   [ 섹션 E-BASIC   ] 기본 모드 전용 스케줄러 + 비주얼
+   [ 섹션 E-PRACTICE] 연습 모드 전용 스케줄러 + 비주얼
+   [ 섹션 E-WARMUP  ] 목풀기1/2/3 전용 스케줄러 + 비주얼
+   [ 섹션 E-ADV     ] 심화1/2 전용 스케줄러 + 비주얼
+   [ 섹션 F ] UI 빌더
+   [ 섹션 H ] 진입점 / 네비게이션
+════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════
+   【 섹션 A 】 발성 패턴 데이터
+   ★ 관리자 편집 구역 ★
+════════════════════════════════════════════════ */
+const VOCAL_PATTERNS = [
+  {
+    id: 1,
+    name: "이에아오우으어 (샘플)",
+    baseTempo: 60,
+    pattern5:   [1,1,1,1,1],
+    engLabels5: ['i','e','a','o','u'],
+    korLabels5: ['이','에','아','오','우'],
+    pattern7:   [1,1,1,1,1,1,1],
+    engLabels7: ['i','e','a','o','u','eu','eo'],
+    korLabels7: ['이','에','아','오','우','으','어'],
+    noteDiv: 4,
+    display: 'label',
+    modeLabels: ['기본','연습','목풀기1','목풀기2','목풀기3','심화1','심화2'],
+    warmup1: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
+    warmup2: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
+    warmup3: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
+    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 2,
+    name: "H-a • 8beat (123454321) (1)",
+    cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
+    pracTitle: "H-a(흐아) · 8beat",
+    baseTempo: 60,
+    pattern5:   [1,2,3,4,5,4,3,2,1],
+    engLabels5: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels5: ['도','레','미','파','솔','파','미','레','도'],
+    pattern7:   [1,2,3,4,5,4,3,2,1],
+    engLabels7: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels7: ['도','레','미','파','솔','파','미','레','도'],
+    noteDiv: 8,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    modeLabels: ['기본','연습'],
+  },
+  {
+    id: 3,
+    name: "H-a • 8beat (123454321) (2)",
+    cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
+    pracTitle: "H-a(흐아) · 8beat",
+    baseTempo: 60,
+    pattern5:   [1,2,3,4,5,4,3,2,1],
+    engLabels5: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels5: ['도','레','미','파','솔','파','미','레','도'],
+    pattern7:   [1,2,3,4,5,4,3,2,1],
+    engLabels7: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels7: ['도','레','미','파','솔','파','미','레','도'],
+    noteDiv: 8,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    modeLabels: ['목풀기1','심화1'],
+    warmup1: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup2: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup3: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 4,
+    name: "H-a • 4beat (13531)",
+    cardDesc: "흐아 · 4분음표 · 도미솔미도",
+    pracTitle: "H-a(흐아) · 4beat",
+    baseTempo: 60,
+    pattern5:   [1,3,5,3,1],
+    engLabels5: ['흐','아','흐','아','흐'],
+    korLabels5: ['도','미','솔','미','도'],
+    pattern7:   [1,3,5,3,1],
+    engLabels7: ['흐','아','흐','아','흐'],
+    korLabels7: ['도','미','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    modeLabels: ['목풀기1','심화1'],
+    warmup1: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
+    warmup2: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
+    warmup3: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
+    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 5,
+    name: "H-a • 16beat (12345432123454321)",
+    cardDesc: "흐아 · 16분음표 · 도레미파솔파미레도 (2회 연주)",
+    pracTitle: "H-a(흐아) · 16beat",
+    baseTempo: 60,
+    pattern5:   [1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1],
+    engLabels5: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels5: ['도','레','미','파','솔','파','미','레','도'],
+    pattern7:   [1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1],
+    engLabels7: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels7: ['도','레','미','파','솔','파','미','레','도'],
+    noteDiv: 16,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    modeLabels: ['목풀기1','심화1'],
+    warmup1: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup2: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup3: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 6,
+    name: "Na • 4beat (13531) (1)",
+    cardDesc: "나 · 4분음표 · 도미솔미도",
+    pracTitle: "Na(나) · 4beat",
+    baseTempo: 70,
+    pattern5:   [1,3,5,3,1],
+    engLabels5: ['','','','',''],
+    korLabels5: ['도','미','솔','미','도'],
+    pattern7:   [1,3,5,3,1],
+    engLabels7: ['','','','',''],
+    korLabels7: ['도','미','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'Na (나)',
+    modeLabels: ['기본','연습'],
+  },
+  {
+    id: 8,
+    name: "Na • 4beat (13531) (2)",
+    cardDesc: "나 · 4분음표 · 도미솔미도",
+    pracTitle: "Na(나) · 4beat",
+    baseTempo: 70,
+    pattern5:   [1,3,5,3,1],
+    engLabels5: ['','','','',''],
+    korLabels5: ['도','미','솔','미','도'],
+    pattern7:   [1,3,5,3,1],
+    engLabels7: ['','','','',''],
+    korLabels7: ['도','미','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'Na (나)',
+    modeLabels: ['목풀기1','심화1'],
+    warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup3: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 7,
+    name: "Ma • 4beat (13531) (1)",
+    cardDesc: "마 · 4분음표 · 도미솔미도",
+    pracTitle: "Ma(마) · 4beat",
+    baseTempo: 70,
+    pattern5:   [1,3,5,3,1],
+    engLabels5: ['','','','',''],
+    korLabels5: ['도','미','솔','미','도'],
+    pattern7:   [1,3,5,3,1],
+    engLabels7: ['','','','',''],
+    korLabels7: ['도','미','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'Ma (마)',
+    modeLabels: ['기본','연습'],
+  },
+  {
+    id: 9,
+    name: "Ma • 4beat (13531) (2)",
+    cardDesc: "마 · 4분음표 · 도미솔미도",
+    pracTitle: "Ma(마) · 4beat",
+    baseTempo: 70,
+    pattern5:   [1,3,5,3,1],
+    engLabels5: ['','','','',''],
+    korLabels5: ['도','미','솔','미','도'],
+    pattern7:   [1,3,5,3,1],
+    engLabels7: ['','','','',''],
+    korLabels7: ['도','미','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'Ma (마)',
+    modeLabels: ['목풀기1','심화1'],
+    warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup3: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  }
+];
+
+/* ════════════════════════════════════════════════
+   【 섹션 B 】 모드 코드네임
+════════════════════════════════════════════════ */
+const MODE_BASIC      = 'MODE_BASIC';
+const MODE_PRACTICE   = 'MODE_PRACTICE';
+const MODE_WARMUP_1   = 'MODE_WARMUP_1';
+const MODE_WARMUP_2   = 'MODE_WARMUP_2';
+const MODE_WARMUP_3   = 'MODE_WARMUP_3';
+const MODE_ADVANCED_1 = 'MODE_ADVANCED_1';
+const MODE_ADVANCED_2 = 'MODE_ADVANCED_2';
+const LABEL_TO_MODE = {
+  '기본':MODE_BASIC,'연습':MODE_PRACTICE,
+  '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,'목풀기3':MODE_WARMUP_3,
+  '심화1':MODE_ADVANCED_1,'심화2':MODE_ADVANCED_2,
+};
+
+/* ════════════════════════════════════════════════
+   【 섹션 C 】 음계·코드네임·공용 유틸
+════════════════════════════════════════════════ */
+const SCALE_5TONE='SCALE_5TONE', SCALE_7TONE='SCALE_7TONE';
+const BAR_TYPE_COUNTING='BAR_TYPE_COUNTING', BAR_TYPE_PATTERN='BAR_TYPE_PATTERN';
+const NOTE_NAMES_SHARP=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const NOTE_NAMES_FLAT =['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+function midiToFreq(midi){return 440*Math.pow(2,(midi-69)/12);}
+function midiToName(midi,dir){const n=(dir<0)?NOTE_NAMES_FLAT:NOTE_NAMES_SHARP;return n[((midi%12)+12)%12]+(Math.floor(midi/12)-1);}
+function isSharpNote(midi){return[1,3,6,8,10].includes(((midi%12)+12)%12);}
+const DEGREE_TO_SEMITONE={1:0,2:2,3:4,4:5,5:7,6:9,7:11,8:12};
+function degreeToSemitone(deg){const oct=Math.floor((deg-1)/7);const base=((deg-1)%7)+1;return(DEGREE_TO_SEMITONE[base]||0)+oct*12;}
+function getModeScale(mode){if(mode===MODE_WARMUP_2||mode===MODE_WARMUP_3||mode===MODE_ADVANCED_2)return SCALE_7TONE;return SCALE_5TONE;}
+
+let EX_ID=null, TMODE=MODE_BASIC;
+function currentPat(){return VOCAL_PATTERNS.find(p=>p.id===EX_ID)||VOCAL_PATTERNS[0];}
+
+function getActivePatternArray(){
+  const pat=currentPat();
+  if(TMODE===MODE_WARMUP_1)return pat.warmup1.pattern;
+  if(TMODE===MODE_WARMUP_2)return pat.warmup2.pattern;
+  if(TMODE===MODE_WARMUP_3)return pat.warmup3.pattern;
+  return getModeScale(TMODE)===SCALE_7TONE?pat.pattern7:pat.pattern5;
+}
+function getActiveLabels(){
+  const pat=currentPat();
+  if(TMODE===MODE_WARMUP_1)return{eng:pat.warmup1.engLabels,kor:pat.warmup1.korLabels};
+  if(TMODE===MODE_WARMUP_2)return{eng:pat.warmup2.engLabels,kor:pat.warmup2.korLabels};
+  if(TMODE===MODE_WARMUP_3)return{eng:pat.warmup3.engLabels,kor:pat.warmup3.korLabels};
+  return getModeScale(TMODE)===SCALE_7TONE?{eng:pat.engLabels7,kor:pat.korLabels7}:{eng:pat.engLabels5,kor:pat.korLabels5};
+}
+// noteDiv:8이면 패턴 박수는 4 (1박당 2음), noteDiv:16이면 패턴 박수는 4 (1박당 4음), 아니면 음수-1
+function getPatternBarBeats(){
+  const pat=currentPat();
+  if((pat.noteDiv||4)===8)return 4;
+  if((pat.noteDiv||4)===16)return 4;
+  return getActivePatternArray().length-1;
+}
+// noteDiv:8이면 1박당 2음씩, noteDiv:16이면 1박당 4음씩 → 박 인덱스로 변환
+function getNoteIdxForBeat(beatIdx){
+  const pat=currentPat();
+  if((pat.noteDiv||4)===8)return beatIdx*2;
+  if((pat.noteDiv||4)===16)return beatIdx*4;
+  return beatIdx;
+}
+function getFullOffsets(){return getActivePatternArray().map(deg=>degreeToSemitone(deg));}
+
+/* ════════════════════════════════════════════════
+   【 섹션 D 】 오디오 엔진
+════════════════════════════════════════════════ */
+let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null;
+let metronomeVol=1.0,pianoVol=1.0;
+function initAudio(){
+  if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    audioCtx=new AC();
+    masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+    metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
+    pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);}
+  if(audioCtx.state==='suspended')audioCtx.resume();
+}
+function ensureAudio(){if(!audioCtx)initAudio();else if(audioCtx.state==='suspended')audioCtx.resume();}
+document.addEventListener('touchstart',ensureAudio,{passive:true});
+document.addEventListener('click',ensureAudio,{passive:true});
+function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
+function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
+function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
+
+/* ════════════════════════════════════════════════
+   【 섹션 E-공용 】 엔진 공용 상태 + 재생/정지/타이머
+   ※ 모드별 스케줄러·비주얼은 각 섹션에서 완전 독립
+════════════════════════════════════════════════ */
+let currentBPM=70;
+let beatInterval=1,nextBeatTime=0,beatQueue=[],schedulerTimer=null;
+let loopCount=0,seqStep=0,patStep=0;
+let stopScheduled=false,stopAudioTime=0;
+let isPlaying=false,isPaused=false,pausedElapsed=0;
+let mainStartWallTime=0,elapsedSeconds=0,timerRafId=null;
+let activeBarType=BAR_TYPE_COUNTING;
+let prevRootMidi=60;
+
+// 엔진이 호출할 모드별 함수 포인터 — 모드 진입 시 세팅
+let _fn_scheduleOneBeat = null;
+let _fn_applyVisual     = null;
+let _fn_onComplete      = null; // 완료 시 처리
+
+let currentNoteInterval=1; // 실제 틱 간격 — 카운팅=beatInterval, 패턴=beatInterval*(4/noteDiv)
+function schedulerTick(){
+  if(!audioCtx)return;
+  while(nextBeatTime<audioCtx.currentTime+0.15){_fn_scheduleOneBeat(nextBeatTime);nextBeatTime+=currentNoteInterval;}
+}
+function timerFrame(){
+  if(!audioCtx){timerRafId=requestAnimationFrame(timerFrame);return;}
+  const now=audioCtx.currentTime;
+  while(beatQueue.length&&beatQueue[0].time<=now+0.050)_fn_applyVisual(beatQueue.shift().vis);
+  if(stopScheduled&&now>=stopAudioTime-0.01){
+    stopScheduled=false;
+    while(beatQueue.length)_fn_applyVisual(beatQueue.shift().vis);
+    stopEngine();
+    if(_fn_onComplete)_fn_onComplete();
+    const tm=document.getElementById('timer-main');if(tm)tm.className='timer-main';
+    return;
+  }
+  if(isPlaying&&mainStartWallTime>0){
+    const ms=Math.max(0,Date.now()-mainStartWallTime);elapsedSeconds=ms/1000;
+    const tm=document.getElementById('timer-main');
+    if(tm){const mins=Math.floor(ms/60000),secs=Math.floor((ms%60000)/1000),cs=Math.floor((ms%1000)/10);
+      tm.textContent=String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0')+'.'+String(cs).padStart(2,'0');
+      tm.className='timer-main running';}
+  }
+  if(isPlaying||stopScheduled)timerRafId=requestAnimationFrame(timerFrame);
+}
+function togglePlay(){if(isPlaying)pauseEngine();else startEngine();}
+function startEngine(){
+  if(!audioCtx)initAudio();if(audioCtx.state==='suspended')audioCtx.resume();
+  isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
+  beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
+  if(isPaused){isPaused=false;stopScheduled=false;beatQueue=[];
+    if(pausedElapsed>0)mainStartWallTime=Date.now()-pausedElapsed*1000;
+    nextBeatTime=audioCtx.currentTime+0.05;
+    schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);return;}
+  stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
+  activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
+  _fn_onEngineStart(); // 모드별 시작 초기화
+  prevRootMidi=_fn_getCurrentRootMidi();
+  nextBeatTime=audioCtx.currentTime+0.05;
+  schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
+}
+function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
+function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
+function stopExercise(){stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();}
+function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
+
+// 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
+function _commonScheduleCounting(time, getRoot, getNextRoot, getNextRootDir, onFirstBeat, onThirdBeat, isLastKeyFn){
+  const idx=seqStep;
+  let vis={phase:'counting',idx,loop:loopCount};
+  const clickType=idx===0?'accent':'normal';
+  if(loopCount===0){
+    if(idx===0){const r=getRoot();playPianoNote(midiToFreq(r),time,beatInterval*4.0);vis.keyMidi=r;if(onFirstBeat)onFirstBeat(vis,r);}
+  } else if(stopScheduled){
+    if(idx===0){const offsets=getFullOffsets();const last=prevRootMidi+offsets[offsets.length-1];playPianoNote(midiToFreq(last),time,beatInterval*4.0);vis.keyMidi=last;vis.noteIdx=getActiveLabels().eng.length-1;if(onFirstBeat)onFirstBeat(vis,last);}
+  } else {
+    if(idx===0){const offsets=getFullOffsets();const last=prevRootMidi+offsets[offsets.length-1];playPianoNote(midiToFreq(last),time,beatInterval*2.0);vis.keyMidi=last;vis.noteIdx=getActiveLabels().eng.length-1;if(onFirstBeat)onFirstBeat(vis,last);}
+    if(idx===2){const nxt=getNextRoot();playPianoNote(midiToFreq(nxt),time,beatInterval*2.0);vis.newRootMidi=nxt;vis.nextDir=getNextRootDir(nxt);if(onThirdBeat)onThirdBeat(vis,nxt);}
+  }
+  seqStep++;
+  if(seqStep>=4){
+    if(stopScheduled){playClickAt(clickType,time);beatQueue.push({time,vis});return;}
+    activeBarType=BAR_TYPE_PATTERN;seqStep=0;patStep=0;
+    currentNoteInterval=beatInterval; // 패턴도 4박 기준이므로 beatInterval 그대로
+    const firstMain=time+beatInterval;
+    if(mainStartWallTime===0)mainStartWallTime=Date.now()+(firstMain-audioCtx.currentTime)*1000;
+    if(loopCount>0)_fn_advanceKey();
+    prevRootMidi=_fn_getCurrentRootMidi();loopCount++;
+  }
+  playClickAt(clickType,time);beatQueue.push({time,vis});
+}
+function _commonSchedulePattern(time, getRoot, getCurrentDir){
+  const rootMidi=getRoot();const offsets=getFullOffsets();const barBeats=getPatternBarBeats();
+  const pat=currentPat();const nd=pat.noteDiv||4;const is8=nd===8;const is16=nd===16;
+  const step=patStep;
+
+  if(is16){
+    // 1박에 16분음표 4개 (step 0~3) → 총 16음
+    // 마지막 17번째 음(도)은 카운팅 idx=0에서 재생됨 (기존 시스템 설계)
+    const quarterBeat=beatInterval*0.25;
+    const labelCount=getActiveLabels().eng.length; // 9
+    for(let q=0;q<4;q++){
+      const noteIdx=step*4+q;
+      const noteMidi=rootMidi+offsets[Math.min(noteIdx,offsets.length-1)];
+      // 음 0~8: 라벨 0~8, 음 9~15: 라벨 1~7 (중간 도 겹침 없이 이어서 순환)
+      const visNoteIdx=noteIdx<labelCount?noteIdx:noteIdx-(labelCount-1);
+      playPianoNote(midiToFreq(noteMidi),time+quarterBeat*q,quarterBeat*1.7);
+      beatQueue.push({time:time+quarterBeat*q,vis:{phase:'pattern',beatIdx:step,noteIdx:visNoteIdx,keyMidi:rootMidi,noteMidi,dirForDisplay:getCurrentDir()}});
+    }
+  } else if(is8){
+    // 1박에 8분음표 2개 — 첫음(time), 둘째음(time+beatInterval/2)
+    const noteIdx1=step*2;const noteIdx2=step*2+1;
+    const noteMidi1=rootMidi+offsets[Math.min(noteIdx1,offsets.length-1)];
+    const noteMidi2=rootMidi+offsets[Math.min(noteIdx2,offsets.length-1)];
+    const halfBeat=beatInterval*0.5;
+    playPianoNote(midiToFreq(noteMidi1),time,halfBeat*1.8);
+    playPianoNote(midiToFreq(noteMidi2),time+halfBeat,halfBeat*1.8);
+    const vis1={phase:'pattern',beatIdx:step,noteIdx:noteIdx1,keyMidi:rootMidi,noteMidi:noteMidi1,dirForDisplay:getCurrentDir()};
+    const vis2={phase:'pattern',beatIdx:step,noteIdx:noteIdx2,keyMidi:rootMidi,noteMidi:noteMidi2,dirForDisplay:getCurrentDir()};
+    beatQueue.push({time,vis:vis1});
+    beatQueue.push({time:time+halfBeat,vis:vis2});
+  } else {
+    const noteOffset=offsets[Math.min(step,offsets.length-2)];const noteMidi=rootMidi+noteOffset;
+    playPianoNote(midiToFreq(noteMidi),time,beatInterval*1.85);
+    const vis={phase:'pattern',beatIdx:step,noteIdx:step,keyMidi:rootMidi,noteMidi,dirForDisplay:getCurrentDir()};
+    beatQueue.push({time,vis});
+  }
+
+  patStep++;
+  if(patStep>=barBeats){
+    activeBarType=BAR_TYPE_COUNTING;seqStep=0;patStep=0;currentNoteInterval=beatInterval;
+    if(!stopScheduled&&_fn_isLastKey())scheduleStop(time+beatInterval*4.5);
+  }
+  playClickAt('normal',time);
+}
+
+// 공용 비주얼 헬퍼
+function updateVocalBeats(barType,beatIdx){for(let i=0;i<4;i++){const el=document.getElementById('vcnt-'+i);if(el)el.className='vbn'+(barType===BAR_TYPE_COUNTING&&i===beatIdx?' active-cnt':' dim');}const bb=getPatternBarBeats();for(let i=0;i<bb;i++){const el=document.getElementById('vpat-'+i);if(el)el.className='vbn'+(barType===BAR_TYPE_PATTERN&&i===beatIdx?' active-pat':' dim');}}
+function clearVocalBeats(){for(let i=0;i<4;i++){const el=document.getElementById('vcnt-'+i);if(el)el.className='vbn dim';}for(let i=0;i<8;i++){const el=document.getElementById('vpat-'+i);if(el)el.className='vbn dim';}}
+function updateVocalLabelHighlight(noteIdx){const total=getActiveLabels().eng.length;for(let i=0;i<total;i++){const e=document.getElementById('vle-'+i);if(e)e.classList.toggle('lit',i===noteIdx);const k=document.getElementById('vlk-'+i);if(k)k.classList.toggle('lit',i===noteIdx);}}
+function setInfoBox(action,sub){const ae=document.getElementById('info-action');if(ae)ae.textContent=action;const se=document.getElementById('info-sub');if(se)se.textContent=sub;const sr=document.getElementById('scale-row');if(sr)sr.remove();}
+function updateLoopCounter(){const lcc=document.getElementById('loop-counter');if(!lcc)return;lcc.textContent=loopCount+'/'+_fn_getTotalLoops();}
+function _setEl(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+
+
+/* ════════════════════════════════════════════════
+   【 섹션 E-BASIC 】 기본 모드 — 완전 독립
+   ※ 다른 모드와 변수/함수 공유 없음
+════════════════════════════════════════════════ */
+const BASIC_SEQ=[
+  {midi:57,dir:1},{midi:58,dir:1},{midi:59,dir:1},{midi:60,dir:1},
+  {midi:61,dir:1},{midi:62,dir:1},{midi:63,dir:1},{midi:64,dir:1},
+  {midi:63,dir:-1},{midi:62,dir:-1},{midi:61,dir:-1},{midi:60,dir:-1},
+  {midi:59,dir:-1},{midi:58,dir:-1},{midi:57,dir:-1}
+];
+let basic_seqIdx=0;
+function basic_getCurrentMidi(){return BASIC_SEQ[Math.min(basic_seqIdx,BASIC_SEQ.length-1)].midi;}
+function basic_getCurrentDir() {return BASIC_SEQ[Math.min(basic_seqIdx,BASIC_SEQ.length-1)].dir;}
+function basic_getNextMidi()   {return BASIC_SEQ[Math.min(basic_seqIdx+1,BASIC_SEQ.length-1)].midi;}
+function basic_getNextDir()    {return BASIC_SEQ[Math.min(basic_seqIdx+1,BASIC_SEQ.length-1)].dir;}
+function basic_isLastKey()     {return basic_seqIdx>=BASIC_SEQ.length-1;}
+function basic_advanceKey()    {basic_seqIdx=Math.min(basic_seqIdx+1,BASIC_SEQ.length-1);}
+function basic_onEngineStart() {} // 시작 위치는 버튼 클릭 시 이미 세팅됨
+function basic_getTotalLoops() {return BASIC_SEQ.length;}
+function basic_reset()         {basic_seqIdx=0;}
+
+function basic_scheduleOneBeat(time){
+  if(activeBarType===BAR_TYPE_COUNTING){
+    _commonScheduleCounting(time,
+      basic_getCurrentMidi,
+      basic_getNextMidi,
+      ()=>basic_getNextDir(), // 기본: 다음 음의 고정 dir
+      (vis,midi)=>{vis.dirForDisplay=basic_getCurrentDir();},
+      (vis,nextMidi)=>{vis.nextDir=basic_getNextDir();}
+    );
+  } else {
+    _commonSchedulePattern(time,basic_getCurrentMidi,basic_getCurrentDir);
+  }
+}
+
+function basic_applyVisual(vis){
+  if(!vis)return;
+  const pat=currentPat();
+  if(vis.phase==='counting'){
+    updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.display==='label'){
+      if(loopCount===0)updateVocalLabelHighlight(-1);
+      else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else updateVocalLabelHighlight(-1);
+    }
+    if(vis.idx===0&&vis.keyMidi!=null){
+      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:basic_getCurrentDir();
+      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
+    }
+    if(vis.idx===2&&vis.newRootMidi!=null){
+      const dir=vis.nextDir!=null?vis.nextDir:basic_getCurrentDir();
+      _setEl('vocal-key-display',midiToName(vis.newRootMidi,dir));
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
+    }
+    updateLoopCounter();
+  } else if(vis.phase==='pattern'){
+    updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
+    if(vis.keyMidi!=null){
+      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:basic_getCurrentDir();
+      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
+    }
+    updateLoopCounter();
+  }
+}
+
+function _commonOnComplete(){
+  const pat=currentPat();
+  const isAdv=TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2;
+  if(pat.display==='label'){
+    if(isAdv){_setEl('adv-cur-key','🎉');_setEl('adv-next-key','성공');}
+    else{
+      _setEl('vocal-key-display','🎉');
+      const dirEl=document.getElementById('vocal-dir-display');
+      if(dirEl){dirEl.textContent='성공';dirEl.style.cssText='font-size:1.1rem;font-weight:900;color:var(--accent3);text-shadow:0 0 12px rgba(106,247,200,0.6);white-space:nowrap;text-align:center;width:100%;overflow:hidden;';}
+    }
+  } else {
+    setInfoBox('성공 🎉','');
+  }
+}
+
+function basic_onComplete(){
+  _commonOnComplete();
+  const wrap=document.querySelector('.basic-key-wrap');if(wrap)wrap.querySelectorAll('.basic-key-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+/* ════════════════════════════════════════════════
+   【 섹션 E-PRACTICE 】 연습 모드 — 완전 독립
+   ※ 다른 모드와 변수/함수 공유 없음
+════════════════════════════════════════════════ */
+let prac_rangeStart=48,prac_rangeEnd=84;
+let prac_startDir=1;     // 1=상행시작, -1=하행시작
+let prac_keyIndex=0;
+let prac_keyDir=1;
+let prac_rangeSelected=false;
+
+function prac_buildRange(){const keys=[];for(let m=prac_rangeStart;m<=prac_rangeEnd;m++)keys.push(m);if(keys.length===0)keys.push(prac_rangeStart);return keys;}
+function prac_getCurrentMidi(){return prac_buildRange()[Math.min(prac_keyIndex,prac_buildRange().length-1)];}
+function prac_getCurrentDir() {return prac_keyDir;}
+function prac_getNextMidi()   {const keys=prac_buildRange();let n=prac_keyIndex+prac_keyDir;if(n>=keys.length)n=Math.max(0,keys.length-2);if(n<0)n=Math.min(1,keys.length-1);return keys[n];}
+function prac_getNextDir()    {const keys=prac_buildRange();let sIdx=prac_keyIndex,sDir=prac_keyDir,n=sIdx+sDir;if(n>=keys.length)sDir=-1;if(n<0)sDir=1;return sDir;}
+function prac_isLastKey()     {return false;} // 무한
+function prac_advanceKey()    {const keys=prac_buildRange();let n=prac_keyIndex+prac_keyDir;if(n>=keys.length){prac_keyDir=-1;n=Math.max(0,keys.length-2);}if(n<0){prac_keyDir=1;n=Math.min(1,keys.length-1);}prac_keyIndex=n;}
+function prac_onEngineStart() {}
+function prac_getTotalLoops() {return '∞';}
+function prac_reset()         {prac_keyIndex=0;prac_keyDir=1;prac_startDir=1;prac_rangeSelected=false;}
+
+function prac_scheduleOneBeat(time){
+  if(activeBarType===BAR_TYPE_COUNTING){
+    _commonScheduleCounting(time,
+      prac_getCurrentMidi,
+      prac_getNextMidi,
+      prac_getNextDir,
+      (vis)=>{vis.dirForDisplay=prac_getCurrentDir();},
+      (vis)=>{vis.nextDir=prac_getNextDir();}
+    );
+  } else {
+    _commonSchedulePattern(time,prac_getCurrentMidi,prac_getCurrentDir);
+  }
+}
+
+function prac_applyVisual(vis){
+  if(!vis)return;
+  const pat=currentPat();
+  if(vis.phase==='counting'){
+    updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.display==='label'){
+      if(loopCount===0)updateVocalLabelHighlight(-1);
+      else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else updateVocalLabelHighlight(-1);
+    }
+    if(vis.idx===0&&vis.keyMidi!=null){
+      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:prac_getCurrentDir();
+      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
+    }
+    if(vis.idx===2&&vis.newRootMidi!=null){
+      const dir=vis.nextDir!=null?vis.nextDir:prac_getCurrentDir();
+      _setEl('vocal-key-display',midiToName(vis.newRootMidi,dir));
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
+    }
+    updateLoopCounter();
+  } else if(vis.phase==='pattern'){
+    updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
+    if(vis.keyMidi!=null){
+      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:prac_getCurrentDir();
+      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
+    }
+    updateLoopCounter();
+  }
+}
+
+function prac_onComplete(){_commonOnComplete();}
+
+
+/* ════════════════════════════════════════════════
+   【 섹션 E-WARMUP 】 목풀기1/2/3 — 완전 독립
+   ※ 다른 모드와 변수/함수 공유 없음
+   ※ 목풀기1/2/3 공통 로직, 패턴 데이터만 다름
+════════════════════════════════════════════════ */
+let wu_keyIdx=0;
+
+function wu_getSeq(){
+  const pat=currentPat();
+  if(TMODE===MODE_WARMUP_3)return pat.warmup3Seq;
+  return pat.warmup12Seq;
+}
+function wu_getDirAt(idx){const seq=wu_getSeq();if(idx+1>=seq.length)return -1;return seq[idx+1]>=seq[idx]?1:-1;}
+function wu_getCurrentMidi(){const seq=wu_getSeq();return seq[Math.min(wu_keyIdx,seq.length-1)];}
+function wu_getNextMidi()   {const seq=wu_getSeq();return seq[Math.min(wu_keyIdx+1,seq.length-1)];}
+function wu_isLastKey()     {return wu_keyIdx>=wu_getSeq().length-1;}
+function wu_advanceKey()    {wu_keyIdx=Math.min(wu_keyIdx+1,wu_getSeq().length-1);}
+function wu_onEngineStart() {}
+function wu_getTotalLoops() {const pat=currentPat();if(TMODE===MODE_WARMUP_3)return pat.warmup3Seq.length;return pat.warmup12Seq.length;}
+function wu_reset()         {wu_keyIdx=0;}
+// 목풀기는 항상 b 표기
+function wu_getCurrentDir() {return wu_getDirAt(wu_keyIdx);}
+
+function wu_scheduleOneBeat(time){
+  if(activeBarType===BAR_TYPE_COUNTING){
+    _commonScheduleCounting(time,
+      wu_getCurrentMidi,
+      wu_getNextMidi,
+      ()=>wu_getDirAt(wu_keyIdx), // 다음 예고음: 현재→다음 방향
+      (vis)=>{vis.dirForDisplay=wu_getDirAt(wu_keyIdx);},
+      (vis)=>{vis.nextDir=wu_getDirAt(wu_keyIdx);}
+    );
+  } else {
+    _commonSchedulePattern(time,wu_getCurrentMidi,()=>wu_getDirAt(wu_keyIdx));
+  }
+}
+
+function wu_applyVisual(vis){
+  if(!vis)return;
+  const pat=currentPat();
+  if(vis.phase==='counting'){
+    updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.display==='label'){
+      if(loopCount===0)updateVocalLabelHighlight(-1);
+      else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else updateVocalLabelHighlight(-1);
+    }
+    if(vis.idx===0&&vis.keyMidi!=null){
+      // 목풀기: 항상 b 표기
+      _setEl('vocal-key-display',midiToName(vis.keyMidi,-1));
+      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:wu_getDirAt(wu_keyIdx);
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행':'▼ 하행');
+    }
+    if(vis.idx===2&&vis.newRootMidi!=null){
+      // 목풀기: 항상 b 표기
+      _setEl('vocal-key-display',midiToName(vis.newRootMidi,-1));
+      const dir=vis.nextDir!=null?vis.nextDir:wu_getDirAt(wu_keyIdx);
+      _setEl('vocal-dir-display',dir>=0?'▲ 상행':'▼ 하행');
+    }
+    updateLoopCounter();
+  } else if(vis.phase==='pattern'){
+    updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
+    // 목풀기: 패턴 중 방향 표시 고정 (카운팅 3박에서만 업데이트)
+    if(vis.keyMidi!=null){_setEl('vocal-key-display',midiToName(vis.keyMidi,-1));}
+    updateLoopCounter();
+  }
+}
+
+function wu_onComplete(){
+  _commonOnComplete();
+  const grid=document.getElementById('seq-grid');if(grid)grid.querySelectorAll('.seq-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+/* ════════════════════════════════════════════════
+   【 섹션 E-ADV 】 심화1/2 — 완전 독립
+   ※ 다른 모드와 변수/함수 공유 없음
+════════════════════════════════════════════════ */
+let adv_dir='basic';         // 'basic'|'loop'
+let adv_currentMidi=60;
+let adv_pendingMidi=-1;
+let adv_rangeMin=48,adv_rangeMax=84;
+let adv_rangeStartDir=1;
+let adv_rangeSelected=false;
+let adv_rangeFirstMidi=null;
+let adv_intervalOrder=[];
+let adv_intervalRandom=false;
+let adv_intervalSeqIdx=0;
+let adv_loopStart=60,adv_loopEnd=72,adv_loopDir=1;
+
+function adv_getInterval(){
+  if(adv_intervalRandom){
+    const pool=adv_intervalOrder.length>0?adv_intervalOrder:[1,2,3,4,5,6,7,8,9,10,11,12];
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  if(adv_intervalOrder.length===0)return 1;
+  const iv=adv_intervalOrder[adv_intervalSeqIdx%adv_intervalOrder.length];
+  adv_intervalSeqIdx++;return iv;
+}
+
+function adv_calcNextMidi(){
+  if(adv_dir==='loop'){
+    const iv=adv_getInterval();
+    // 이미 끝음이면 방향 반전 후 이동 (끝음 중복 방지)
+    if(adv_loopDir===1&&adv_currentMidi>=adv_loopEnd)adv_loopDir=-1;
+    else if(adv_loopDir===-1&&adv_currentMidi<=adv_loopStart)adv_loopDir=1;
+    let next=adv_currentMidi+adv_loopDir*iv;
+    if(next>adv_loopEnd)next=adv_loopEnd;
+    if(next<adv_loopStart)next=adv_loopStart;
+    adv_pendingMidi=next;return next;
+  }
+  // 기본: advRangeStartDir 방향으로 계속, 옥타브 자동 조정
+  const iv=adv_getInterval();
+  let next=adv_currentMidi+adv_rangeStartDir*iv;
+  if(adv_rangeStartDir===1){while(next>adv_rangeMax)next-=12;if(next<adv_rangeMin)next=adv_rangeMin;}
+  else{while(next<adv_rangeMin)next+=12;if(next>adv_rangeMax)next=adv_rangeMax;}
+  adv_pendingMidi=next;return next;
+}
+
+function adv_getCurrentDir(){
+  // 기본: 설정 방향 고정 (#/b 일관성)
+  // 왕복: 실제 진행 방향 (loopDir)
+  return adv_dir==='loop'?adv_loopDir:adv_rangeStartDir;
+}
+function adv_getNextDir(){
+  return adv_dir==='loop'?adv_loopDir:adv_rangeStartDir;
+}
+
+function adv_getCurrentMidi(){return adv_currentMidi;}
+function adv_getNextMidi()   {return adv_pendingMidi>=0?adv_pendingMidi:adv_currentMidi;}
+function adv_isLastKey()     {return false;} // 무한
+function adv_advanceKey()    {adv_currentMidi=adv_pendingMidi>=0?adv_pendingMidi:adv_currentMidi;adv_pendingMidi=-1;}
+function adv_getTotalLoops() {return '∞';}
+
+function adv_onEngineStart(){
+  adv_currentMidi=adv_rangeStartDir===1?adv_rangeMin:adv_rangeMax;
+  adv_pendingMidi=-1;adv_intervalSeqIdx=0;
+  if(adv_dir==='loop'){adv_currentMidi=adv_loopStart;adv_loopDir=adv_loopStart<=adv_loopEnd?1:-1;}
+}
+
+function adv_reset(){
+  adv_intervalOrder=[];adv_intervalRandom=false;adv_intervalSeqIdx=0;
+  adv_dir='basic';adv_rangeSelected=false;adv_rangeFirstMidi=null;
+  adv_rangeMin=48;adv_rangeMax=84;adv_rangeStartDir=1;
+  adv_loopStart=60;adv_loopEnd=72;adv_loopDir=1;
+  adv_currentMidi=60;adv_pendingMidi=-1;
+}
+
+function adv_scheduleOneBeat(time){
+  if(activeBarType===BAR_TYPE_COUNTING){
+    _commonScheduleCounting(time,
+      adv_getCurrentMidi,
+      adv_getNextMidi,
+      adv_getNextDir,
+      (vis,midi)=>{
+        vis.dirForDisplay=adv_getCurrentDir();
+        // 심화: 카운팅 1박에서 다음 음 예고 계산
+        adv_calcNextMidi();
+        vis.pendingNextMidi=adv_pendingMidi;
+      },
+      (vis,nextMidi)=>{
+        vis.nextDir=adv_getNextDir();
+      }
+    );
+  } else {
+    _commonSchedulePattern(time,adv_getCurrentMidi,adv_getCurrentDir);
+  }
+}
+
+function adv_applyVisual(vis){
+  if(!vis)return;
+  const pat=currentPat();
+  if(vis.phase==='counting'){
+    updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.display==='label'){
+      if(loopCount===0)updateVocalLabelHighlight(-1);
+      else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
+      else updateVocalLabelHighlight(-1);
+    }
+    if(vis.idx===0&&vis.keyMidi!=null){
+      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:adv_getCurrentDir();
+      _setEl('adv-cur-key',midiToName(vis.keyMidi,dir));
+      // 다음 음 예고 표시
+      if(vis.pendingNextMidi!=null){
+        const nDir=adv_getNextDir();
+        _setEl('adv-next-key','→ '+midiToName(vis.pendingNextMidi,nDir));
+      }
+    }
+    if(vis.idx===2&&vis.newRootMidi!=null){
+      const dir=vis.nextDir!=null?vis.nextDir:adv_getCurrentDir();
+      _setEl('adv-cur-key',midiToName(vis.newRootMidi,dir));
+      _setEl('adv-next-key','\u00a0');
+    }
+    updateLoopCounter();
+  } else if(vis.phase==='pattern'){
+    updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
+    if(vis.keyMidi!=null){
+      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:adv_getCurrentDir();
+      _setEl('adv-cur-key',midiToName(vis.keyMidi,dir));
+    }
+    updateLoopCounter();
+  }
+}
+
+function adv_onComplete(){_commonOnComplete();}
+
+/* ════════════════════════════════════════════════
+   모드 진입 시 함수 포인터 세팅
+════════════════════════════════════════════════ */
+function setupModeFunctions(){
+  if(TMODE===MODE_BASIC){
+    _fn_scheduleOneBeat=basic_scheduleOneBeat;
+    _fn_applyVisual=basic_applyVisual;
+    _fn_onComplete=basic_onComplete;
+    _fn_getCurrentRootMidi=basic_getCurrentMidi;
+    _fn_advanceKey=basic_advanceKey;
+    _fn_isLastKey=basic_isLastKey;
+    _fn_onEngineStart=basic_onEngineStart;
+    _fn_getTotalLoops=basic_getTotalLoops;
+  } else if(TMODE===MODE_PRACTICE){
+    _fn_scheduleOneBeat=prac_scheduleOneBeat;
+    _fn_applyVisual=prac_applyVisual;
+    _fn_onComplete=prac_onComplete;
+    _fn_getCurrentRootMidi=prac_getCurrentMidi;
+    _fn_advanceKey=prac_advanceKey;
+    _fn_isLastKey=prac_isLastKey;
+    _fn_onEngineStart=prac_onEngineStart;
+    _fn_getTotalLoops=prac_getTotalLoops;
+  } else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3){
+    _fn_scheduleOneBeat=wu_scheduleOneBeat;
+    _fn_applyVisual=wu_applyVisual;
+    _fn_onComplete=wu_onComplete;
+    _fn_getCurrentRootMidi=wu_getCurrentMidi;
+    _fn_advanceKey=wu_advanceKey;
+    _fn_isLastKey=wu_isLastKey;
+    _fn_onEngineStart=wu_onEngineStart;
+    _fn_getTotalLoops=wu_getTotalLoops;
+  } else if(TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2){
+    _fn_scheduleOneBeat=adv_scheduleOneBeat;
+    _fn_applyVisual=adv_applyVisual;
+    _fn_onComplete=adv_onComplete;
+    _fn_getCurrentRootMidi=adv_getCurrentMidi;
+    _fn_advanceKey=adv_advanceKey;
+    _fn_isLastKey=adv_isLastKey;
+    _fn_onEngineStart=adv_onEngineStart;
+    _fn_getTotalLoops=adv_getTotalLoops;
+  }
+}
+
+// 포인터 초기 선언
+let _fn_getCurrentRootMidi=basic_getCurrentMidi;
+let _fn_advanceKey=basic_advanceKey;
+let _fn_isLastKey=basic_isLastKey;
+let _fn_onEngineStart=basic_onEngineStart;
+let _fn_getTotalLoops=basic_getTotalLoops;
+
+function hardReset(){
+  stopEngine();elapsedSeconds=0;isPaused=false;pausedElapsed=0;
+  if(TMODE===MODE_BASIC)basic_reset();
+  else if(TMODE===MODE_PRACTICE)prac_reset();
+  else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)wu_reset();
+  else if(TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2)adv_reset();
+  setupModeFunctions();
+  buildPracticeUI();
+}
+
+
+/* ════════════════════════════════════════════════
+   【 섹션 F 】 UI 빌더
+════════════════════════════════════════════════ */
+function buildPracticeUI(){
+  const body=document.getElementById('prac-body');
+  body.innerHTML='';body.classList.add('vocal-expand');
+  const pat=currentPat();
+  const barBeats=getPatternBarBeats();
+  const isAdv=TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2;
+
+  /* ── 모드 탭 ── */
+  const mt=document.createElement('div');mt.className='mode-tabs';
+  pat.modeLabels.forEach(label=>{
+    const modeVal=LABEL_TO_MODE[label]||MODE_BASIC;
+    const isAdvTab=modeVal===MODE_ADVANCED_1||modeVal===MODE_ADVANCED_2;
+    const b=document.createElement('button');
+    b.className='m-tab'+(isAdvTab?' adv':'')+(TMODE===modeVal?' active':'');
+    b.textContent=label;
+    b.onclick=()=>{
+      TMODE=modeVal;
+      currentBPM=currentPat().baseTempo; // 모드 전환 시 패턴 기본 템포로 리셋
+      mt.querySelectorAll('.m-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+      if(modeVal===MODE_BASIC)basic_reset();
+      else if(modeVal===MODE_PRACTICE)prac_reset();
+      else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2||modeVal===MODE_WARMUP_3)wu_reset();
+      else if(modeVal===MODE_ADVANCED_1||modeVal===MODE_ADVANCED_2)adv_reset();
+      hardReset();
+    };
+    mt.appendChild(b);
+  });
+  body.appendChild(mt);
+
+  /* ── 박자 표시 ── */
+  const vwrap=document.createElement('div');vwrap.className='vocal-beat-wrap';
+  const cSec=document.createElement('div');cSec.className='vocal-beat-section';
+  const cLbl=document.createElement('div');cLbl.className='vocal-beat-label';cLbl.textContent='카운팅';
+  const cRow=document.createElement('div');cRow.className='vocal-beat-row';
+  for(let i=0;i<4;i++){const s=document.createElement('span');s.className='vbn dim';s.id='vcnt-'+i;s.textContent=i+1;cRow.appendChild(s);}
+  cSec.appendChild(cLbl);cSec.appendChild(cRow);vwrap.appendChild(cSec);
+  const pSec=document.createElement('div');pSec.className='vocal-beat-section';
+  const pLbl=document.createElement('div');pLbl.className='vocal-beat-label';
+  pLbl.textContent='패턴';
+  const pRow2=document.createElement('div');pRow2.className='vocal-beat-row';
+  for(let i=0;i<barBeats;i++){const s=document.createElement('span');s.className='vbn dim';s.id='vpat-'+i;s.textContent=i+1;pRow2.appendChild(s);}
+  pSec.appendChild(pLbl);pSec.appendChild(pRow2);vwrap.appendChild(pSec);
+  body.appendChild(vwrap);
+
+  /* ── 라벨 박스 ── */
+  if(pat.display==='label'){
+    const vlb=document.createElement('div');vlb.className='vocal-label-box';vlb.id='vocal-label-box';
+    const kPan=document.createElement('div');kPan.className='vlabel-key-panel';
+    if(isAdv){
+      const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='adv-cur-key';kMid.textContent='\u00a0';kPan.appendChild(kMid);
+      const nxt=document.createElement('div');nxt.className='vkp-next';nxt.id='adv-next-key';nxt.textContent='\u00a0';kPan.appendChild(nxt);
+    } else {
+      const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='vocal-key-display';
+      // 목풀기: b표기, 기본/연습: 시작 방향 기준
+      const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
+      kMid.textContent=midiToName(_fn_getCurrentRootMidi(),initDir);
+      kPan.appendChild(kMid);
+      const dEl=document.createElement('div');dEl.className='vkp-dir';dEl.id='vocal-dir-display';
+      const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)?wu_getDirAt(wu_keyIdx):initDir;
+      dEl.textContent=initMoveDir>=0?'▲ 상행':'▼ 하행';
+      kPan.appendChild(dEl);
+    }
+    vlb.appendChild(kPan);
+    const labArea=document.createElement('div');labArea.className='vlabel-labels-area';
+    labArea.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;';
+    // labelTitle이 있으면 윗줄에 표시
+    if(pat.labelTitle){
+      const titleEl=document.createElement('div');
+      titleEl.style.cssText='font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:0.5px;';
+      titleEl.textContent=pat.labelTitle;
+      labArea.appendChild(titleEl);
+    }
+    const is4beat=(pat.noteDiv||4)===4;
+    const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:wrap;';
+    const lbls=getActiveLabels();
+    lbls.kor.forEach((kor,i2)=>{
+      const col=document.createElement('div');col.className='vlabel-col';
+      // eng는 숨기고 kor만 표시 (labelTitle 패턴)
+      if(!pat.labelTitle){
+        const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.textContent=lbls.eng[i2]||'';
+        col.appendChild(eS);
+      } else {
+        // eng span도 만들되 숨김 (하이라이트 로직 호환)
+        const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
+      }
+      const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.textContent=kor||'';
+      col.appendChild(kS);lblsRow.appendChild(col);
+    });
+    labArea.appendChild(lblsRow);
+    vlb.appendChild(labArea);body.appendChild(vlb);
+  }
+
+  /* ── 타이머 + 루프 카운터 ── */
+  const totalLoops=_fn_getTotalLoops();
+  const tw=document.createElement('div');tw.className='timer-wrap';
+  tw.innerHTML='<div class="timer-row"><div class="timer-counter" id="loop-counter">—/'+totalLoops+'</div><div class="timer-main" id="timer-main" style="font-size:2.2rem;letter-spacing:2px;">00:00.00</div></div>';
+  body.appendChild(tw);
+
+  /* ── 컨트롤 ── */
+  const ctrl=document.createElement('div');ctrl.className='controls';
+  ctrl.innerHTML='<button class="ctrl-btn reset" onclick="hardReset()">↺</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶</button><button class="ctrl-btn stop" onclick="stopExercise()">■</button>';
+  body.appendChild(ctrl);
+
+  /* ── 모드별 키 UI ── */
+  if(TMODE===MODE_BASIC){buildBasicKeyUI(body);buildTempoUI(body);}
+  if(TMODE===MODE_PRACTICE)buildPracticeKeyUI(body); // 내부에서 buildTempoUI 호출
+  if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3){
+    buildSeqGridUI(body,wu_getSeq(),wu_keyIdx,(idx)=>{wu_keyIdx=idx;});
+    buildTempoUI(body);
+  }
+  if(TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2)buildAdvancedPanel(body);
+
+  /* ── 볼륨 ── */
+  const vw=document.createElement('div');vw.className='vol-wrap';
+  const mR=document.createElement('div');mR.className='vol-row';mR.innerHTML='<span>메트로놈</span>';
+  const mS=document.createElement('input');mS.type='range';mS.min='0';mS.max='100';mS.value=String(Math.round(metronomeVol*100));mS.style.cssText='flex:1;accent-color:var(--accent);cursor:pointer;';
+  mS.oninput=()=>{metronomeVol=parseInt(mS.value)/100;if(metronomeGain)metronomeGain.gain.value=metronomeVol;};
+  mR.appendChild(mS);vw.appendChild(mR);
+  const piR=document.createElement('div');piR.className='vol-row';piR.innerHTML='<span>피아노</span>';
+  const piS=document.createElement('input');piS.type='range';piS.min='0';piS.max='100';piS.value=String(Math.round(pianoVol*100));piS.style.cssText='flex:1;accent-color:var(--accent2);cursor:pointer;';
+  piS.oninput=()=>{pianoVol=parseInt(piS.value)/100;if(pianoGain)pianoGain.gain.value=pianoVol;};
+  piR.appendChild(piS);vw.appendChild(piR);body.appendChild(vw);
+}
+
+/* ── 기본 모드 키 UI ── */
+function buildBasicKeyUI(body){
+  const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
+  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const lbl=document.createElement('div');lbl.className='basic-key-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 위치 선택';inner.appendChild(lbl);
+  const upEntries=BASIC_SEQ.map((e,i)=>({...e,seqIdx:i})).filter(e=>e.dir===1);
+  const downEntries=BASIC_SEQ.map((e,i)=>({...e,seqIdx:i})).filter(e=>e.dir===-1);
+  let allBtns=[];
+  function makeRow(entries,arrowChar){
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:4px;';
+    const arrow=document.createElement('span');arrow.className='basic-key-arrow';arrow.textContent=arrowChar;row.appendChild(arrow);
+    entries.forEach(entry=>{
+      const name=midiToName(entry.midi,entry.dir).replace(/-?\d+$/,'');
+      const btn=document.createElement('button');
+      btn.className='basic-key-btn'+(isSharpNote(entry.midi)?' sharp':'');
+      btn.textContent=name;btn.setAttribute('data-idx',String(entry.seqIdx));
+      btn.onclick=()=>{
+        previewNote(entry.midi);basic_seqIdx=entry.seqIdx;
+        allBtns.forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');
+        _setEl('vocal-key-display',midiToName(entry.midi,entry.dir));
+        _setEl('vocal-dir-display',entry.dir>=0?'▲ 상행 중':'▼ 하행 중');
+        stopExercise();
+      };
+      allBtns.push(btn);row.appendChild(btn);
+    });
+    return row;
+  }
+  // 두 행을 grid로 묶어 화살표 컬럼 정렬
+  const rowsWrap=document.createElement('div');rowsWrap.style.cssText='display:grid;grid-template-columns:14px auto;gap:5px 4px;align-items:center;';
+  [makeRow(upEntries,'▲'),makeRow(downEntries,'▼')].forEach(row=>{
+    const arrowEl=row.firstChild;const btnsEl=document.createElement('div');btnsEl.style.cssText='display:flex;gap:4px;';
+    while(row.children.length>1)btnsEl.appendChild(row.children[1]);
+    rowsWrap.appendChild(arrowEl);rowsWrap.appendChild(btnsEl);
+  });
+  inner.appendChild(rowsWrap);
+  outer.appendChild(inner);body.appendChild(outer);
+}
+
+/* ── 연습 모드 키 UI ── */
+function buildPracticeKeyUI(body){
+  const PMIN=48,PMAX=92; // G#6(midi 92)까지
+  const COLS=9;
+  const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
+  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const hdr=document.createElement('div');hdr.style.cssText='display:flex;flex-direction:column;gap:3px;align-self:flex-start;';
+  const rangeLbl=document.createElement('div');rangeLbl.className='key-grid-label';rangeLbl.textContent='음역 범위 설정';hdr.appendChild(rangeLbl);
+  const rangeInfo=document.createElement('div');rangeInfo.id='practice-range-info';
+  rangeInfo.style.cssText='font-size:0.72rem;color:var(--text2);';
+  rangeInfo.innerHTML='첫 클릭 = 시작음 <span style="color:var(--accent);font-weight:700">■</span> 두번째 클릭 = 끝음 <span style="color:var(--accent2);font-weight:700">■</span> 실제 사용 범위 <span style="color:var(--accent3);font-weight:700;opacity:0.7">■</span>';
+  hdr.appendChild(rangeInfo);inner.appendChild(hdr);
+  let firstClickMidi=null;
+  function renderPracticeGrid(){
+    while(inner.children.length>2)inner.removeChild(inner.lastChild);
+    const dispDir=(firstClickMidi!==null)?1:prac_startDir;
+    const allBtns=[];
+    for(let midi=PMIN;midi<=PMAX;midi++){
+      const name=midiToName(midi,dispDir);
+      const btn=document.createElement('button');
+      let cls='key-grid-btn'+(isSharpNote(midi)?' sharp':'');
+      if(firstClickMidi!==null){
+        if(midi===firstClickMidi)cls+=' range-start';
+      } else if(prac_rangeSelected){
+        if(midi===prac_rangeStart){cls+=' range-start';}
+        else if(midi===prac_rangeEnd){cls+=' range-end';}
+        else if(midi>prac_rangeStart&&midi<prac_rangeEnd){cls+=' in-range';}
+      }
+      btn.className=cls;btn.textContent=name;btn.setAttribute('data-midi',midi);
+      btn.onclick=()=>{
+        previewNote(midi);
+        if(firstClickMidi===null){firstClickMidi=midi;renderPracticeGrid();}
+        else{
+          const first=firstClickMidi,second=midi;firstClickMidi=null;
+          if(second>=first){prac_rangeStart=first;prac_rangeEnd=second;prac_startDir=1;}
+          else{prac_rangeStart=second;prac_rangeEnd=first;prac_startDir=-1;}
+          if(prac_startDir===1){prac_keyIndex=0;prac_keyDir=1;}
+          else{const keys=[];for(let m=prac_rangeStart;m<=prac_rangeEnd;m++)keys.push(m);prac_keyIndex=keys.length-1;prac_keyDir=-1;}
+          prac_rangeSelected=true;
+          const startMidi=prac_startDir===1?prac_rangeStart:prac_rangeEnd;
+          _setEl('vocal-key-display',midiToName(startMidi,prac_startDir));
+          _setEl('vocal-dir-display',prac_startDir>=0?'▲ 상행 중':'▼ 하행 중');
+          stopExercise();renderPracticeGrid();
+        }
+      };
+      allBtns.push(btn);
+    }
+    for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
+      const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
+      allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+      inner.appendChild(row);
+    }
+  }
+  renderPracticeGrid();
+  outer.appendChild(inner);body.appendChild(outer);
+  buildTempoUI(body);
+}
+
+/* ── 목풀기 시퀀스 UI ── */
+function buildSeqGridUI(body,seq,selectedIdx,onSelect){
+  const COLS=9;
+  const btns=[];
+  seq.forEach((midi,i)=>{
+    const name=midiToName(midi,-1);
+    const btn=document.createElement('button');btn.className='seq-btn';btn.style.cssText='width:36px;min-width:36px;padding:6px 0;';btn.textContent=name;btn.setAttribute('data-idx',i);
+    btn.onclick=()=>{
+      previewNote(midi);onSelect(i);btns.forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');
+      _setEl('vocal-key-display',midiToName(midi,-1));
+      const moveDir=wu_getDirAt(i);_setEl('vocal-dir-display',moveDir>=0?'▲ 상행':'▼ 하행');
+      stopExercise();
+    };
+    btns.push(btn);
+  });
+  // 내부 블록: 왼쪽 라인 정렬, 블록 자체는 margin auto로 중앙
+  const inner=document.createElement('div');
+  inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const lbl=document.createElement('div');lbl.className='key-grid-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 위치 선택';
+  inner.appendChild(lbl);
+  for(let r=0;r<Math.ceil(seq.length/COLS);r++){
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
+    btns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+    inner.appendChild(row);
+  }
+  const wrap=document.createElement('div');wrap.style.cssText='width:100%;display:flex;justify-content:center;';
+  wrap.appendChild(inner);
+  body.appendChild(wrap);return wrap;
+}
+
+function buildTempoUI(body){
+  const tDiv=document.createElement('div');tDiv.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.78rem;color:var(--text2);width:100%;';
+  const tLabel=document.createElement('span');tLabel.textContent='템포';tDiv.appendChild(tLabel);
+  const tWrap=document.createElement('div');tWrap.className='tempo-wrap';
+
+  const tminus=document.createElement('button');tminus.className='tempo-btn';tminus.textContent='−';
+  const tplus=document.createElement('button');tplus.className='tempo-btn';tplus.textContent='+';
+
+  // BPM 표시 — 클릭 시 input으로 전환
+  const tval=document.createElement('div');tval.className='tempo-val';tval.id='tempo-val';tval.textContent=currentBPM+' BPM';
+
+  function applyBPM(val){
+    const v=Math.min(200,Math.max(40,parseInt(val)||currentBPM));
+    currentBPM=v;beatInterval=60/currentBPM;
+    tval.textContent=currentBPM+' BPM';
+  }
+
+  tval.onclick=()=>{
+    const inp=document.createElement('input');
+    inp.type='text';inp.inputMode='numeric';inp.className='tempo-input';
+    inp.value=String(currentBPM);
+    tval.replaceWith(inp);
+    inp.select();
+    function commit(){
+      applyBPM(inp.value);
+      inp.replaceWith(tval);
+    }
+    inp.onblur=commit;
+    inp.onkeydown=(e)=>{
+      if(e.key==='Enter'){inp.blur();}
+      else if(e.key==='Escape'){inp.value=String(currentBPM);inp.blur();}
+      else if(e.key==='ArrowUp'){e.preventDefault();inp.value=String(Math.min(200,parseInt(inp.value||currentBPM)+1));}
+      else if(e.key==='ArrowDown'){e.preventDefault();inp.value=String(Math.max(40,parseInt(inp.value||currentBPM)-1));}
+    };
+  };
+
+  tminus.onclick=()=>{applyBPM(currentBPM-1);};
+  tplus.onclick=()=>{applyBPM(currentBPM+1);};
+
+  tWrap.appendChild(tminus);tWrap.appendChild(tval);tWrap.appendChild(tplus);
+  tDiv.appendChild(tWrap);body.appendChild(tDiv);
+}
+
+/* ── 심화 패널 UI ── */
+function buildAdvancedPanel(body){
+  const ap=document.createElement('div');ap.className='adv-panel';
+
+  /* 공통: 섹션 제목/설명을 키 그리드 왼쪽 라인에 맞추는 래퍼 */
+  const GRID_W='364px';
+  function makeSecOuter(){const o=document.createElement('div');o.style.cssText='width:100%;display:flex;justify-content:center;';return o;}
+  function makeSecInner(){const i=document.createElement('div');i.style.cssText='display:inline-flex;flex-direction:column;gap:3px;min-width:'+GRID_W+';';return i;}
+
+  /* 1. 음정 간격 */
+  const ivSecOuter=makeSecOuter();const ivSec=makeSecInner();ivSecOuter.appendChild(ivSec);ap.appendChild(ivSecOuter);
+  const ivLbl=document.createElement('div');ivLbl.className='adv-section-label';ivLbl.textContent='음정 간격 설정 (반음 단위)';ivSec.appendChild(ivLbl);
+  const ivInfo=document.createElement('div');ivInfo.style.cssText='font-size:0.72rem;color:var(--text2);margin-bottom:4px;';ivInfo.textContent='중복 선택 가능 · 선택 순서대로 순환 · 다시 클릭하면 해제';ivSec.appendChild(ivInfo);
+  const INAMES={1:'단2도',2:'장2도',3:'단3도',4:'장3도',5:'완전4도',6:'증4도',7:'완전5도',8:'단6도',9:'장6도',10:'단7도',11:'장7도',12:'옥타브'};
+  const ivWrap=document.createElement('div');ivWrap.style.cssText='display:flex;flex-direction:column;gap:6px;';
+  let ivRandBtn;
+
+  function updateRandBtnState(){
+    if(!ivRandBtn)return;
+    const canRand=adv_intervalOrder.length!==1;
+    ivRandBtn.disabled=!canRand;ivRandBtn.style.opacity=canRand?'1':'0.35';ivRandBtn.style.cursor=canRand?'pointer':'not-allowed';
+    if(!canRand&&adv_intervalRandom){adv_intervalRandom=false;ivRandBtn.classList.remove('active');}
+    updateDirBtnStates();
+  }
+  function updateDirBtnStates(){
+    const basicBtn=document.getElementById('adv-dir-basic-btn');
+    const loopBtn=document.getElementById('adv-dir-loop-btn');
+    const hasAny=adv_intervalOrder.length>=1||adv_intervalRandom;
+    const hasOne=adv_intervalOrder.length===1&&!adv_intervalRandom;
+    if(basicBtn){basicBtn.disabled=!hasAny;basicBtn.style.opacity=hasAny?'1':'0.35';basicBtn.style.cursor=hasAny?'pointer':'not-allowed';
+      if(!hasAny&&adv_dir==='basic')basicBtn.classList.remove('active');}
+    if(loopBtn){const canLoop=hasOne;loopBtn.disabled=!canLoop;loopBtn.style.opacity=canLoop?'1':'0.35';loopBtn.style.cursor=canLoop?'pointer':'not-allowed';
+      if(!canLoop&&adv_dir==='loop'){adv_dir='basic';document.querySelectorAll('.dir-btn').forEach(b=>b.classList.remove('active'));if(basicBtn&&hasAny)basicBtn.classList.add('active');renderAdvRangeGrid();}}
+  }
+
+  const ivOrderDisplay=document.createElement('div');ivOrderDisplay.style.cssText='font-size:0.72rem;color:var(--accent3);min-height:1.2em;font-family:"DM Mono",monospace;';ivOrderDisplay.id='iv-order-display';
+  function refreshOrderDisplay(){ivOrderDisplay.textContent=adv_intervalOrder.length>0?'선택 순서: '+adv_intervalOrder.map(v=>'+'+v).join(' → '):'\u00a0';}
+
+  const intBtns=[];
+  // 숫자 버튼 2행 + 무작위 버튼 정사각형(61×61) 오른쪽 배치
+  // 6×45 + 5×5(gap) + 8(gap) + 61(rand) = 270+25+8+61 = 364
+  const ivLayout=document.createElement('div');ivLayout.style.cssText='display:flex;gap:8px;align-items:stretch;';
+  const ivNumCols=document.createElement('div');ivNumCols.style.cssText='display:flex;flex-direction:column;gap:5px;';
+  [[1,2,3,4,5,6],[7,8,9,10,11,12]].forEach(row=>{
+    const rowDiv=document.createElement('div');rowDiv.style.cssText='display:flex;gap:5px;';
+    row.forEach(iv=>{
+      const b=document.createElement('button');b.className='adv-int-btn'+(adv_intervalOrder.includes(iv)?' active':'');b.title=INAMES[iv]||'';b.textContent='+'+iv;b.setAttribute('data-iv',iv);
+      b.style.cssText='width:45px;padding:5px 0;font-size:0.75rem;border-radius:7px;';
+      b.onclick=()=>{
+        const idx=adv_intervalOrder.indexOf(iv);
+        if(idx>=0){adv_intervalOrder.splice(idx,1);b.classList.remove('active');}
+        else{adv_intervalOrder.push(iv);b.classList.add('active');}
+        adv_intervalSeqIdx=0;refreshOrderDisplay();updateRandBtnState();
+        const basicBtn2=document.getElementById('adv-dir-basic-btn');
+        if((adv_intervalOrder.length>=1||adv_intervalRandom)&&adv_dir==='basic'&&basicBtn2){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));basicBtn2.classList.add('active');}
+        if(adv_intervalOrder.length===0&&!adv_intervalRandom){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));adv_dir='basic';}
+        renderAdvRangeGrid();
+      };
+      intBtns.push(b);rowDiv.appendChild(b);
+    });
+    ivNumCols.appendChild(rowDiv);
+  });
+  ivRandBtn=document.createElement('button');ivRandBtn.className='adv-int-btn'+(adv_intervalRandom?' active':'');
+  ivRandBtn.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:61px;height:61px;flex-shrink:0;font-size:0.7rem;line-height:1.3;border-radius:8px;';
+  ivRandBtn.innerHTML='<span style="font-size:1.1rem;line-height:1;">🎲</span><span>무작위</span>';
+  ivRandBtn.onclick=()=>{
+    if(ivRandBtn.disabled)return;adv_intervalRandom=!adv_intervalRandom;ivRandBtn.classList.toggle('active',adv_intervalRandom);updateDirBtnStates();
+    const basicBtn2=document.getElementById('adv-dir-basic-btn');
+    if(adv_intervalRandom&&adv_dir==='basic'&&basicBtn2){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));basicBtn2.classList.add('active');}
+    if(!adv_intervalRandom&&adv_intervalOrder.length===0){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));adv_dir='basic';}
+  };
+  ivLayout.appendChild(ivNumCols);ivLayout.appendChild(ivRandBtn);
+  ivWrap.appendChild(ivLayout);ivWrap.appendChild(ivOrderDisplay);ivSec.appendChild(ivWrap);
+  refreshOrderDisplay();updateRandBtnState();
+
+  /* 2. 진행 방향 */
+  const dirSecOuter=makeSecOuter();const dirSec=makeSecInner();dirSecOuter.appendChild(dirSec);ap.appendChild(dirSecOuter);
+  const dirLbl=document.createElement('div');dirLbl.className='adv-section-label';dirLbl.textContent='진행 방향 설정';dirSec.appendChild(dirLbl);
+  const dirInfo=document.createElement('div');dirInfo.style.cssText='font-size:0.72rem;color:var(--text2);margin-bottom:4px;';dirInfo.textContent='기본: 음역 범위 설정 방향으로 계속 진행 (옥타브 자동 조정)';dirSec.appendChild(dirInfo);
+  const dg=document.createElement('div');dg.className='dir-btn-group';
+  [{label:'기본',val:'basic',id:'adv-dir-basic-btn'},{label:'↕ 왕복',val:'loop',id:'adv-dir-loop-btn'}].forEach(({label,val,id})=>{
+    const b=document.createElement('button');
+    const initActive=adv_dir===val&&adv_intervalOrder.length>0;
+    b.className='dir-btn'+(initActive?' active':'');b.textContent=label;if(id)b.id=id;
+    b.onclick=()=>{
+      if(b.disabled)return;adv_dir=val;dg.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+      stopExercise();adv_rangeSelected=false;adv_rangeFirstMidi=null;updateRngInfo();renderAdvRangeGrid();
+    };
+    dg.appendChild(b);
+  });
+  dirSec.appendChild(dg);
+
+  /* 3. 음역 범위 */
+  const rngSecOuter=makeSecOuter();const rngSec=makeSecInner();rngSecOuter.appendChild(rngSec);ap.appendChild(rngSecOuter);
+  const rngLbl=document.createElement('div');rngLbl.className='adv-section-label';rngLbl.textContent='음역 범위 설정';rngSec.appendChild(rngLbl);
+  const rngInfo=document.createElement('div');rngInfo.id='adv-rng-info';rngInfo.style.cssText='font-size:0.72rem;color:var(--text2);margin-bottom:4px;';
+  function updateRngInfo(){rngInfo.innerHTML=adv_dir==='loop'?'첫 클릭 = 시작음 <span style="color:var(--accent);font-weight:700">■</span> 두번째 클릭 = 끝음 <span style="color:var(--accent2);font-weight:700">■</span> (도달 가능한 음만 표시)':'첫 클릭 = 시작음 <span style="color:var(--accent);font-weight:700">■</span> 두번째 클릭 = 끝음 <span style="color:var(--accent2);font-weight:700">■</span> 실제 사용 범위 <span style="color:var(--accent3);font-weight:700;opacity:0.7">■</span>';}
+  updateRngInfo();rngSec.appendChild(rngInfo);
+
+  const ADV_PMIN=48,ADV_PMAX=92; // G#6(midi 92)까지
+  const ADV_COLS=9;
+  const rngGridOuter=document.createElement('div');rngGridOuter.style.cssText='width:100%;display:flex;justify-content:center;';
+  const rngGridInner=document.createElement('div');rngGridInner.id='adv-range-grid';rngGridInner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:flex-start;';
+  rngGridOuter.appendChild(rngGridInner);
+
+  function calcLoopReachable(startMidi,iv){
+    const r=new Set();let m=startMidi+iv;while(m<=ADV_PMAX){r.add(m);m+=iv;}m=startMidi-iv;while(m>=ADV_PMIN){r.add(m);m-=iv;}return r;
+  }
+
+  function renderAdvRangeGrid(){
+    rngGridInner.innerHTML='';
+    const isLoop=adv_dir==='loop';
+    const iv=(isLoop&&adv_intervalOrder.length===1)?adv_intervalOrder[0]:0;
+    const dispDir=(adv_rangeFirstMidi!==null)?1:adv_rangeStartDir;
+    const reachable=(isLoop&&adv_rangeFirstMidi!==null&&iv>0)?calcLoopReachable(adv_rangeFirstMidi,iv):null;
+    const allBtns=[];
+
+    for(let midi=ADV_PMIN;midi<=ADV_PMAX;midi++){
+      const name=midiToName(midi,dispDir);
+      const btn=document.createElement('button');
+      let cls='key-grid-btn'+(isSharpNote(midi)?' sharp':'');
+      if(isLoop&&adv_rangeFirstMidi!==null&&reachable!==null){
+        if(midi===adv_rangeFirstMidi)cls+=' range-start';
+        else if(!reachable.has(midi)){btn.disabled=true;btn.style.opacity='0.2';btn.style.cursor='not-allowed';}
+      } else if(adv_rangeFirstMidi!==null){if(midi===adv_rangeFirstMidi)cls+=' range-start';}
+      else if(adv_rangeSelected){
+        if(isLoop){
+          if(midi===Math.min(adv_loopStart,adv_loopEnd))cls+=' range-start';
+          else if(midi===Math.max(adv_loopStart,adv_loopEnd))cls+=' range-end';
+          else if(reachable&&reachable.has(midi)&&midi>Math.min(adv_loopStart,adv_loopEnd)&&midi<Math.max(adv_loopStart,adv_loopEnd))cls+=' in-range';
+        } else {
+          if(midi===adv_rangeMin)cls+=' range-start';
+          else if(midi===adv_rangeMax)cls+=' range-end';
+          else if(midi>adv_rangeMin&&midi<adv_rangeMax)cls+=' in-range';
+        }
+      }
+      btn.className=cls;btn.textContent=name;btn.setAttribute('data-midi',midi);
+      btn.onclick=()=>{
+        if(btn.disabled)return;previewNote(midi);
+        if(adv_rangeFirstMidi===null){adv_rangeFirstMidi=midi;renderAdvRangeGrid();}
+        else{
+          const first=adv_rangeFirstMidi,second=midi;adv_rangeFirstMidi=null;
+          if(isLoop){
+            adv_loopStart=first;adv_loopEnd=second;adv_loopDir=first<=second?1:-1;
+            adv_rangeMin=Math.min(first,second);adv_rangeMax=Math.max(first,second);adv_rangeStartDir=adv_loopDir;adv_currentMidi=adv_loopStart;
+          } else {
+            if(second>=first){adv_rangeMin=first;adv_rangeMax=second;adv_rangeStartDir=1;}
+            else{adv_rangeMin=second;adv_rangeMax=first;adv_rangeStartDir=-1;}
+            adv_currentMidi=adv_rangeStartDir===1?adv_rangeMin:adv_rangeMax;
+          }
+          adv_rangeSelected=true;
+          _setEl('adv-cur-key',midiToName(adv_currentMidi,adv_rangeStartDir));
+          stopExercise();renderAdvRangeGrid();
+        }
+      };
+      allBtns.push(btn);
+    }
+    for(let r=0;r<Math.ceil(allBtns.length/ADV_COLS);r++){
+      const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
+      allBtns.slice(r*ADV_COLS,r*ADV_COLS+ADV_COLS).forEach(b=>row.appendChild(b));
+      rngGridInner.appendChild(row);
+    }
+  }
+  renderAdvRangeGrid();rngSec.appendChild(rngGridInner);
+
+  buildTempoUI(ap);
+  const apWrap=document.createElement('div');apWrap.style.cssText='width:100%;display:flex;justify-content:center;';
+  apWrap.appendChild(ap);
+  body.appendChild(apWrap);
+  updateDirBtnStates();
+}
+
+/* ════════════════════════════════════════════════
+   【 섹션 H 】 진입점 / 네비게이션
+════════════════════════════════════════════════ */
+function startExercise(id){
+  EX_ID=id;
+  const pat=currentPat();currentBPM=pat.baseTempo;
+  const firstLabel=pat.modeLabels[0];TMODE=LABEL_TO_MODE[firstLabel]||MODE_BASIC;
+  basic_reset();prac_reset();wu_reset();adv_reset();
+  setupModeFunctions();
+  document.getElementById('prac-title').textContent=pat.pracTitle||pat.name;
+  buildPracticeUI();
+  document.getElementById('pattern-select').style.display='none';
+  document.getElementById('practice-screen').style.display='flex';
+}
+
+function closePractice(){
+  try{stopExercise();}catch(e){}
+  const wrap=document.querySelector('.basic-key-wrap');if(wrap)wrap.querySelectorAll('.basic-key-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('practice-screen').style.display='none';
+  document.getElementById('pattern-select').style.display='block';
+}
+
+function renderPatternCards(){
+  const container=document.getElementById('pattern-cards');container.innerHTML='';
+  VOCAL_PATTERNS.forEach(pat=>{
+    const card=document.createElement('div');card.className='pattern-card';
+    const desc=pat.cardDesc||'';
+    const noteDivLabel=pat.noteDiv===4?'4분음표':pat.noteDiv===16?'16분음표':'8분음표';
+    card.innerHTML='<h3>'+pat.name+'</h3><p>'+desc+'</p><div class="pattern-meta"><span class="meta-tag">'+pat.baseTempo+' BPM</span><span class="meta-tag">'+noteDivLabel+'</span><span class="meta-tag">'+pat.modeLabels.join(' · ')+'</span></div>';
+    card.onclick=()=>startExercise(pat.id);container.appendChild(card);
+  });
+}
+
+document.addEventListener('DOMContentLoaded',()=>{setupModeFunctions();renderPatternCards();});
+</script>
+</body>
+</html>

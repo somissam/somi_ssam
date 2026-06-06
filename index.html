@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>somi_ssam</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3d;--accent:#7c6af7;--accent2:#f76ac8;--accent3:#6af7c8;--counting:#f7c26a;--text:#e8e8f0;--text2:#8888aa;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+button{font-family:inherit;cursor:pointer;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+#splash{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;gap:56px;padding:24px;
+  background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);
+}
+.logo{text-align:center;}
+.logo h1{
+  font-size:clamp(3rem,10vw,6rem);font-weight:900;letter-spacing:-2px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  font-family:'DM Mono',monospace;
+}
+.logo p{color:var(--text2);font-size:0.9rem;margin-top:8px;letter-spacing:3px;text-transform:uppercase;text-align:center;}
+
+.mode-cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:680px;width:100%;}
+.mode-card{
+  width:160px;height:200px;background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;cursor:pointer;transition:all 0.3s;text-decoration:none;color:var(--text);
+}
+.mode-card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 12px 40px rgba(124,106,247,0.2);}
+.mode-card.teacher:hover{border-color:var(--counting);box-shadow:0 12px 40px rgba(247,194,106,0.2);}
+.mode-card.student-card:hover{border-color:var(--accent2);box-shadow:0 12px 40px rgba(247,106,200,0.2);}
+.mode-icon{font-size:2.8rem;}
+.mode-card h2{font-size:1rem;font-weight:700;}
+.mode-card p{font-size:0.72rem;color:var(--text2);text-align:center;padding:0 12px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="logo">
+    <h1>somi_ssam</h1>
+    <p>Vocal Practice System</p>
+  </div>
+
+  <div class="mode-cards">
+    <a class="mode-card student-card" href="somi_ssam_student.html">
+      <div class="mode-icon">🎤</div>
+      <h2>학생</h2>
+      <p>호흡·발성·리듬 연습하기</p>
+    </a>
+    <a class="mode-card teacher" href="somi_ssam_home.html">
+      <div class="mode-icon">👩‍🏫</div>
+      <h2>소미쌤</h2>
+      <p>학생 기록 확인하기</p>
+    </a>
+  </div>
+</div>
+</body>
+</html>
