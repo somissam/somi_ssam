@@ -7,58 +7,269 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
 :root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3d;--accent:#7c6af7;--accent2:#f76ac8;--accent3:#6af7c8;--counting:#f7c26a;--text:#e8e8f0;--text2:#8888aa;}
+.theme-ivory{--bg:#f5f0e8;--surface:#fffdf7;--surface2:#f0ebe0;--border:#d8cfc0;--accent:#6b5ce7;--accent2:#e05fa0;--accent3:#2db89a;--counting:#c8960a;--text:#2a2420;--text2:#7a6e60;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
 button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 
-#splash{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;gap:56px;padding:24px;
-  background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);
-}
+/* ── 스플래시 ── */
+#splash{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:56px;padding:24px;background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);}
+.theme-ivory #splash{background:radial-gradient(ellipse at 30% 20%,#e0d5c5 0%,var(--bg) 60%);}
 .logo{text-align:center;}
-.logo h1{
-  font-size:clamp(3rem,10vw,6rem);font-weight:900;letter-spacing:-2px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  font-family:'DM Mono',monospace;
-}
+.logo h1{font-size:clamp(3rem,10vw,6rem);font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'DM Mono',monospace;}
 .logo p{color:var(--text2);font-size:0.9rem;margin-top:8px;letter-spacing:3px;text-transform:uppercase;text-align:center;}
-
 .mode-cards{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:680px;width:100%;}
-.mode-card{
-  width:160px;height:200px;background:var(--surface);border:1px solid var(--border);
-  border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:14px;cursor:pointer;transition:all 0.3s;text-decoration:none;color:var(--text);
-}
-.mode-card:hover{transform:translateY(-6px);border-color:var(--accent);box-shadow:0 12px 40px rgba(124,106,247,0.2);}
+.mode-card{width:160px;height:200px;background:var(--surface);border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;transition:all 0.3s;color:var(--text);}
+.mode-card:hover{transform:translateY(-6px);}
 .mode-card.teacher:hover{border-color:var(--counting);box-shadow:0 12px 40px rgba(247,194,106,0.2);}
 .mode-card.student-card:hover{border-color:var(--accent2);box-shadow:0 12px 40px rgba(247,106,200,0.2);}
 .mode-icon{font-size:2.8rem;}
 .mode-card h2{font-size:1rem;font-weight:700;}
 .mode-card p{font-size:0.72rem;color:var(--text2);text-align:center;padding:0 12px;line-height:1.5;}
+
+/* ── 공통 화면 ── */
+.full-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:32px;padding:24px;background:radial-gradient(ellipse at 70% 80%,#1a1040 0%,var(--bg) 60%);}
+.theme-ivory .full-screen{background:radial-gradient(ellipse at 70% 80%,#e0d5c5 0%,var(--bg) 60%);}
+
+/* ── 비밀번호 ── */
+.pw-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 40px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:20px;}
+.pw-box h2{font-size:1.2rem;font-weight:700;text-align:center;}
+.pw-box p{font-size:0.82rem;color:var(--text2);text-align:center;}
+.pw-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:1rem;font-family:inherit;outline:none;text-align:center;letter-spacing:4px;transition:border-color 0.2s;}
+.pw-input:focus{border-color:var(--accent);}
+.pw-btn{width:100%;padding:14px;border-radius:12px;border:none;background:var(--accent);color:white;font-size:1rem;font-weight:600;transition:all 0.2s;}
+.pw-btn:hover{opacity:0.85;}
+.pw-btn.secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.pw-btn.secondary:hover{border-color:var(--accent);color:var(--text);}
+.pw-error{color:#f76a6a;font-size:0.8rem;text-align:center;display:none;}
+
+/* ── 프로필 ── */
+#profile-screen{display:none;flex-direction:column;align-items:center;min-height:100vh;padding:24px;gap:20px;background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);}
+.theme-ivory #profile-screen{background:radial-gradient(ellipse at 30% 20%,#e0d5c5 0%,var(--bg) 60%);}
+.profile-header{width:100%;max-width:480px;padding-top:16px;display:flex;align-items:center;justify-content:space-between;}
+.profile-item{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s;width:100%;max-width:480px;}
+.profile-item:hover{border-color:var(--accent);transform:translateX(4px);}
+.profile-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;flex-shrink:0;}
+.profile-avatar.female{background:linear-gradient(135deg,var(--accent2),#c96af7);}
+.profile-avatar.male{background:linear-gradient(135deg,var(--accent),#6ab4f7);}
+.new-profile-btn{width:100%;max-width:480px;padding:16px;border-radius:16px;border:1px dashed var(--border);background:transparent;color:var(--text2);font-size:0.9rem;transition:all 0.2s;}
+.new-profile-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+
+/* ── 프로필 생성 ── */
+#create-profile-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;padding:24px;gap:20px;background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);}
+.theme-ivory #create-profile-screen{background:radial-gradient(ellipse at 30% 20%,#e0d5c5 0%,var(--bg) 60%);}
+.create-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:20px;}
+.form-group{display:flex;flex-direction:column;gap:8px;}
+.form-label{font-size:0.8rem;color:var(--text2);}
+.form-input{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:0.95rem;font-family:inherit;outline:none;transition:border-color 0.2s;}
+.form-input:focus{border-color:var(--accent);}
+.gender-select{display:flex;gap:10px;}
+.gender-btn{flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;transition:all 0.2s;font-size:0.9rem;}
+.gender-btn.active{border-color:var(--accent);color:var(--text);background:rgba(124,106,247,0.15);}
+.back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:8px;font-size:0.8rem;transition:all 0.2s;cursor:pointer;}
+.back-btn:hover{border-color:var(--accent);color:var(--text);}
 </style>
 </head>
 <body>
+
+<!-- ══════════ SPLASH ══════════ -->
 <div id="splash">
   <div class="logo">
     <h1>somi_ssam</h1>
     <p>Vocal Practice System</p>
   </div>
-
   <div class="mode-cards">
-    <a class="mode-card student-card" href="somi_ssam_student.html">
+    <div class="mode-card student-card" onclick="goStudent()">
       <div class="mode-icon">🎤</div>
       <h2>학생</h2>
       <p>호흡·발성·리듬 연습하기</p>
-    </a>
-    <a class="mode-card teacher" href="somi_ssam_home.html">
+    </div>
+    <div class="mode-card teacher" onclick="goTeacher()">
       <div class="mode-icon">👩‍🏫</div>
       <h2>소미쌤</h2>
       <p>학생 기록 확인하기</p>
-    </a>
+    </div>
   </div>
 </div>
+
+<!-- ══════════ 선생님 비밀번호 ══════════ -->
+<div id="pw-screen" class="full-screen">
+  <div class="pw-box">
+    <h2>👩‍🏫 소미쌤</h2>
+    <p>소미쌤 비밀번호를 입력해주세요</p>
+    <input type="password" class="pw-input" id="pw-input" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')checkTeacherPw()">
+    <div class="pw-error" id="pw-error">비밀번호가 틀렸어요</div>
+    <button class="pw-btn" onclick="checkTeacherPw()">확인</button>
+    <button class="pw-btn secondary" onclick="showScreen('splash')">← 돌아가기</button>
+  </div>
+</div>
+
+<!-- ══════════ 학생 프로필 선택 ══════════ -->
+<div id="profile-screen">
+  <div class="profile-header">
+    <h2 style="font-size:1.2rem;font-weight:700">학생 선택</h2>
+    <button class="back-btn" onclick="showScreen('splash')">← 홈</button>
+  </div>
+  <div style="width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;" id="profile-list"></div>
+  <button class="new-profile-btn" onclick="showCreateProfile()">+ 새 프로필 만들기</button>
+</div>
+
+<!-- ══════════ 프로필 비밀번호 ══════════ -->
+<div id="profile-pw-screen" class="full-screen">
+  <div class="pw-box">
+    <h2 id="ppw-name">이름</h2>
+    <p>비밀번호를 입력해주세요</p>
+    <input type="password" class="pw-input" id="ppw-input" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')checkProfilePw()">
+    <div class="pw-error" id="ppw-error">비밀번호가 틀렸어요</div>
+    <button class="pw-btn" onclick="checkProfilePw()">확인</button>
+    <button class="pw-btn secondary" onclick="showProfileSelect()">← 뒤로</button>
+  </div>
+</div>
+
+<!-- ══════════ 프로필 생성 ══════════ -->
+<div id="create-profile-screen">
+  <div class="create-box">
+    <h2>프로필 만들기</h2>
+    <div class="form-group">
+      <div class="form-label">이름 (본명)</div>
+      <input type="text" class="form-input" id="new-name" placeholder="이름을 입력하세요">
+    </div>
+    <div class="form-group">
+      <div class="form-label">성별</div>
+      <div class="gender-select">
+        <button class="gender-btn" id="gbtn-f" onclick="selectGender('female')">여자</button>
+        <button class="gender-btn" id="gbtn-m" onclick="selectGender('male')">남자</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">비밀번호 설정</div>
+      <input type="password" class="form-input" id="new-pw" placeholder="비밀번호를 설정하세요" maxlength="20">
+    </div>
+    <div class="pw-error" id="create-error">이름, 성별, 비밀번호를 모두 입력해주세요</div>
+    <button class="pw-btn" onclick="createProfile()">프로필 생성</button>
+    <button class="pw-btn secondary" onclick="showProfileSelect()">← 뒤로</button>
+  </div>
+</div>
+
+<script>
+// ── 테마 ──
+function loadData(k,d){try{const v=localStorage.getItem(k);if(v===null)return d;const p=JSON.parse(v);if(Array.isArray(d)&&!Array.isArray(p)){localStorage.removeItem(k);return d;}return p;}catch(e){return d;}}
+function saveData(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+const currentTheme = loadData('somi_theme','dark');
+if(currentTheme==='ivory') document.body.classList.add('theme-ivory');
+
+// ── 데이터 ──
+let profiles = loadData('somi_profiles',[]);
+let patternLocks = loadData('somi_pattern_locks',{});
+const teacherPw = ()=> loadData('somi_teacher_pw','1');
+
+// ── 화면 전환 ──
+function showScreen(id){
+  ['splash','pw-screen','profile-screen','profile-pw-screen','create-profile-screen']
+    .forEach(s=>{ const el=document.getElementById(s); if(el) el.style.display='none'; });
+  const t=document.getElementById(id);
+  if(!t) return;
+  if(id==='profile-screen'||id==='create-profile-screen') t.style.display='flex';
+  else t.style.display='flex';
+}
+
+// ── 선생님 ──
+function goTeacher(){
+  document.getElementById('pw-input').value='';
+  document.getElementById('pw-error').style.display='none';
+  showScreen('pw-screen');
+  setTimeout(()=>document.getElementById('pw-input').focus(),100);
+}
+function checkTeacherPw(){
+  if(document.getElementById('pw-input').value===teacherPw()){
+    window.location.href='somi_ssam_home.html?mode=teacher';
+  } else {
+    document.getElementById('pw-error').style.display='block';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+// ── 학생 ──
+function goStudent(){
+  renderProfileList();
+  showScreen('profile-screen');
+}
+function renderProfileList(){
+  profiles = loadData('somi_profiles',[]);
+  const list=document.getElementById('profile-list');
+  list.innerHTML='';
+  if(!profiles.length){
+    list.innerHTML='<p style="color:var(--text2);text-align:center;padding:20px">아직 프로필이 없어요</p>';
+    return;
+  }
+  profiles.forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className='profile-item';
+    div.innerHTML=`<div class="profile-avatar ${p.gender}">${p.name[0]}</div><div style="flex:1"><h4 style="font-size:0.95rem;font-weight:600">${p.name}</h4><p style="font-size:0.75rem;color:var(--text2)">${p.gender==='female'?'여자':'남자'}</p></div><div style="color:var(--text2);font-size:1.2rem">›</div>`;
+    div.onclick=()=>selectProfile(i);
+    list.appendChild(div);
+  });
+}
+function showProfileSelect(){
+  renderProfileList();
+  showScreen('profile-screen');
+}
+
+let pendingProfileIdx=-1;
+function selectProfile(idx){
+  pendingProfileIdx=idx;
+  document.getElementById('ppw-name').textContent=profiles[idx].name;
+  document.getElementById('ppw-input').value='';
+  document.getElementById('ppw-error').style.display='none';
+  showScreen('profile-pw-screen');
+  setTimeout(()=>document.getElementById('ppw-input').focus(),100);
+}
+function checkProfilePw(){
+  if(document.getElementById('ppw-input').value===profiles[pendingProfileIdx].password){
+    localStorage.setItem('somi_current_profile_id', profiles[pendingProfileIdx].id);
+    window.location.href='somi_ssam_student.html?mode=student';
+  } else {
+    document.getElementById('ppw-error').style.display='block';
+    document.getElementById('ppw-input').value='';
+    document.getElementById('ppw-input').focus();
+  }
+}
+
+// ── 프로필 생성 ──
+let selectedGender='';
+function showCreateProfile(){
+  document.getElementById('new-name').value='';
+  document.getElementById('new-pw').value='';
+  selectedGender='';
+  document.getElementById('gbtn-f').classList.remove('active');
+  document.getElementById('gbtn-m').classList.remove('active');
+  document.getElementById('create-error').style.display='none';
+  showScreen('create-profile-screen');
+}
+function selectGender(g){
+  selectedGender=g;
+  document.getElementById('gbtn-f').classList.toggle('active',g==='female');
+  document.getElementById('gbtn-m').classList.toggle('active',g==='male');
+}
+function createProfile(){
+  const name=document.getElementById('new-name').value.trim();
+  const pw=document.getElementById('new-pw').value;
+  if(!name||!selectedGender||!pw){
+    document.getElementById('create-error').style.display='block';
+    return;
+  }
+  profiles = loadData('somi_profiles',[]);
+  patternLocks = loadData('somi_pattern_locks',{});
+  const newId=Date.now().toString();
+  profiles.push({id:newId,name,gender:selectedGender,password:pw,stamp:'apple',createdAt:new Date().toISOString()});
+  patternLocks[newId]={};
+  saveData('somi_profiles',profiles);
+  saveData('somi_pattern_locks',patternLocks);
+  showProfileSelect();
+}
+</script>
 </body>
 </html>

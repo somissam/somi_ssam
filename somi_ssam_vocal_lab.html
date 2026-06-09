@@ -1,36 +1,57 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" style="background:#0a0a0f;">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vocal Lab · somi_ssam</title>
+<title>발성 · somi_ssam</title>
+<script>
+(function(){
+  try{
+    const raw=localStorage.getItem('somi_theme');
+    const t=raw?(raw.startsWith('"')?JSON.parse(raw):raw):'dark';
+    if(t==='ivory'){
+      document.documentElement.style.background='#f5f0e8';
+      document.documentElement.classList.add('theme-ivory');
+    }
+  }catch(e){}
+})();
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
-:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3d;--accent:#7c6af7;--accent2:#f76ac8;--accent3:#6af7c8;--counting:#f7c26a;--text:#e8e8f0;--text2:#8888aa;}
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3d;--accent:#7c6af7;--accent2:#f76ac8;--accent3:#6af7c8;--counting:#f7c26a;--text:#e8e8f0;--text2:#8888aa;--tier-lv1:#C0C8D0;--tier-lv2:#E8C200;}
+.theme-ivory{--bg:#f5f0e8;--surface:#fffdf7;--surface2:#f0ebe0;--border:#d8cfc0;--accent:#6b5ce7;--accent2:#e05fa0;--accent3:#2db89a;--counting:#c8960a;--text:#2a2420;--text2:#7a6e60;--tier-lv1:#6A7280;--tier-lv2:#E8C200;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 .lab-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
-.lab-brand{display:flex;flex-direction:column;gap:1px;}
+.lab-brand{display:flex;flex-direction:column;gap:1px;text-align:right;}
 .lab-brand .brand-title{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'DM Mono',monospace;}
 .lab-brand .brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
-.home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.82rem;transition:all 0.2s;}
+.home-link{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;min-width:120px;justify-content:center;white-space:nowrap;}
 .home-link:hover{border-color:var(--accent);color:var(--text);}
 .pattern-select{max-width:600px;margin:0 auto;padding:28px 20px 60px;}
 .select-title{font-size:1.1rem;font-weight:700;margin-bottom:6px;}
 .select-desc{color:var(--text2);font-size:0.82rem;margin-bottom:24px;line-height:1.6;}
 .pattern-cards{display:flex;flex-direction:column;gap:12px;}
-.pattern-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;cursor:pointer;transition:all 0.2s;}
-.pattern-card:hover{border-color:var(--accent);transform:translateX(4px);}
+.pattern-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;cursor:pointer;transition:all 0.2s;position:relative;}
+.pattern-card:hover:not(.locked){border-color:var(--accent);transform:translateX(4px);}
+.pattern-card.locked{opacity:0.45;cursor:default;}
+.lock-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;border-radius:14px;background:rgba(10,10,15,0.18);}
+.theme-ivory .lock-overlay{background:rgba(245,240,232,0.18);}
 .pattern-card h3{font-size:0.95rem;font-weight:600;margin-bottom:4px;}
 .pattern-card p{color:var(--text2);font-size:0.78rem;line-height:1.5;}
 .pattern-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;}
 .meta-tag{font-size:0.68rem;padding:3px 9px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.meta-tag.tag-bpm{background:rgba(124,106,247,0.12);color:var(--accent);border-color:rgba(124,106,247,0.35);}
+.meta-tag.tag-note{background:rgba(106,247,200,0.10);color:var(--accent3);border-color:rgba(106,247,200,0.35);}
+.meta-tag.tag-mode{background:var(--surface2);color:var(--text2);border-color:var(--border);}
+.meta-tag.tag-level{background:rgba(247,194,106,0.12);color:var(--counting);border-color:rgba(247,194,106,0.35);}
+.meta-tag.tag-vowel{background:rgba(247,106,200,0.12);color:var(--accent2);border-color:rgba(247,106,200,0.35);}
 #practice-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column;overflow-y:auto;}
 .prac-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
 .prac-header h2{font-size:0.95rem;font-weight:600;flex:1;}
-.back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:8px;font-size:0.8rem;transition:all 0.2s;}
+.back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:10px 20px;border-radius:10px;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;cursor:pointer;min-width:120px;justify-content:center;white-space:nowrap;}
 .back-btn:hover{border-color:var(--accent);color:var(--text);}
 .prac-body{display:flex;flex-direction:column;align-items:center;padding:24px 20px 52px;gap:22px;max-width:560px;margin:0 auto;width:100%;}
 .prac-body.vocal-expand{padding-top:20px;padding-bottom:52px;gap:18px;}
@@ -135,11 +156,11 @@ button{font-family:inherit;cursor:pointer;}
 </head>
 <body>
 <header class="lab-header">
+  <a class="home-link" href="somi_ssam_student.html">← 학생 홈</a>
   <div class="lab-brand">
-    <div class="brand-title">Vocal Lab</div>
-    <div class="brand-sub">somi_ssam · 발성 연습 엔진</div>
+    <div class="brand-title">발성</div>
+    <div class="brand-sub">VOCAL LAB · SOMI_SSAM</div>
   </div>
-  <a class="home-link" href="index.html">← somi_ssam</a>
 </header>
 <div class="pattern-select" id="pattern-select">
   <div class="select-title">발성 연습 패턴 선택</div>
@@ -153,8 +174,7 @@ button{font-family:inherit;cursor:pointer;}
   </div>
   <div class="prac-body" id="prac-body"></div>
 </div>
-<script>
-/* ════════════════════════════════════════════════════════════════
+<script>/* ════════════════════════════════════════════════════════════════
    ★ somi_ssam_vocal_lab.html  v7 (리팩토링 — 모드 완전 독립)
    [ 섹션 A ] 발성 패턴 데이터
    [ 섹션 B ] 모드 코드네임
@@ -164,7 +184,7 @@ button{font-family:inherit;cursor:pointer;}
    [ 섹션 E-BASIC   ] 기본 모드 전용 스케줄러 + 비주얼
    [ 섹션 E-PRACTICE] 연습 모드 전용 스케줄러 + 비주얼
    [ 섹션 E-WARMUP  ] 목풀기1/2/3 전용 스케줄러 + 비주얼
-   [ 섹션 E-ADV     ] 심화1/2 전용 스케줄러 + 비주얼
+   [ 섹션 E-ADV     ] 심화 전용 스케줄러 + 비주얼
    [ 섹션 F ] UI 빌더
    [ 섹션 H ] 진입점 / 네비게이션
 ════════════════════════════════════════════════════════════════ */
@@ -175,26 +195,7 @@ button{font-family:inherit;cursor:pointer;}
 ════════════════════════════════════════════════ */
 const VOCAL_PATTERNS = [
   {
-    id: 1,
-    name: "이에아오우으어 (샘플)",
-    baseTempo: 60,
-    pattern5:   [1,1,1,1,1],
-    engLabels5: ['i','e','a','o','u'],
-    korLabels5: ['이','에','아','오','우'],
-    pattern7:   [1,1,1,1,1,1,1],
-    engLabels7: ['i','e','a','o','u','eu','eo'],
-    korLabels7: ['이','에','아','오','우','으','어'],
-    noteDiv: 4,
-    display: 'label',
-    modeLabels: ['기본','연습','목풀기1','목풀기2','목풀기3','심화1','심화2'],
-    warmup1: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
-    warmup2: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
-    warmup3: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
-    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
-    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
-  },
-  {
-    id: 2,
+    id: 'vocal_ha_8beat_1',
     name: "H-a • 8beat (123454321) (1)",
     cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
     pracTitle: "H-a(흐아) · 8beat",
@@ -211,7 +212,7 @@ const VOCAL_PATTERNS = [
     modeLabels: ['기본','연습'],
   },
   {
-    id: 3,
+    id: 'vocal_ha_8beat_2',
     name: "H-a • 8beat (123454321) (2)",
     cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
     pracTitle: "H-a(흐아) · 8beat",
@@ -225,15 +226,14 @@ const VOCAL_PATTERNS = [
     noteDiv: 8,
     display: 'label',
     labelTitle: 'H-a (흐아)',
-    modeLabels: ['목풀기1','심화1'],
+    modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup3: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
-    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
   },
   {
-    id: 4,
+    id: 'vocal_ha_4beat',
     name: "H-a • 4beat (13531)",
     cardDesc: "흐아 · 4분음표 · 도미솔미도",
     pracTitle: "H-a(흐아) · 4beat",
@@ -247,15 +247,14 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'H-a (흐아)',
-    modeLabels: ['목풀기1','심화1'],
+    modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
-    warmup3: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
-    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
-    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
   },
   {
-    id: 5,
+    id: 'vocal_ha_16beat',
     name: "H-a • 16beat (12345432123454321)",
     cardDesc: "흐아 · 16분음표 · 도레미파솔파미레도 (2회 연주)",
     pracTitle: "H-a(흐아) · 16beat",
@@ -269,15 +268,14 @@ const VOCAL_PATTERNS = [
     noteDiv: 16,
     display: 'label',
     labelTitle: 'H-a (흐아)',
-    modeLabels: ['목풀기1','심화1'],
+    modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup3: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
-    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
   },
   {
-    id: 6,
+    id: 'vocal_na_4beat_1',
     name: "Na • 4beat (13531) (1)",
     cardDesc: "나 · 4분음표 · 도미솔미도",
     pracTitle: "Na(나) · 4beat",
@@ -294,7 +292,7 @@ const VOCAL_PATTERNS = [
     modeLabels: ['기본','연습'],
   },
   {
-    id: 8,
+    id: 'vocal_na_4beat_2',
     name: "Na • 4beat (13531) (2)",
     cardDesc: "나 · 4분음표 · 도미솔미도",
     pracTitle: "Na(나) · 4beat",
@@ -308,15 +306,14 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Na (나)',
-    modeLabels: ['목풀기1','심화1'],
+    modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup3: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
-    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
   },
   {
-    id: 7,
+    id: 'vocal_ma_4beat_1',
     name: "Ma • 4beat (13531) (1)",
     cardDesc: "마 · 4분음표 · 도미솔미도",
     pracTitle: "Ma(마) · 4beat",
@@ -333,7 +330,7 @@ const VOCAL_PATTERNS = [
     modeLabels: ['기본','연습'],
   },
   {
-    id: 9,
+    id: 'vocal_ma_4beat_2',
     name: "Ma • 4beat (13531) (2)",
     cardDesc: "마 · 4분음표 · 도미솔미도",
     pracTitle: "Ma(마) · 4beat",
@@ -347,13 +344,417 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ma (마)',
-    modeLabels: ['목풀기1','심화1'],
+    modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup3: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup12Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
-    warmup3Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
-  }
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_ieaou_4beat',
+    name: "ieaou • 4beat (11111)",
+    cardDesc: "이에아오우 · 4분음표 · 도도도도도",
+    pracTitle: "ieaou(이에아오우) · 4beat",
+    baseTempo: 60,
+    pattern5:   [1,1,1,1,1],
+    engLabels5: ['i','e','a','o','u'],
+    korLabels5: ['이','에','아','오','우'],
+    pattern7:   [1,1,1,1,1,1,1],
+    engLabels7: ['i','e','a','o','u','eu','eo'],
+    korLabels7: ['이','에','아','오','우','으','어'],
+    noteDiv: 4,
+    display: 'label',
+    modeLabels: ['목풀기1','심화'],
+    warmup1: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
+    warmup2: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_ieaoueueo_4beat',
+    name: "ieaou+eueo • 4beat (1111111)",
+    cardDesc: "이에아오우으어 · 4분음표 · 도도도도도도도",
+    pracTitle: "ieaou+eueo(이에아오우으어) · 4beat",
+    baseTempo: 60,
+    pattern5:   [1,1,1,1,1],
+    engLabels5: ['i','e','a','o','u'],
+    korLabels5: ['이','에','아','오','우'],
+    pattern7:   [1,1,1,1,1,1,1],
+    engLabels7: ['i','e','a','o','u','eu','eo'],
+    korLabels7: ['이','에','아','오','우','으','어'],
+    noteDiv: 4,
+    display: 'label',
+    modeLabels: ['목풀기1','심화'],
+    warmup1: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
+    warmup2: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_sung_4beat',
+    name: "Sung • 4beat (13531)",
+    cardDesc: "썽 · 4분음표 · 도미솔미도",
+    pracTitle: "Sung(썽) · 4beat",
+    baseTempo: 60,
+    pattern5:   [1,3,5,3,1],
+    engLabels5: ['','','','',''],
+    korLabels5: ['도','미','솔','미','도'],
+    pattern7:   [1,3,5,3,1],
+    engLabels7: ['','','','',''],
+    korLabels7: ['도','미','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'Sung (썽)',
+    modeLabels: ['목풀기1','심화'],
+    warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_iaiaiai_4beat',
+    name: "iaiaiai • 4beat (1358531)",
+    cardDesc: "이아이아이아이 · 4분음표 · 도미솔도솔미도",
+    pracTitle: "iaiaiai(이아이아이아이) · 4beat",
+    baseTempo: 70,
+    pattern5:   [1,3,5,3,1],
+    engLabels5: ['i','a','i','a','i'],
+    korLabels5: ['이','아','이','아','이'],
+    pattern7:   [1,3,5,8,5,3,1],
+    engLabels7: ['i','a','i','a','i','a','i'],
+    korLabels7: ['이','아','이','아','이','아','이'],
+    noteDiv: 4,
+    display: 'label',
+    modeLabels: ['목풀기2','심화'],
+    warmup1: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
+    warmup2: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_ha_8beat_minor',
+    name: "H-a • 8beat minor (12b3454b321)",
+    cardDesc: "흐아 · 8분음표 · 도레미b파솔파미b레도 (마이너)",
+    pracTitle: "H-a(흐아) · 8beat · minor",
+    baseTempo: 60,
+    offsets: [0,2,3,5,7,5,3,2,0],
+    engLabels5: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels5: ['도','레','미b','파','솔','파','미b','레','도'],
+    pattern5:   [1,2,3,4,5,4,3,2,1],
+    engLabels7: ['흐','아','흐','아','흐','아','흐','아','흐'],
+    korLabels7: ['도','레','미b','파','솔','파','미b','레','도'],
+    pattern7:   [1,2,3,4,5,4,3,2,1],
+    noteDiv: 8,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    modeLabels: ['기본','목풀기1','심화'],
+    warmup1: { offsets:[0,2,3,5,7,5,3,2,0], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미b','파','솔','파','미b','레','도'] },
+    warmup2: { offsets:[0,2,3,5,7,5,3,2,0], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미b','파','솔','파','미b','레','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_ha_4beat_minor',
+    name: "H-a • 4beat minor (1b35b31)",
+    cardDesc: "흐아 · 발음 선택 · 4분음표 · 도미b솔미b도 (마이너)",
+    pracTitle: "H-a(흐아) · 4beat · minor",
+    baseTempo: 60,
+    offsets: [0,3,7,3,0],
+    engLabels5: ['흐','아','흐','아','흐'],
+    korLabels5: ['도','미b','솔','미b','도'],
+    pattern5:   [1,3,5,3,1],
+    engLabels7: ['흐','아','흐','아','흐'],
+    korLabels7: ['도','미b','솔','미b','도'],
+    pattern7:   [1,3,5,3,1],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},
+      {label:'Na',  title:'Na (나)'},
+      {label:'Ma',  title:'Ma (마)'},
+      {label:'Mum', title:'Mum (멈)'},
+      {label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기1','심화'],
+    warmup1: { offsets:[0,3,7,3,0], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미b','솔','미b','도'] },
+    warmup2: { offsets:[0,3,7,3,0], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미b','솔','미b','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_major_4beat',
+    name: "Major 7th • Sound Type • 4beat (135787531)",
+    cardDesc: "메이저 7화음 · 발음 선택 · 4분음표 · 도미솔시도시솔미도",
+    pracTitle: "Major 7th(메이저 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,4,7,11,12,11,7,4,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미','솔','시','도','시','솔','미','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미','솔','시','도','시','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},
+      {label:'Na',  title:'Na (나)'},
+      {label:'Ma',  title:'Ma (마)'},
+      {label:'Mum', title:'Mum (멈)'},
+      {label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,4,7,11,12,11,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시','도','시','솔','미','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq:  [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_dominant_4beat',
+    name: "Dominant 7th • Sound Type • 4beat (135b7531)",
+    cardDesc: "도미넌트 7화음 · 발음 선택 · 4분음표 · 도미솔시b도시b솔미도",
+    pracTitle: "Dominant 7th(도미넌트 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,4,7,10,12,10,7,4,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미','솔','시b','도','시b','솔','미','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미','솔','시b','도','시b','솔','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},{label:'Na', title:'Na (나)'},
+      {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,4,7,10,12,10,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시b','도','시b','솔','미','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_minor_4beat',
+    name: "Minor 7th • Sound Type • 4beat (1b35b75b31)",
+    cardDesc: "마이너 7화음 · 발음 선택 · 4분음표 · 도미b솔시b도시b솔미b도",
+    pracTitle: "Minor 7th(마이너 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,3,7,10,12,10,7,3,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미b','솔','시b','도','시b','솔','미b','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미b','솔','시b','도','시b','솔','미b','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},{label:'Na', title:'Na (나)'},
+      {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,3,7,10,12,10,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시b','도','시b','솔','미b','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_minor_major_4beat',
+    name: "Minor Major 7th • Sound Type • 4beat (1b3575b31)",
+    cardDesc: "마이너 메이저 7화음 · 발음 선택 · 4분음표 · 도미b솔시도시솔미b도",
+    pracTitle: "Minor Major 7th(마이너 메이저 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,3,7,11,12,11,7,3,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미b','솔','시','도','시','솔','미b','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미b','솔','시','도','시','솔','미b','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},{label:'Na', title:'Na (나)'},
+      {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,3,7,11,12,11,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시','도','시','솔','미b','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_half_diminished_4beat',
+    name: "Half-diminished 7th • Sound Type • 4beat (1b3b5b7b5b31)",
+    cardDesc: "하프 디미니쉬드 7화음 · 발음 선택 · 4분음표 · 도미b솔b시b도시b솔b미b도",
+    pracTitle: "Half-diminished 7th(하프 디미니쉬드 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,3,6,10,12,10,6,3,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미b','솔b','시b','도','시b','솔b','미b','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미b','솔b','시b','도','시b','솔b','미b','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},{label:'Na', title:'Na (나)'},
+      {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,3,6,10,12,10,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','시b','도','시b','솔b','미b','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_diminished_4beat',
+    name: "Diminished 7th • Sound Type • 4beat (1b3b5bb7b5b31)",
+    cardDesc: "디미니쉬드 7화음 · 발음 선택 · 4분음표 · 도미b솔b라도라솔b미b도",
+    pracTitle: "Diminished 7th(디미니쉬드 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,3,6,9,12,9,6,3,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미b','솔b','라','도','라','솔b','미b','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미b','솔b','라','도','라','솔b','미b','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},{label:'Na', title:'Na (나)'},
+      {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,3,6,9,12,9,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','라','도','라','솔b','미b','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_augmented_4beat',
+    name: "Augmented 7th • Sound Type • 4beat (13#5b7#531)",
+    cardDesc: "어그먼티드 7화음 · 발음 선택 · 4분음표 · 도미솔#시b도시b솔#미도",
+    pracTitle: "Augmented 7th(어그먼티드 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,4,8,10,12,10,8,4,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미','솔#','시b','도','시b','솔#','미','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미','솔#','시b','도','시b','솔#','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},{label:'Na', title:'Na (나)'},
+      {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,4,8,10,12,10,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시b','도','시b','솔#','미','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+  {
+    id: 'vocal_7th_augmented_major_4beat',
+    name: "Augmented Major 7th • Sound Type • 4beat (13#57#531)",
+    cardDesc: "어그먼티드 메이저 7화음 · 발음 선택 · 4분음표 · 도미솔#시도시솔#미도",
+    pracTitle: "Augmented Major 7th(어그먼티드 메이저 세븐) · 4beat",
+    baseTempo: 70,
+    offsets: [0,4,8,11,12,11,8,4,0],
+    pattern5:   [1,3,5,7,8,7,5,3,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','미','솔#','시','도','시','솔#','미','도'],
+    pattern7:   [1,3,5,7,8,7,5,3,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','미','솔#','시','도','시','솔#','미','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    vowelOptions: [
+      {label:'H-a', title:'H-a (흐아)'},{label:'Na', title:'Na (나)'},
+      {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
+    ],
+    modeLabels: ['기본','목풀기2','심화'],
+    warmup2: { offsets:[0,4,8,11,12,11,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시','도','시','솔#','미','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+
+  /* ── 패턴 23: Staccato Ah 8beat ── */
+  {
+    id: 'vocal_staccato_ah_8beat',
+    name: "Staccato • Ah • 8beat (123454321)",
+    cardDesc: "스타카토 · 아 · 8분음표 · 도레미파솔파미레도",
+    pracTitle: "Staccato Ah · 8beat",
+    baseTempo: 60,
+    pattern5:   [1,2,3,4,5,4,3,2,1],
+    engLabels5: ['','','','','','','','',''],
+    korLabels5: ['도','레','미','파','솔','파','미','레','도'],
+    pattern7:   [1,2,3,4,5,4,3,2,1],
+    engLabels7: ['','','','','','','','',''],
+    korLabels7: ['도','레','미','파','솔','파','미','레','도'],
+    noteDiv: 8,
+    display: 'label',
+    labelTitle: 'Ah (아)',
+    staccato: true,
+    modeLabels: ['기본','목풀기1','심화'],
+    warmup1: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['','','','','','','','',''], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup2: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['','','','','','','','',''], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+
+  /* ── 패턴 24: Glissando H-a 4beat ── */
+  /* 도솔도솔도 — 4분음표 4박+카운팅1 (barBeats=4)
+     슬라이더: 1박=좌→우(도→솔), 2박=우→좌(솔→도), 3박=좌→우, 4박=우→좌, 카운팅=왼쪽 찍으며 끝 */
+  {
+    id: 'vocal_glissando_ha_4beat',
+    name: "Glissando • H-a • 4beat (15151)",
+    cardDesc: "글리산도 · 흐아 · 4분음표 · 도솔도솔도 (왕복 슬라이딩)",
+    pracTitle: "Glissando H-a · 4beat",
+    baseTempo: 60,
+    pattern5:   [1,5,1,5,1],
+    engLabels5: ['흐','아','흐','아','흐'],
+    korLabels5: ['도','솔','도','솔','도'],
+    pattern7:   [1,5,1,5,1],
+    engLabels7: ['흐','아','흐','아','흐'],
+    korLabels7: ['도','솔','도','솔','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'H-a (흐아)',
+    glissando: true,
+    modeLabels: ['기본','목풀기1','심화'],
+    warmup1: { pattern:[1,5,1,5,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','솔','도','솔','도'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
+    warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
+  },
+
+  /* ── 패턴 25: Vibrato Ah 4beat ── */
+  {
+    id: 'vocal_vibrato_ah_4beat',
+    name: "Vibrato • Ah • 4beat (도 무한)",
+    cardDesc: "비브라토 · 아 · 4분음표 · 도 무한 지속",
+    pracTitle: "Vibrato Ah · 4beat",
+    baseTempo: 60,
+    pattern5:   [1,1],
+    engLabels5: ['',''],
+    korLabels5: ['도','도'],
+    pattern7:   [1,1],
+    engLabels7: ['',''],
+    korLabels7: ['도','도'],
+    noteDiv: 4,
+    display: 'label',
+    labelTitle: 'Ah (아)',
+    vibrato: true,
+    modeLabels: ['심화'],
+  },
+
 ];
 
 /* ════════════════════════════════════════════════
@@ -363,14 +764,15 @@ const MODE_BASIC      = 'MODE_BASIC';
 const MODE_PRACTICE   = 'MODE_PRACTICE';
 const MODE_WARMUP_1   = 'MODE_WARMUP_1';
 const MODE_WARMUP_2   = 'MODE_WARMUP_2';
-const MODE_WARMUP_3   = 'MODE_WARMUP_3';
 const MODE_ADVANCED_1 = 'MODE_ADVANCED_1';
-const MODE_ADVANCED_2 = 'MODE_ADVANCED_2';
 const LABEL_TO_MODE = {
   '기본':MODE_BASIC,'연습':MODE_PRACTICE,
-  '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,'목풀기3':MODE_WARMUP_3,
-  '심화1':MODE_ADVANCED_1,'심화2':MODE_ADVANCED_2,
+  '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,
+  '심화':MODE_ADVANCED_1,
 };
+function isStaccatoPat(){return !!(currentPat()&&currentPat().staccato);}
+function isGlissandoPat(){return !!(currentPat()&&currentPat().glissando);}
+function isVibratoPat(){return !!(currentPat()&&currentPat().vibrato);}
 
 /* ════════════════════════════════════════════════
    【 섹션 C 】 음계·코드네임·공용 유틸
@@ -384,7 +786,34 @@ function midiToName(midi,dir){const n=(dir<0)?NOTE_NAMES_FLAT:NOTE_NAMES_SHARP;r
 function isSharpNote(midi){return[1,3,6,8,10].includes(((midi%12)+12)%12);}
 const DEGREE_TO_SEMITONE={1:0,2:2,3:4,4:5,5:7,6:9,7:11,8:12};
 function degreeToSemitone(deg){const oct=Math.floor((deg-1)/7);const base=((deg-1)%7)+1;return(DEGREE_TO_SEMITONE[base]||0)+oct*12;}
-function getModeScale(mode){if(mode===MODE_WARMUP_2||mode===MODE_WARMUP_3||mode===MODE_ADVANCED_2)return SCALE_7TONE;return SCALE_5TONE;}
+function getModeScale(mode){if(mode===MODE_WARMUP_2)return SCALE_7TONE;return SCALE_5TONE;}
+
+// korLabel에서 한글 뒤 b→위첨자b, #→위첨자# 변환
+function formatKorLabel(str){
+  return str.replace(/([가-힣])([b#])/g,(_,note,acc)=>{
+    return '<span style="position:relative;display:inline-block;">'+note+'<span style="position:absolute;top:0;right:-0.6em;font-size:0.75em;line-height:1;">'+acc+'</span></span>';
+  });
+}
+
+// 현재 패턴의 실제 사용 최대 음정 오프셋 (반음 단위)
+// offsets 직접 지정 패턴은 Math.max, 아니면 degree 변환
+function getPatternMaxOffset(){
+  const pat=currentPat();
+  const allOffsets=[];
+  if(pat.offsets)allOffsets.push(...pat.offsets);
+  if(pat.warmup1&&pat.warmup1.offsets)allOffsets.push(...pat.warmup1.offsets);
+  if(pat.warmup2&&pat.warmup2.offsets)allOffsets.push(...pat.warmup2.offsets);
+  if(pat.warmup2&&pat.warmup2.offsets)allOffsets.push(...pat.warmup2.offsets);
+  if(allOffsets.length>0)return Math.max(...allOffsets);
+  const allPatterns=[];
+  if(pat.pattern5)allPatterns.push(...pat.pattern5);
+  if(pat.pattern7)allPatterns.push(...pat.pattern7);
+  if(pat.warmup1&&pat.warmup1.pattern)allPatterns.push(...pat.warmup1.pattern);
+  if(pat.warmup2&&pat.warmup2.pattern)allPatterns.push(...pat.warmup2.pattern);
+  if(pat.warmup2&&pat.warmup2.pattern)allPatterns.push(...pat.warmup2.pattern);
+  const maxDeg=Math.max(...allPatterns);
+  return degreeToSemitone(maxDeg);
+}
 
 let EX_ID=null, TMODE=MODE_BASIC;
 function currentPat(){return VOCAL_PATTERNS.find(p=>p.id===EX_ID)||VOCAL_PATTERNS[0];}
@@ -393,14 +822,12 @@ function getActivePatternArray(){
   const pat=currentPat();
   if(TMODE===MODE_WARMUP_1)return pat.warmup1.pattern;
   if(TMODE===MODE_WARMUP_2)return pat.warmup2.pattern;
-  if(TMODE===MODE_WARMUP_3)return pat.warmup3.pattern;
   return getModeScale(TMODE)===SCALE_7TONE?pat.pattern7:pat.pattern5;
 }
 function getActiveLabels(){
   const pat=currentPat();
   if(TMODE===MODE_WARMUP_1)return{eng:pat.warmup1.engLabels,kor:pat.warmup1.korLabels};
   if(TMODE===MODE_WARMUP_2)return{eng:pat.warmup2.engLabels,kor:pat.warmup2.korLabels};
-  if(TMODE===MODE_WARMUP_3)return{eng:pat.warmup3.engLabels,kor:pat.warmup3.korLabels};
   return getModeScale(TMODE)===SCALE_7TONE?{eng:pat.engLabels7,kor:pat.korLabels7}:{eng:pat.engLabels5,kor:pat.korLabels5};
 }
 // noteDiv:8이면 패턴 박수는 4 (1박당 2음), noteDiv:16이면 패턴 박수는 4 (1박당 4음), 아니면 음수-1
@@ -408,6 +835,8 @@ function getPatternBarBeats(){
   const pat=currentPat();
   if((pat.noteDiv||4)===8)return 4;
   if((pat.noteDiv||4)===16)return 4;
+  // offsets 직접 지정 패턴은 offsets.length-1
+  if(pat.offsets)return pat.offsets.length-1;
   return getActivePatternArray().length-1;
 }
 // noteDiv:8이면 1박당 2음씩, noteDiv:16이면 1박당 4음씩 → 박 인덱스로 변환
@@ -417,7 +846,14 @@ function getNoteIdxForBeat(beatIdx){
   if((pat.noteDiv||4)===16)return beatIdx*4;
   return beatIdx;
 }
-function getFullOffsets(){return getActivePatternArray().map(deg=>degreeToSemitone(deg));}
+function getFullOffsets(){
+  const pat=currentPat();
+  // offsets 직접 지정된 패턴 (마이너/코드톤 등) — warmup도 offsets 우선
+  if(TMODE===MODE_WARMUP_1&&pat.warmup1&&pat.warmup1.offsets)return pat.warmup1.offsets;
+  if(TMODE===MODE_WARMUP_2&&pat.warmup2&&pat.warmup2.offsets)return pat.warmup2.offsets;
+  if(pat.offsets)return pat.offsets;
+  return getActivePatternArray().map(deg=>degreeToSemitone(deg));
+}
 
 /* ════════════════════════════════════════════════
    【 섹션 D 】 오디오 엔진
@@ -438,6 +874,33 @@ document.addEventListener('click',ensureAudio,{passive:true});
 function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
 function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
 function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
+
+// 스타카토: 전체 박자의 50%만 재생
+function playPianoNoteStaccato(freq,startTime,fullDuration){
+  playPianoNote(freq,startTime,fullDuration*0.5);
+}
+
+// 비브라토: 길게 지속되는 풍성한 톤
+function playPianoNoteVibrato(freq,startTime,duration){
+  if(!audioCtx)return;
+  try{
+    const out=pianoGain||masterGain;
+    [{n:1,vol:0.55},{n:2,vol:0.25},{n:3,vol:0.14},{n:4,vol:0.07}].forEach(h=>{
+      const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+      osc.type='sine';osc.frequency.value=h.n*freq;
+      osc.connect(g);g.connect(out);
+      const v=0.30*h.vol;
+      g.gain.setValueAtTime(0,startTime);
+      g.gain.linearRampToValueAtTime(v,startTime+0.015);
+      g.gain.setValueAtTime(v,startTime+duration-0.05);
+      g.gain.linearRampToValueAtTime(0.0001,startTime+duration);
+      osc.start(startTime);osc.stop(startTime+duration+0.05);
+    });
+  }catch(e){}
+}
+
+// 글리산도용 슬라이더 전역 상태
+let _glissState={active:false};
 
 /* ════════════════════════════════════════════════
    【 섹션 E-공용 】 엔진 공용 상태 + 재생/정지/타이머
@@ -488,20 +951,23 @@ function startEngine(){
   if(!audioCtx)initAudio();if(audioCtx.state==='suspended')audioCtx.resume();
   isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
   beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
+  const glissWrap=document.getElementById('glissando-slider-wrap');
+  if(glissWrap&&glissWrap._setTransition)glissWrap._setTransition(Math.round(beatInterval*1000));
   if(isPaused){isPaused=false;stopScheduled=false;beatQueue=[];
     if(pausedElapsed>0)mainStartWallTime=Date.now()-pausedElapsed*1000;
     nextBeatTime=audioCtx.currentTime+0.05;
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);return;}
   stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
   activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
-  _fn_onEngineStart(); // 모드별 시작 초기화
+  if(isGlissandoPat())_resetGlissandoSlider(true);
+  _fn_onEngineStart();
   prevRootMidi=_fn_getCurrentRootMidi();
   nextBeatTime=audioCtx.currentTime+0.05;
   schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
 }
 function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
-function stopExercise(){stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();}
+function stopExercise(){stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
 function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
 
 // 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
@@ -533,37 +999,51 @@ function _commonSchedulePattern(time, getRoot, getCurrentDir){
   const rootMidi=getRoot();const offsets=getFullOffsets();const barBeats=getPatternBarBeats();
   const pat=currentPat();const nd=pat.noteDiv||4;const is8=nd===8;const is16=nd===16;
   const step=patStep;
+  const staccato=!!pat.staccato;
+  const glissando=!!pat.glissando;
+  const vibrato=!!pat.vibrato;
 
   if(is16){
-    // 1박에 16분음표 4개 (step 0~3) → 총 16음
-    // 마지막 17번째 음(도)은 카운팅 idx=0에서 재생됨 (기존 시스템 설계)
     const quarterBeat=beatInterval*0.25;
-    const labelCount=getActiveLabels().eng.length; // 9
+    const labelCount=getActiveLabels().eng.length;
     for(let q=0;q<4;q++){
       const noteIdx=step*4+q;
       const noteMidi=rootMidi+offsets[Math.min(noteIdx,offsets.length-1)];
-      // 음 0~8: 라벨 0~8, 음 9~15: 라벨 1~7 (중간 도 겹침 없이 이어서 순환)
       const visNoteIdx=noteIdx<labelCount?noteIdx:noteIdx-(labelCount-1);
       playPianoNote(midiToFreq(noteMidi),time+quarterBeat*q,quarterBeat*1.7);
       beatQueue.push({time:time+quarterBeat*q,vis:{phase:'pattern',beatIdx:step,noteIdx:visNoteIdx,keyMidi:rootMidi,noteMidi,dirForDisplay:getCurrentDir()}});
     }
   } else if(is8){
-    // 1박에 8분음표 2개 — 첫음(time), 둘째음(time+beatInterval/2)
     const noteIdx1=step*2;const noteIdx2=step*2+1;
     const noteMidi1=rootMidi+offsets[Math.min(noteIdx1,offsets.length-1)];
     const noteMidi2=rootMidi+offsets[Math.min(noteIdx2,offsets.length-1)];
     const halfBeat=beatInterval*0.5;
-    playPianoNote(midiToFreq(noteMidi1),time,halfBeat*1.8);
-    playPianoNote(midiToFreq(noteMidi2),time+halfBeat,halfBeat*1.8);
-    const vis1={phase:'pattern',beatIdx:step,noteIdx:noteIdx1,keyMidi:rootMidi,noteMidi:noteMidi1,dirForDisplay:getCurrentDir()};
-    const vis2={phase:'pattern',beatIdx:step,noteIdx:noteIdx2,keyMidi:rootMidi,noteMidi:noteMidi2,dirForDisplay:getCurrentDir()};
-    beatQueue.push({time,vis:vis1});
-    beatQueue.push({time:time+halfBeat,vis:vis2});
+    const dur=staccato?halfBeat*0.5:halfBeat*1.8;
+    playPianoNote(midiToFreq(noteMidi1),time,dur);
+    playPianoNote(midiToFreq(noteMidi2),time+halfBeat,dur);
+    const staccatoOffMs=staccato?halfBeat*0.5*1000:null;
+    beatQueue.push({time,vis:{phase:'pattern',beatIdx:step,noteIdx:noteIdx1,keyMidi:rootMidi,noteMidi:noteMidi1,dirForDisplay:getCurrentDir(),staccatoOffMs}});
+    beatQueue.push({time:time+halfBeat,vis:{phase:'pattern',beatIdx:step,noteIdx:noteIdx2,keyMidi:rootMidi,noteMidi:noteMidi2,dirForDisplay:getCurrentDir(),staccatoOffMs}});
   } else {
-    const noteOffset=offsets[Math.min(step,offsets.length-2)];const noteMidi=rootMidi+noteOffset;
-    playPianoNote(midiToFreq(noteMidi),time,beatInterval*1.85);
-    const vis={phase:'pattern',beatIdx:step,noteIdx:step,keyMidi:rootMidi,noteMidi,dirForDisplay:getCurrentDir()};
-    beatQueue.push({time,vis});
+    if(vibrato){
+      const noteMidi=rootMidi+offsets[0];
+      const totalDur=beatInterval*barBeats*1.2;
+      if(step===0){
+        playPianoNoteVibrato(midiToFreq(noteMidi),time,totalDur);
+        beatQueue.push({time,vis:{phase:'pattern',beatIdx:0,noteIdx:0,keyMidi:rootMidi,noteMidi,dirForDisplay:getCurrentDir()}});
+      }
+    } else if(glissando){
+      // 도솔도솔도: step%2===0→도(1), step%2===1→솔(5)
+      // glissandoDir: 0=좌→우(도출발→솔도착), 1=우→좌(솔출발→도도착)
+      const noteOffset=offsets[Math.min(step,offsets.length-1)];const noteMidi=rootMidi+noteOffset;
+      playPianoNote(midiToFreq(noteMidi),time,beatInterval*1.85);
+      const glissDir=step%2===0?0:1;
+      beatQueue.push({time,vis:{phase:'pattern',beatIdx:step,noteIdx:step,keyMidi:rootMidi,noteMidi,dirForDisplay:getCurrentDir(),glissandoStep:step,glissandoDir:glissDir,glissandoBeatInterval:beatInterval}});
+    } else {
+      const noteOffset=offsets[Math.min(step,offsets.length-2)];const noteMidi=rootMidi+noteOffset;
+      playPianoNote(midiToFreq(noteMidi),time,beatInterval*1.85);
+      beatQueue.push({time,vis:{phase:'pattern',beatIdx:step,noteIdx:step,keyMidi:rootMidi,noteMidi,dirForDisplay:getCurrentDir()}});
+    }
   }
 
   patStep++;
@@ -576,8 +1056,19 @@ function _commonSchedulePattern(time, getRoot, getCurrentDir){
 
 // 공용 비주얼 헬퍼
 function updateVocalBeats(barType,beatIdx){for(let i=0;i<4;i++){const el=document.getElementById('vcnt-'+i);if(el)el.className='vbn'+(barType===BAR_TYPE_COUNTING&&i===beatIdx?' active-cnt':' dim');}const bb=getPatternBarBeats();for(let i=0;i<bb;i++){const el=document.getElementById('vpat-'+i);if(el)el.className='vbn'+(barType===BAR_TYPE_PATTERN&&i===beatIdx?' active-pat':' dim');}}
-function clearVocalBeats(){for(let i=0;i<4;i++){const el=document.getElementById('vcnt-'+i);if(el)el.className='vbn dim';}for(let i=0;i<8;i++){const el=document.getElementById('vpat-'+i);if(el)el.className='vbn dim';}}
-function updateVocalLabelHighlight(noteIdx){const total=getActiveLabels().eng.length;for(let i=0;i<total;i++){const e=document.getElementById('vle-'+i);if(e)e.classList.toggle('lit',i===noteIdx);const k=document.getElementById('vlk-'+i);if(k)k.classList.toggle('lit',i===noteIdx);}}
+function clearVocalBeats(){for(let i=0;i<4;i++){const el=document.getElementById('vcnt-'+i);if(el)el.className='vbn dim';}for(let i=0;i<12;i++){const el=document.getElementById('vpat-'+i);if(el)el.className='vbn dim';}}
+let _staccatoTimer=null;
+function updateVocalLabelHighlight(noteIdx,staccatoOffMs){
+  if(_staccatoTimer){clearTimeout(_staccatoTimer);_staccatoTimer=null;}
+  const total=getActiveLabels().eng.length;
+  for(let i=0;i<total;i++){const e=document.getElementById('vle-'+i);if(e)e.classList.toggle('lit',i===noteIdx);const k=document.getElementById('vlk-'+i);if(k)k.classList.toggle('lit',i===noteIdx);}
+  if(noteIdx>=0&&staccatoOffMs!=null&&staccatoOffMs>0){
+    _staccatoTimer=setTimeout(()=>{
+      for(let i=0;i<total;i++){const e=document.getElementById('vle-'+i);if(e)e.classList.remove('lit');const k=document.getElementById('vlk-'+i);if(k)k.classList.remove('lit');}
+      _staccatoTimer=null;
+    },staccatoOffMs);
+  }
+}
 function setInfoBox(action,sub){const ae=document.getElementById('info-action');if(ae)ae.textContent=action;const se=document.getElementById('info-sub');if(se)se.textContent=sub;const sr=document.getElementById('scale-row');if(sr)sr.remove();}
 function updateLoopCounter(){const lcc=document.getElementById('loop-counter');if(!lcc)return;lcc.textContent=loopCount+'/'+_fn_getTotalLoops();}
 function _setEl(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
@@ -623,17 +1114,14 @@ function basic_applyVisual(vis){
   const pat=currentPat();
   if(vis.phase==='counting'){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
       if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else updateVocalLabelHighlight(-1);
     }
-    if(vis.idx===0&&vis.keyMidi!=null){
-      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:basic_getCurrentDir();
-      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
-      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
-    }
+    // 3박에서만 음이름+방향 같이 바꿈
     if(vis.idx===2&&vis.newRootMidi!=null){
       const dir=vis.nextDir!=null?vis.nextDir:basic_getCurrentDir();
       _setEl('vocal-key-display',midiToName(vis.newRootMidi,dir));
@@ -642,19 +1130,17 @@ function basic_applyVisual(vis){
     updateLoopCounter();
   } else if(vis.phase==='pattern'){
     updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
-    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
-    if(vis.keyMidi!=null){
-      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:basic_getCurrentDir();
-      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
-      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
-    }
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx,vis.staccatoOffMs);
+    if(pat.glissando)_applyGlissandoVisual(vis);
+    if(pat.vibrato)_applyVibratoVisual(vis);
     updateLoopCounter();
   }
 }
 
 function _commonOnComplete(){
+  if(isGlissandoPat())_resetGlissandoSlider();
   const pat=currentPat();
-  const isAdv=TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2;
+  const isAdv=TMODE===MODE_ADVANCED_1;
   if(pat.display==='label'){
     if(isAdv){_setEl('adv-cur-key','🎉');_setEl('adv-next-key','성공');}
     else{
@@ -712,17 +1198,14 @@ function prac_applyVisual(vis){
   const pat=currentPat();
   if(vis.phase==='counting'){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
       if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else updateVocalLabelHighlight(-1);
     }
-    if(vis.idx===0&&vis.keyMidi!=null){
-      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:prac_getCurrentDir();
-      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
-      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
-    }
+    // 3박에서만 음이름+방향 같이 바꿈
     if(vis.idx===2&&vis.newRootMidi!=null){
       const dir=vis.nextDir!=null?vis.nextDir:prac_getCurrentDir();
       _setEl('vocal-key-display',midiToName(vis.newRootMidi,dir));
@@ -731,12 +1214,9 @@ function prac_applyVisual(vis){
     updateLoopCounter();
   } else if(vis.phase==='pattern'){
     updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
-    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
-    if(vis.keyMidi!=null){
-      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:prac_getCurrentDir();
-      _setEl('vocal-key-display',midiToName(vis.keyMidi,dir));
-      _setEl('vocal-dir-display',dir>=0?'▲ 상행 중':'▼ 하행 중');
-    }
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx,vis.staccatoOffMs);
+    if(pat.glissando)_applyGlissandoVisual(vis);
+    if(pat.vibrato)_applyVibratoVisual(vis);
     updateLoopCounter();
   }
 }
@@ -753,8 +1233,8 @@ let wu_keyIdx=0;
 
 function wu_getSeq(){
   const pat=currentPat();
-  if(TMODE===MODE_WARMUP_3)return pat.warmup3Seq;
-  return pat.warmup12Seq;
+  if(TMODE===MODE_WARMUP_2)return pat.warmup2Seq;
+  return pat.warmup1Seq;
 }
 function wu_getDirAt(idx){const seq=wu_getSeq();if(idx+1>=seq.length)return -1;return seq[idx+1]>=seq[idx]?1:-1;}
 function wu_getCurrentMidi(){const seq=wu_getSeq();return seq[Math.min(wu_keyIdx,seq.length-1)];}
@@ -762,7 +1242,7 @@ function wu_getNextMidi()   {const seq=wu_getSeq();return seq[Math.min(wu_keyIdx
 function wu_isLastKey()     {return wu_keyIdx>=wu_getSeq().length-1;}
 function wu_advanceKey()    {wu_keyIdx=Math.min(wu_keyIdx+1,wu_getSeq().length-1);}
 function wu_onEngineStart() {}
-function wu_getTotalLoops() {const pat=currentPat();if(TMODE===MODE_WARMUP_3)return pat.warmup3Seq.length;return pat.warmup12Seq.length;}
+function wu_getTotalLoops() {const pat=currentPat();if(TMODE===MODE_WARMUP_2)return pat.warmup2Seq.length;return pat.warmup1Seq.length;}
 function wu_reset()         {wu_keyIdx=0;}
 // 목풀기는 항상 b 표기
 function wu_getCurrentDir() {return wu_getDirAt(wu_keyIdx);}
@@ -786,20 +1266,15 @@ function wu_applyVisual(vis){
   const pat=currentPat();
   if(vis.phase==='counting'){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
       if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else updateVocalLabelHighlight(-1);
     }
-    if(vis.idx===0&&vis.keyMidi!=null){
-      // 목풀기: 항상 b 표기
-      _setEl('vocal-key-display',midiToName(vis.keyMidi,-1));
-      const dir=vis.dirForDisplay!=null?vis.dirForDisplay:wu_getDirAt(wu_keyIdx);
-      _setEl('vocal-dir-display',dir>=0?'▲ 상행':'▼ 하행');
-    }
+    // 3박에서만 음이름+방향 같이 바꿈 (목풀기: 항상 b 표기)
     if(vis.idx===2&&vis.newRootMidi!=null){
-      // 목풀기: 항상 b 표기
       _setEl('vocal-key-display',midiToName(vis.newRootMidi,-1));
       const dir=vis.nextDir!=null?vis.nextDir:wu_getDirAt(wu_keyIdx);
       _setEl('vocal-dir-display',dir>=0?'▲ 상행':'▼ 하행');
@@ -807,9 +1282,9 @@ function wu_applyVisual(vis){
     updateLoopCounter();
   } else if(vis.phase==='pattern'){
     updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
-    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
-    // 목풀기: 패턴 중 방향 표시 고정 (카운팅 3박에서만 업데이트)
-    if(vis.keyMidi!=null){_setEl('vocal-key-display',midiToName(vis.keyMidi,-1));}
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx,vis.staccatoOffMs);
+    if(pat.glissando)_applyGlissandoVisual(vis);
+    if(pat.vibrato)_applyVibratoVisual(vis);
     updateLoopCounter();
   }
 }
@@ -820,7 +1295,7 @@ function wu_onComplete(){
 }
 
 /* ════════════════════════════════════════════════
-   【 섹션 E-ADV 】 심화1/2 — 완전 독립
+   【 섹션 E-ADV 】 심화 — 완전 독립
    ※ 다른 모드와 변수/함수 공유 없음
 ════════════════════════════════════════════════ */
 let adv_dir='basic';         // 'basic'|'loop'
@@ -830,6 +1305,7 @@ let adv_rangeMin=48,adv_rangeMax=84;
 let adv_rangeStartDir=1;
 let adv_rangeSelected=false;
 let adv_rangeFirstMidi=null;
+let adv_displayStart=null,adv_displayEnd=null; // 클릭 순서 기준 표시용
 let adv_intervalOrder=[];
 let adv_intervalRandom=false;
 let adv_intervalSeqIdx=0;
@@ -888,6 +1364,7 @@ function adv_onEngineStart(){
 function adv_reset(){
   adv_intervalOrder=[];adv_intervalRandom=false;adv_intervalSeqIdx=0;
   adv_dir='basic';adv_rangeSelected=false;adv_rangeFirstMidi=null;
+  adv_displayStart=null;adv_displayEnd=null;
   adv_rangeMin=48;adv_rangeMax=84;adv_rangeStartDir=1;
   adv_loopStart=60;adv_loopEnd=72;adv_loopDir=1;
   adv_currentMidi=60;adv_pendingMidi=-1;
@@ -919,6 +1396,7 @@ function adv_applyVisual(vis){
   const pat=currentPat();
   if(vis.phase==='counting'){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
       if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
@@ -942,7 +1420,9 @@ function adv_applyVisual(vis){
     updateLoopCounter();
   } else if(vis.phase==='pattern'){
     updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
-    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx);
+    if(pat.display==='label')updateVocalLabelHighlight(vis.noteIdx,vis.staccatoOffMs);
+    if(pat.glissando)_applyGlissandoVisual(vis);
+    if(pat.vibrato)_applyVibratoVisual(vis);
     if(vis.keyMidi!=null){
       const dir=vis.dirForDisplay!=null?vis.dirForDisplay:adv_getCurrentDir();
       _setEl('adv-cur-key',midiToName(vis.keyMidi,dir));
@@ -952,6 +1432,181 @@ function adv_applyVisual(vis){
 }
 
 function adv_onComplete(){_commonOnComplete();}
+
+/* ════════════════════════════════════════════════
+   【 글리산도 비주얼 헬퍼 】
+   슬라이더 왕복 동작:
+   step0 (도, 1박): 0% → 100% (트랜지션 on)
+   step1 (솔, 2박): 100% → 0%  (트랜지션 on, 이미 100%에 있음)
+   step2 (도, 3박): 0% → 100% (트랜지션 on, 이미 0%에 있음)
+   step3 (솔, 4박): 100% → 0%  (트랜지션 on, 이미 100%에 있음)
+   → 끝점에서 바로 반환이라 리셋 불필요
+════════════════════════════════════════════════ */
+// 글리산도 계이름 페이드 타이머
+let _glissLabelFadeTimer=null;
+
+function _applyGlissandoVisual(vis){
+  const step=vis.glissandoStep;
+  const glissDir=vis.glissandoDir;
+  const beatMs=Math.round((vis.glissandoBeatInterval||beatInterval)*1000);
+
+  const thumb=document.getElementById('gliss-thumb');
+  const lineL=document.getElementById('gliss-line-fill');
+  const lineR=document.getElementById('gliss-line-fill-r');
+
+  if(!thumb||!lineL||!lineR)return;
+
+  // fade-out 중이면 취소하고 즉시 복원 (깜빡임 방지)
+  if(_glissFadeTimer){clearTimeout(_glissFadeTimer);_glissFadeTimer=null;}
+  thumb.style.opacity='1';
+  lineL.style.opacity='1'; lineL.style.filter='blur(0px)';
+  lineR.style.opacity='1'; lineR.style.filter='blur(0px)';
+
+  updateVocalLabelHighlight(step);
+
+  thumb.style.transition='left '+beatMs+'ms linear';
+
+  if(glissDir===0){
+    // 좌→우: lineL(left=0앵커) width 확장. lineR 즉시 숨김
+    lineR.style.transition='none'; lineR.style.width='0%';
+    lineL.style.transition='none';
+    lineL.style.width='0%';
+    lineL.style.background='linear-gradient(to right, rgba(247,106,200,0.03) 0%, rgba(247,106,200,0.7) 100%)';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      lineL.style.transition='width '+beatMs+'ms linear';
+      lineL.style.width='100%';
+      thumb.style.left='100%';
+    }));
+  } else {
+    // 우→좌: lineR(right=0앵커) width 확장. lineL은 fade-out으로 자연스럽게 교체
+    const fadeMs=Math.min(beatMs*0.35, 180);
+    lineL.style.transition='opacity '+fadeMs+'ms ease'; lineL.style.opacity='0';
+    lineR.style.transition='none';
+    lineR.style.width='0%';
+    lineR.style.background='linear-gradient(to left, rgba(247,106,200,0.03) 0%, rgba(247,106,200,0.7) 100%)';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      lineR.style.transition='width '+beatMs+'ms linear';
+      lineR.style.width='100%';
+      thumb.style.left='0%';
+      setTimeout(()=>{ lineL.style.transition='none'; lineL.style.width='0%'; lineL.style.opacity='1'; }, fadeMs+20);
+    }));
+  }
+}
+
+// 정지 시 슬라이더 초기 위치(왼쪽)로 리셋
+let _glissFadeTimer=null;
+function _resetGlissandoSlider(instant){
+  if(_glissLabelFadeTimer){clearTimeout(_glissLabelFadeTimer);_glissLabelFadeTimer=null;}
+  if(_glissFadeTimer){clearTimeout(_glissFadeTimer);_glissFadeTimer=null;}
+  const thumb=document.getElementById('gliss-thumb');
+  const lineL=document.getElementById('gliss-line-fill');
+  const lineR=document.getElementById('gliss-line-fill-r');
+  if(instant){
+    // 즉시 리셋 (새 시작 직전)
+    if(thumb){thumb.style.transition='none';thumb.style.left='0%';thumb.style.opacity='1';thumb.style.background='rgba(247,106,200,1)';thumb.style.boxShadow='0 0 10px 3px rgba(247,106,200,1)';}
+    if(lineL){lineL.style.transition='none';lineL.style.opacity='1';lineL.style.width='0%';}
+    if(lineR){lineR.style.transition='none';lineR.style.opacity='1';lineR.style.width='0%';}
+  } else {
+    // 블러+opacity fade-out (패턴→카운팅 전환 시) — thumb는 건드리지 않음(깜빡임 방지)
+    if(lineL){lineL.style.transition='opacity 0.35s ease, filter 0.35s ease';lineL.style.opacity='0';lineL.style.filter='blur(4px)';}
+    if(lineR){lineR.style.transition='opacity 0.35s ease, filter 0.35s ease';lineR.style.opacity='0';lineR.style.filter='blur(4px)';}
+    _glissFadeTimer=setTimeout(()=>{
+      if(lineL){lineL.style.transition='none';lineL.style.width='0%';lineL.style.opacity='1';lineL.style.filter='blur(0px)';}
+      if(lineR){lineR.style.transition='none';lineR.style.width='0%';lineR.style.opacity='1';lineR.style.filter='blur(0px)';}
+      _glissFadeTimer=null;
+    },380);
+  }
+}
+
+function _buildGlissandoUI(container){
+  const wrap=document.createElement('div');
+  wrap.id='glissando-slider-wrap';
+  wrap.style.cssText='width:100%;max-width:364px;display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 auto;';
+  const trackWrap=document.createElement('div');
+  trackWrap.style.cssText='width:100%;position:relative;height:28px;display:flex;align-items:center;';
+  const track=document.createElement('div');
+  track.style.cssText='width:100%;height:3px;background:rgba(247,106,200,0.25);border-radius:2px;position:relative;';
+  const lineFill=document.createElement('div');
+  lineFill.id='gliss-line-fill';
+  lineFill.style.cssText='position:absolute;left:0;top:0;height:100%;width:0%;background:transparent;border-radius:2px;transition:width 0ms;';
+  track.appendChild(lineFill);
+  // 우→좌 전용: right앵커 (오른쪽에서 왼쪽으로 자람)
+  const lineFillR=document.createElement('div');
+  lineFillR.id='gliss-line-fill-r';
+  lineFillR.style.cssText='position:absolute;right:0;top:0;height:100%;width:0%;background:transparent;border-radius:2px;transition:width 0ms;';
+  track.appendChild(lineFillR);
+  const thumb=document.createElement('div');
+  thumb.id='gliss-thumb';
+  thumb.style.cssText='position:absolute;top:50%;left:0%;transform:translate(-50%,-50%);width:3px;height:13px;border-radius:2px;background:rgba(247,106,200,1);box-shadow:0 0 10px 3px rgba(247,106,200,1);transition:left 0ms;';
+  track.appendChild(thumb);
+  trackWrap.appendChild(track);
+  wrap.appendChild(trackWrap);
+  // 라벨박스 바로 앞에 삽입 (라벨박스 위)
+  const labelBox=container.querySelector('#vocal-label-box');
+  if(labelBox){
+    container.insertBefore(wrap,labelBox);
+  } else {
+    container.appendChild(wrap);
+  }
+  wrap._setTransition=(ms)=>{
+    if(lineFill)lineFill.style.transition='width '+ms+'ms linear';
+    if(lineFillR)lineFillR.style.transition='width '+ms+'ms linear';
+    if(thumb)thumb.style.transition='left '+ms+'ms linear';
+  };
+}
+
+/* ════════════════════════════════════════════════
+   【 비브라토 비주얼 헬퍼 】
+════════════════════════════════════════════════ */
+let _vibratoAnimId=null;
+let _vibratoStartTime=0;
+
+function _applyVibratoVisual(vis){
+  if(vis.beatIdx===0){_startVibratoAnim();updateVocalLabelHighlight(0);}
+}
+function _startVibratoAnim(){
+  const wave=document.getElementById('vibrato-wave');if(!wave)return;
+  if(_vibratoAnimId){cancelAnimationFrame(_vibratoAnimId);_vibratoAnimId=null;}
+  _vibratoStartTime=performance.now();
+  function frame(now){
+    if(!isPlaying){_stopVibratoAnim();return;}
+    const t=(now-_vibratoStartTime)/1000;
+    const svg=wave.querySelector('svg');
+    if(svg){
+      const W=300,H=60,cy=H/2;
+      let d='M 0 '+cy;
+      for(let x=0;x<=W;x+=2){const y=cy+Math.sin((x/W)*Math.PI*8+t*5.5*Math.PI*2)*18;d+=' L '+x+' '+y;}
+      const path=svg.querySelector('path');if(path)path.setAttribute('d',d);
+    }
+    _vibratoAnimId=requestAnimationFrame(frame);
+  }
+  _vibratoAnimId=requestAnimationFrame(frame);
+}
+function _stopVibratoAnim(){
+  if(_vibratoAnimId){cancelAnimationFrame(_vibratoAnimId);_vibratoAnimId=null;}
+  const wave=document.getElementById('vibrato-wave');
+  if(wave){const path=wave.querySelector('path');if(path)path.setAttribute('d','M 0 30 L 300 30');}
+}
+function _buildVibratoUI(body){
+  const wrap=document.createElement('div');
+  wrap.style.cssText='width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:14px;margin:0 auto;';
+  const desc=document.createElement('div');
+  desc.style.cssText='font-size:0.72rem;color:var(--text2);letter-spacing:1px;font-weight:600;text-transform:uppercase;';
+  desc.textContent='비브라토 가이드';
+  wrap.appendChild(desc);
+  const hint=document.createElement('div');
+  hint.style.cssText='font-size:0.78rem;color:var(--text2);text-align:center;line-height:1.6;white-space:pre-line;';
+  hint.textContent='카운팅 후 "도" 음을 유지하며 떨림을 내세요.\n숨이 끊길 때까지 계속 연습합니다.';
+  wrap.appendChild(hint);
+  const waveWrap=document.createElement('div');waveWrap.id='vibrato-wave';waveWrap.style.cssText='width:100%;';
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 300 60');svg.setAttribute('width','100%');svg.setAttribute('height','60');
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d','M 0 30 L 300 30');path.setAttribute('stroke','var(--accent2)');
+  path.setAttribute('stroke-width','2.5');path.setAttribute('fill','none');path.setAttribute('stroke-linecap','round');
+  svg.appendChild(path);waveWrap.appendChild(svg);wrap.appendChild(waveWrap);
+  body.appendChild(wrap);
+}
 
 /* ════════════════════════════════════════════════
    모드 진입 시 함수 포인터 세팅
@@ -975,7 +1630,7 @@ function setupModeFunctions(){
     _fn_isLastKey=prac_isLastKey;
     _fn_onEngineStart=prac_onEngineStart;
     _fn_getTotalLoops=prac_getTotalLoops;
-  } else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3){
+  } else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2){
     _fn_scheduleOneBeat=wu_scheduleOneBeat;
     _fn_applyVisual=wu_applyVisual;
     _fn_onComplete=wu_onComplete;
@@ -984,7 +1639,7 @@ function setupModeFunctions(){
     _fn_isLastKey=wu_isLastKey;
     _fn_onEngineStart=wu_onEngineStart;
     _fn_getTotalLoops=wu_getTotalLoops;
-  } else if(TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2){
+  } else if(TMODE===MODE_ADVANCED_1){
     _fn_scheduleOneBeat=adv_scheduleOneBeat;
     _fn_applyVisual=adv_applyVisual;
     _fn_onComplete=adv_onComplete;
@@ -1007,8 +1662,8 @@ function hardReset(){
   stopEngine();elapsedSeconds=0;isPaused=false;pausedElapsed=0;
   if(TMODE===MODE_BASIC)basic_reset();
   else if(TMODE===MODE_PRACTICE)prac_reset();
-  else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)wu_reset();
-  else if(TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2)adv_reset();
+  else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)wu_reset();
+  else if(TMODE===MODE_ADVANCED_1)adv_reset();
   setupModeFunctions();
   buildPracticeUI();
 }
@@ -1022,13 +1677,13 @@ function buildPracticeUI(){
   body.innerHTML='';body.classList.add('vocal-expand');
   const pat=currentPat();
   const barBeats=getPatternBarBeats();
-  const isAdv=TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2;
+  const isAdv=TMODE===MODE_ADVANCED_1;
 
   /* ── 모드 탭 ── */
   const mt=document.createElement('div');mt.className='mode-tabs';
   pat.modeLabels.forEach(label=>{
     const modeVal=LABEL_TO_MODE[label]||MODE_BASIC;
-    const isAdvTab=modeVal===MODE_ADVANCED_1||modeVal===MODE_ADVANCED_2;
+    const isAdvTab=modeVal===MODE_ADVANCED_1;
     const b=document.createElement('button');
     b.className='m-tab'+(isAdvTab?' adv':'')+(TMODE===modeVal?' active':'');
     b.textContent=label;
@@ -1038,8 +1693,8 @@ function buildPracticeUI(){
       mt.querySelectorAll('.m-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
       if(modeVal===MODE_BASIC)basic_reset();
       else if(modeVal===MODE_PRACTICE)prac_reset();
-      else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2||modeVal===MODE_WARMUP_3)wu_reset();
-      else if(modeVal===MODE_ADVANCED_1||modeVal===MODE_ADVANCED_2)adv_reset();
+      else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2)wu_reset();
+      else if(modeVal===MODE_ADVANCED_1)adv_reset();
       hardReset();
     };
     mt.appendChild(b);
@@ -1071,11 +1726,11 @@ function buildPracticeUI(){
     } else {
       const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='vocal-key-display';
       // 목풀기: b표기, 기본/연습: 시작 방향 기준
-      const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
+      const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
       kMid.textContent=midiToName(_fn_getCurrentRootMidi(),initDir);
       kPan.appendChild(kMid);
       const dEl=document.createElement('div');dEl.className='vkp-dir';dEl.id='vocal-dir-display';
-      const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)?wu_getDirAt(wu_keyIdx):initDir;
+      const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?wu_getDirAt(wu_keyIdx):initDir;
       dEl.textContent=initMoveDir>=0?'▲ 상행':'▼ 하행';
       kPan.appendChild(dEl);
     }
@@ -1085,6 +1740,7 @@ function buildPracticeUI(){
     // labelTitle이 있으면 윗줄에 표시
     if(pat.labelTitle){
       const titleEl=document.createElement('div');
+      titleEl.id='vowel-title-display';
       titleEl.style.cssText='font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:0.5px;';
       titleEl.textContent=pat.labelTitle;
       labArea.appendChild(titleEl);
@@ -1102,12 +1758,15 @@ function buildPracticeUI(){
         // eng span도 만들되 숨김 (하이라이트 로직 호환)
         const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
       }
-      const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.textContent=kor||'';
+      const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.innerHTML=formatKorLabel(kor||'');
       col.appendChild(kS);lblsRow.appendChild(col);
     });
     labArea.appendChild(lblsRow);
     vlb.appendChild(labArea);body.appendChild(vlb);
   }
+
+  /* ── 글리산도 슬라이더: 라벨박스 바로 아래 삽입 ── */
+  if(pat.glissando)_buildGlissandoUI(body);
 
   /* ── 타이머 + 루프 카운터 ── */
   const totalLoops=_fn_getTotalLoops();
@@ -1121,13 +1780,17 @@ function buildPracticeUI(){
   body.appendChild(ctrl);
 
   /* ── 모드별 키 UI ── */
-  if(TMODE===MODE_BASIC){buildBasicKeyUI(body);buildTempoUI(body);}
+  if(TMODE===MODE_BASIC){buildVowelSelector(body);buildBasicKeyUI(body);buildTempoUI(body);}
   if(TMODE===MODE_PRACTICE)buildPracticeKeyUI(body); // 내부에서 buildTempoUI 호출
-  if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3){
+  if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2){
+    buildVowelSelector(body);
     buildSeqGridUI(body,wu_getSeq(),wu_keyIdx,(idx)=>{wu_keyIdx=idx;});
     buildTempoUI(body);
   }
-  if(TMODE===MODE_ADVANCED_1||TMODE===MODE_ADVANCED_2)buildAdvancedPanel(body);
+  if(TMODE===MODE_ADVANCED_1)buildAdvancedPanel(body);
+
+  /* ── 특수 패턴 전용 UI ── */
+  if(pat.vibrato)_buildVibratoUI(body);
 
   /* ── 볼륨 ── */
   const vw=document.createElement('div');vw.className='vol-wrap';
@@ -1195,6 +1858,7 @@ function buildPracticeKeyUI(body){
   function renderPracticeGrid(){
     while(inner.children.length>2)inner.removeChild(inner.lastChild);
     const dispDir=(firstClickMidi!==null)?1:prac_startDir;
+    const maxOffset=getPatternMaxOffset();
     const allBtns=[];
     for(let midi=PMIN;midi<=PMAX;midi++){
       const name=midiToName(midi,dispDir);
@@ -1203,9 +1867,11 @@ function buildPracticeKeyUI(body){
       if(firstClickMidi!==null){
         if(midi===firstClickMidi)cls+=' range-start';
       } else if(prac_rangeSelected){
-        if(midi===prac_rangeStart){cls+=' range-start';}
-        else if(midi===prac_rangeEnd){cls+=' range-end';}
-        else if(midi>prac_rangeStart&&midi<prac_rangeEnd){cls+=' in-range';}
+        // 시작음·끝음 표시
+        if(midi===prac_rangeStart)cls+=' range-start';
+        else if(midi===prac_rangeEnd)cls+=' range-end';
+        // 실제 사용 범위: 각 근음(rangeStart~rangeEnd)에서 패턴 최대 오프셋까지
+        else if(midi>prac_rangeStart&&midi<=prac_rangeEnd+maxOffset)cls+=' in-range';
       }
       btn.className=cls;btn.textContent=name;btn.setAttribute('data-midi',midi);
       btn.onclick=()=>{
@@ -1267,7 +1933,43 @@ function buildSeqGridUI(body,seq,selectedIdx,onSelect){
   body.appendChild(wrap);return wrap;
 }
 
+/* ── 발음 선택기 UI (vowelOptions 있는 패턴에만 사용) ── */
+function buildVowelSelector(body){
+  const pat=currentPat();
+  if(!pat.vowelOptions||pat.vowelOptions.length===0)return;
+  const outer=document.createElement('div');
+  outer.style.cssText='width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;';
+  const lbl=document.createElement('div');
+  lbl.style.cssText='font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;align-self:center;';
+  lbl.textContent='발음 선택';
+  outer.appendChild(lbl);
+  const btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;';
+  const btns=[];
+  pat.vowelOptions.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='m-tab'+(i===0?' active':'');
+    b.style.cssText='padding:7px 20px;font-size:0.85rem;';
+    b.textContent=opt.label;
+    b.onclick=()=>{
+      // labelTitle 영역 텍스트 교체
+      const titleEl=document.getElementById('vowel-title-display');
+      if(titleEl)titleEl.textContent=opt.title;
+      // 버튼 active 상태 교체
+      btns.forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      // 재생 중이면 정지
+      if(isPlaying)stopExercise();
+    };
+    btns.push(b);
+    btnRow.appendChild(b);
+  });
+  outer.appendChild(btnRow);
+  body.appendChild(outer);
+}
+
 function buildTempoUI(body){
+  const maxBPM=currentPat()&&currentPat().vibrato?300:200;
   const tDiv=document.createElement('div');tDiv.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.78rem;color:var(--text2);width:100%;';
   const tLabel=document.createElement('span');tLabel.textContent='템포';tDiv.appendChild(tLabel);
   const tWrap=document.createElement('div');tWrap.className='tempo-wrap';
@@ -1275,11 +1977,10 @@ function buildTempoUI(body){
   const tminus=document.createElement('button');tminus.className='tempo-btn';tminus.textContent='−';
   const tplus=document.createElement('button');tplus.className='tempo-btn';tplus.textContent='+';
 
-  // BPM 표시 — 클릭 시 input으로 전환
   const tval=document.createElement('div');tval.className='tempo-val';tval.id='tempo-val';tval.textContent=currentBPM+' BPM';
 
   function applyBPM(val){
-    const v=Math.min(200,Math.max(40,parseInt(val)||currentBPM));
+    const v=Math.min(maxBPM,Math.max(40,parseInt(val)||currentBPM));
     currentBPM=v;beatInterval=60/currentBPM;
     tval.textContent=currentBPM+' BPM';
   }
@@ -1290,15 +1991,12 @@ function buildTempoUI(body){
     inp.value=String(currentBPM);
     tval.replaceWith(inp);
     inp.select();
-    function commit(){
-      applyBPM(inp.value);
-      inp.replaceWith(tval);
-    }
+    function commit(){applyBPM(inp.value);inp.replaceWith(tval);}
     inp.onblur=commit;
     inp.onkeydown=(e)=>{
       if(e.key==='Enter'){inp.blur();}
       else if(e.key==='Escape'){inp.value=String(currentBPM);inp.blur();}
-      else if(e.key==='ArrowUp'){e.preventDefault();inp.value=String(Math.min(200,parseInt(inp.value||currentBPM)+1));}
+      else if(e.key==='ArrowUp'){e.preventDefault();inp.value=String(Math.min(maxBPM,parseInt(inp.value||currentBPM)+1));}
       else if(e.key==='ArrowDown'){e.preventDefault();inp.value=String(Math.max(40,parseInt(inp.value||currentBPM)-1));}
     };
   };
@@ -1349,15 +2047,15 @@ function buildAdvancedPanel(body){
   function refreshOrderDisplay(){ivOrderDisplay.textContent=adv_intervalOrder.length>0?'선택 순서: '+adv_intervalOrder.map(v=>'+'+v).join(' → '):'\u00a0';}
 
   const intBtns=[];
-  // 숫자 버튼 2행 + 무작위 버튼 정사각형(61×61) 오른쪽 배치
-  // 6×45 + 5×5(gap) + 8(gap) + 61(rand) = 270+25+8+61 = 364
+  // 숫자 버튼 2행 + 무작위 버튼 오른쪽 배치 (높이 자동 맞춤)
   const ivLayout=document.createElement('div');ivLayout.style.cssText='display:flex;gap:8px;align-items:stretch;';
   const ivNumCols=document.createElement('div');ivNumCols.style.cssText='display:flex;flex-direction:column;gap:5px;';
   [[1,2,3,4,5,6],[7,8,9,10,11,12]].forEach(row=>{
     const rowDiv=document.createElement('div');rowDiv.style.cssText='display:flex;gap:5px;';
     row.forEach(iv=>{
-      const b=document.createElement('button');b.className='adv-int-btn'+(adv_intervalOrder.includes(iv)?' active':'');b.title=INAMES[iv]||'';b.textContent='+'+iv;b.setAttribute('data-iv',iv);
-      b.style.cssText='width:45px;padding:5px 0;font-size:0.75rem;border-radius:7px;';
+      const b=document.createElement('button');b.className='adv-int-btn'+(adv_intervalOrder.includes(iv)?' active':'');b.setAttribute('data-iv',iv);
+      b.style.cssText='width:45px;padding:4px 0;font-size:0.72rem;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;';
+      b.innerHTML='<span style="font-size:0.82rem;font-weight:700;">+'+iv+'</span><span style="font-size:0.58rem;color:inherit;opacity:0.8;white-space:nowrap;">'+(INAMES[iv]||'')+'</span>';
       b.onclick=()=>{
         const idx=adv_intervalOrder.indexOf(iv);
         if(idx>=0){adv_intervalOrder.splice(idx,1);b.classList.remove('active');}
@@ -1373,7 +2071,7 @@ function buildAdvancedPanel(body){
     ivNumCols.appendChild(rowDiv);
   });
   ivRandBtn=document.createElement('button');ivRandBtn.className='adv-int-btn'+(adv_intervalRandom?' active':'');
-  ivRandBtn.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:61px;height:61px;flex-shrink:0;font-size:0.7rem;line-height:1.3;border-radius:8px;';
+  ivRandBtn.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:61px;flex-shrink:0;font-size:0.7rem;line-height:1.3;border-radius:8px;align-self:stretch;';
   ivRandBtn.innerHTML='<span style="font-size:1.1rem;line-height:1;">🎲</span><span>무작위</span>';
   ivRandBtn.onclick=()=>{
     if(ivRandBtn.disabled)return;adv_intervalRandom=!adv_intervalRandom;ivRandBtn.classList.toggle('active',adv_intervalRandom);updateDirBtnStates();
@@ -1424,6 +2122,7 @@ function buildAdvancedPanel(body){
     const isLoop=adv_dir==='loop';
     const iv=(isLoop&&adv_intervalOrder.length===1)?adv_intervalOrder[0]:0;
     const dispDir=(adv_rangeFirstMidi!==null)?1:adv_rangeStartDir;
+    const maxOffset=getPatternMaxOffset();
     const reachable=(isLoop&&adv_rangeFirstMidi!==null&&iv>0)?calcLoopReachable(adv_rangeFirstMidi,iv):null;
     const allBtns=[];
 
@@ -1441,9 +2140,11 @@ function buildAdvancedPanel(body){
           else if(midi===Math.max(adv_loopStart,adv_loopEnd))cls+=' range-end';
           else if(reachable&&reachable.has(midi)&&midi>Math.min(adv_loopStart,adv_loopEnd)&&midi<Math.max(adv_loopStart,adv_loopEnd))cls+=' in-range';
         } else {
-          if(midi===adv_rangeMin)cls+=' range-start';
-          else if(midi===adv_rangeMax)cls+=' range-end';
+          // 클릭 순서 기준: 첫클릭=보라(range-start), 두번째클릭=핑크(range-end)
+          if(midi===adv_displayStart)cls+=' range-start';
+          else if(midi===adv_displayEnd)cls+=' range-end';
           else if(midi>adv_rangeMin&&midi<adv_rangeMax)cls+=' in-range';
+          else if(midi>adv_rangeMax&&midi<=adv_rangeMax+maxOffset)cls+=' in-range';
         }
       }
       btn.className=cls;btn.textContent=name;btn.setAttribute('data-midi',midi);
@@ -1452,6 +2153,7 @@ function buildAdvancedPanel(body){
         if(adv_rangeFirstMidi===null){adv_rangeFirstMidi=midi;renderAdvRangeGrid();}
         else{
           const first=adv_rangeFirstMidi,second=midi;adv_rangeFirstMidi=null;
+          adv_displayStart=first;adv_displayEnd=second; // 클릭 순서 저장
           if(isLoop){
             adv_loopStart=first;adv_loopEnd=second;adv_loopDir=first<=second?1:-1;
             adv_rangeMin=Math.min(first,second);adv_rangeMax=Math.max(first,second);adv_rangeStartDir=adv_loopDir;adv_currentMidi=adv_loopStart;
@@ -1504,18 +2206,174 @@ function closePractice(){
   document.getElementById('pattern-select').style.display='block';
 }
 
+// ── 잠금 헬퍼 ──
+let _currentProfileId = null;
+function _isLocked(patternId){
+  if(!_currentProfileId) return false;
+  try{
+    const locks = JSON.parse(localStorage.getItem('somi_pattern_locks')||'{}');
+    const pl = locks[_currentProfileId];
+    return pl && pl[patternId] === false;
+  }catch(e){ return false; }
+}
+
+// home.html의 modeLabel → modeKey 매핑 (getLvKey 기준)
+const _MODE_LABEL_TO_KEY={'기본':'basic','연습':'free','목풀기1':'warmup1','목풀기2':'warmup2','목풀기3':'warmup3','심화':'adv','심화1':'adv','심화2':'adv2'};
+
+// 패턴ID + modeLabels 기준으로 저장된 레벨 ID 조회
+// home.html 저장 키: "{patternId}__{modeKey}" (예: "vocal_ha_8beat_2__warmup1")
+function _getLvIdForPat(patternId){
+  try{
+    const lvs=JSON.parse(localStorage.getItem('somi_pattern_levels')||'{}');
+    const pat=VOCAL_PATTERNS.find(p=>p.id===patternId);
+    const modeLabels=pat?pat.modeLabels:[];
+    // 1) 패턴의 modeLabels 순서대로 정확한 키 탐색
+    for(const label of modeLabels){
+      const mk=_MODE_LABEL_TO_KEY[label];
+      if(mk){
+        const exactKey=patternId+'__'+mk;
+        if(lvs[exactKey]) return lvs[exactKey];
+      }
+    }
+    // 2) pid 직접 키 (구버전 호환)
+    if(lvs[patternId]) return lvs[patternId];
+    return null;
+  }catch(e){return null;}
+}
+
+function _getLevel(patternId){
+  try{
+    const lvId=_getLvIdForPat(patternId);
+    if(!lvId) return null;
+    try{
+      const settings=JSON.parse(localStorage.getItem('somi_level_settings')||'null');
+      if(settings){const found=settings.find(l=>l.id===lvId);if(found)return found.label;}
+    }catch(e){}
+    return lvId;
+  }catch(e){return null;}
+}
+
+// 티어 색상 — 롤 티어 참고
+const _TIER_COLORS=['var(--tier-lv1)','var(--tier-lv2)','#00C9B1','#00B4FF','#AA44FF','#FF8C00','#FF4444','#FF69B4'];
+function _getLevelColor(patternId){
+  try{
+    const lvId=_getLvIdForPat(patternId);
+    if(!lvId||lvId==='ing') return null;
+    const m=lvId.match(/^lv(\d+)$/i);
+    if(m){const idx=parseInt(m[1])-1;return _TIER_COLORS[idx%_TIER_COLORS.length];}
+    try{
+      const settings=JSON.parse(localStorage.getItem('somi_level_settings')||'null');
+      if(settings){const idx=settings.findIndex(l=>l.id===lvId);if(idx>=0)return _TIER_COLORS[idx%_TIER_COLORS.length];}
+    }catch(e){}
+    return null;
+  }catch(e){return null;}
+}
+
 function renderPatternCards(){
   const container=document.getElementById('pattern-cards');container.innerHTML='';
-  VOCAL_PATTERNS.forEach(pat=>{
-    const card=document.createElement('div');card.className='pattern-card';
+  // 활성화 패턴 상단, 비활성화(잠금) 패턴 하단 — 기본 순서 유지
+  const active=VOCAL_PATTERNS.filter(p=>!_isLocked(p.id));
+  const locked=VOCAL_PATTERNS.filter(p=>_isLocked(p.id));
+  [...active,...locked].forEach(pat=>{
+    const isLocked=_isLocked(pat.id);
+    const level=_getLevel(pat.id);
+    const card=document.createElement('div');
+    card.className='pattern-card'+(isLocked?' locked':'');
     const desc=pat.cardDesc||'';
     const noteDivLabel=pat.noteDiv===4?'4분음표':pat.noteDiv===16?'16분음표':'8분음표';
-    card.innerHTML='<h3>'+pat.name+'</h3><p>'+desc+'</p><div class="pattern-meta"><span class="meta-tag">'+pat.baseTempo+' BPM</span><span class="meta-tag">'+noteDivLabel+'</span><span class="meta-tag">'+pat.modeLabels.join(' · ')+'</span></div>';
-    card.onclick=()=>startExercise(pat.id);container.appendChild(card);
+    let tags='<div class="pattern-meta">'
+      +'<span class="meta-tag tag-bpm">'+pat.baseTempo+' BPM</span>'
+      +'<span class="meta-tag tag-note">'+noteDivLabel+'</span>'
+      +'<span class="meta-tag tag-mode">'+pat.modeLabels.join(' · ')+'</span>';
+    if(level!=null){
+      const lvColor=_getLevelColor(pat.id);
+      const lvStyle=lvColor?`background:${lvColor}22;color:${lvColor};border-color:${lvColor}88;`:'';
+      tags+=`<span class="meta-tag tag-level" style="${lvStyle}">${level}</span>`;
+    }
+    if(pat.vowelOptions&&pat.vowelOptions.length>0) tags+='<span class="meta-tag tag-vowel">발음 선택</span>';
+    if(pat.staccato) tags+='<span class="meta-tag" style="background:rgba(247,194,106,0.12);color:var(--counting);border-color:rgba(247,194,106,0.5);">✂ 스타카토</span>';
+    if(pat.glissando) tags+='<span class="meta-tag" style="background:rgba(106,247,200,0.12);color:var(--accent3);border-color:rgba(106,247,200,0.5);">〰 글리산도</span>';
+    if(pat.vibrato) tags+='<span class="meta-tag" style="background:rgba(247,106,200,0.12);color:var(--accent2);border-color:rgba(247,106,200,0.5);">〜 비브라토</span>';
+    tags+='</div>';
+    card.innerHTML='<h3>'+pat.name+'</h3><p>'+desc+'</p>'+tags
+      +(isLocked?'<div class="lock-overlay">🔒</div>':'');
+    if(!isLocked) card.onclick=()=>startExercise(pat.id);
+    container.appendChild(card);
   });
 }
 
-document.addEventListener('DOMContentLoaded',()=>{setupModeFunctions();renderPatternCards();});
+document.addEventListener('DOMContentLoaded', ()=>{
+  // ── 1. 테마 적용
+  try{
+    const raw=localStorage.getItem('somi_theme');
+    const t=raw ? (raw.startsWith('"') ? JSON.parse(raw) : raw) : 'dark';
+    if(t==='ivory') document.body.classList.add('theme-ivory');
+  }catch(e){}
+
+  // ── 2. 프로필 연결
+  _currentProfileId = localStorage.getItem('somi_current_profile_id') || null;
+
+  // ── 3. 패턴 목록 localStorage 저장 → home.html이 읽어서 자동 반영
+  try{
+    const vocList = VOCAL_PATTERNS.map(p=>({
+      id: p.id, name: p.name, desc: p.cardDesc||p.name,
+      chapter: 'vocal', bpm: p.baseTempo||60,
+      modeLabels: p.modeLabels||['기본'],
+      tags: [String(p.baseTempo||60)+' BPM'],
+    }));
+    localStorage.setItem('somi_vocal_patterns', JSON.stringify(vocList));
+  }catch(e){}
+
+  // ── 4. localStorage 기준으로 카드 즉시 렌더 (검은화면 없음)
+  setupModeFunctions();
+  renderPatternCards();
+
+  // ── 5. Firebase 백그라운드 동기화 (렌더 막지 않음)
+  // 북마크로 바로 진입했을 때도 선생님 잠금 최신 반영
+  (async ()=>{
+    try{
+      const {initializeApp,getApps} = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+      const {getFirestore,doc,getDoc}  = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+
+      const FB_CONFIG = {
+        apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",
+        authDomain:"somi-ssam.firebaseapp.com",
+        projectId:"somi-ssam",
+        storageBucket:"somi-ssam.firebasestorage.app",
+        messagingSenderId:"841594074779",
+        appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"
+      };
+      const APP_NAME = 'somi-vocal-lab-v1';
+      const fbApp = getApps().find(a=>a.name===APP_NAME) || initializeApp(FB_CONFIG, APP_NAME);
+      const fsDb  = getFirestore(fbApp);
+
+      // 잠금 + 레벨 데이터 가져오기
+      const [lockSnap, levelSnap] = await Promise.all([
+        getDoc(doc(fsDb, "somi_data", "somi_pattern_locks")),
+        getDoc(doc(fsDb, "somi_data", "somi_pattern_levels")),
+      ]);
+      let needsUpdate = false;
+      if(lockSnap.exists()){
+        const fresh = lockSnap.data().value;
+        if(fresh !== localStorage.getItem('somi_pattern_locks')){
+          localStorage.setItem('somi_pattern_locks', fresh);
+          needsUpdate = true;
+        }
+      }
+      if(levelSnap.exists()){
+        const fresh = levelSnap.data().value;
+        if(fresh !== localStorage.getItem('somi_pattern_levels')){
+          localStorage.setItem('somi_pattern_levels', fresh);
+          needsUpdate = true;
+        }
+      }
+      if(needsUpdate) renderPatternCards();
+    }catch(e){
+      // 네트워크 오류 등 → 무시하고 localStorage 기준으로 계속 사용
+      console.warn('vocal_lab Firebase 동기화 실패 (무시됨):', e.message);
+    }
+  })();
+});
 </script>
 </body>
 </html>

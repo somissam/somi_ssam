@@ -53,7 +53,7 @@ console.log(`🎵 패턴 ${VOCAL_PATTERNS.length}개 감지\n`);
 const DEGREE_TO_SEMITONE={1:0,2:2,3:4,4:5,5:7,6:9,7:11,8:12};
 function degreeToSemitone(deg){const oct=Math.floor((deg-1)/7);const base=((deg-1)%7)+1;return(DEGREE_TO_SEMITONE[base]||0)+oct*12;}
 
-const LABEL_TO_MODE={'기본':'BASIC','연습':'PRACTICE','목풀기1':'WU1','목풀기2':'WU2','목풀기3':'WU3','심화1':'ADV1','심화2':'ADV2'};
+const LABEL_TO_MODE={'기본':'BASIC','연습':'PRACTICE','목풀기1':'WU1','목풀기2':'WU2','심화':'ADV1'};
 
 function getExpectedBarBeats(nd, pattern){
   if(nd===8)  return 4;
@@ -77,13 +77,23 @@ let errors=[], ok=[];
 VOCAL_PATTERNS.forEach(pat=>{
   const nd = pat.noteDiv || 4;
   const modes = pat.modeLabels.map(l => LABEL_TO_MODE[l] || l);
-  const needsWarmup = modes.some(m => ['WU1','WU2','WU3','ADV1','ADV2'].includes(m));
+  const needsWarmup = modes.some(m => ['WU1','WU2','ADV1'].includes(m));
 
   // 1. 모드별 필수 필드
   if(needsWarmup){
-    ['warmup1','warmup2','warmup3','warmup12Seq','warmup3Seq'].forEach(f=>{
-      if(!pat[f]) errors.push(`패턴${pat.id}(${pat.name}): [${f}] 없음`);
-    });
+    // warmup1Seq는 목풀기1 있을 때, warmup2Seq는 목풀기2 있을 때만 체크
+    if(modes.includes('WU1')||modes.includes('WU2')) {
+      if(modes.includes('WU1')) {
+        ['warmup1','warmup1Seq'].forEach(f=>{
+          if(!pat[f]) errors.push(`패턴${pat.id}(${pat.name}): [${f}] 없음`);
+        });
+      }
+      if(modes.includes('WU2')){
+        ['warmup2','warmup2Seq'].forEach(f=>{
+          if(!pat[f]) errors.push(`패턴${pat.id}(${pat.name}): [${f}] 없음`);
+        });
+      }
+    }
   }
 
   // 2. 라벨·패턴 수 + 마지막음 카운팅 처리 검증
@@ -111,9 +121,8 @@ VOCAL_PATTERNS.forEach(pat=>{
   checkLP(pat.pattern5, pat.korLabels5, 'p5/kor');
   checkLP(pat.pattern7, pat.engLabels7, 'p7/eng');
   checkLP(pat.pattern7, pat.korLabels7, 'p7/kor');
-  if(pat.warmup1){ checkLP(pat.warmup1.pattern, pat.warmup1.engLabels, 'wu1/eng'); checkLP(pat.warmup1.pattern, pat.warmup1.korLabels, 'wu1/kor'); }
-  if(pat.warmup2){ checkLP(pat.warmup2.pattern, pat.warmup2.engLabels, 'wu2/eng'); checkLP(pat.warmup2.pattern, pat.warmup2.korLabels, 'wu2/kor'); }
-  if(pat.warmup3){ checkLP(pat.warmup3.pattern, pat.warmup3.engLabels, 'wu3/eng'); checkLP(pat.warmup3.pattern, pat.warmup3.korLabels, 'wu3/kor'); }
+  if(pat.warmup1){ checkLP(pat.warmup1.pattern||pat.warmup1.offsets?.map((_,i)=>i+1), pat.warmup1.engLabels, 'wu1/eng'); checkLP(pat.warmup1.pattern||pat.warmup1.offsets?.map((_,i)=>i+1), pat.warmup1.korLabels, 'wu1/kor'); }
+  if(pat.warmup2){ checkLP(pat.warmup2.pattern||pat.warmup2.offsets?.map((_,i)=>i+1), pat.warmup2.engLabels, 'wu2/eng'); checkLP(pat.warmup2.pattern||pat.warmup2.offsets?.map((_,i)=>i+1), pat.warmup2.korLabels, 'wu2/kor'); }
 
   // 3. 16beat visNoteIdx 매핑 검증
   if(nd===16){
