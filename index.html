@@ -302,16 +302,10 @@ async function createProfile(){
 document.addEventListener('DOMContentLoaded',async function(){
   document.body.style.visibility='visible';
 
-  // 자동 로그인 후보 있으면 로딩 화면 먼저
-  const studentAuto=loadData(STUDENT_AUTO_KEY,null);
-  const teacherAuto=loadData(TEACHER_AUTO_KEY,null);
-  if(studentAuto?.id||teacherAuto?.token){
-    showScreen('loading-screen');
-  } else {
-    showScreen('login-screen');
-  }
+  // 항상 로딩 스피너 먼저 — Firebase 완료 전에 로그인 화면 절대 안 보여줌
+  showScreen('loading-screen');
 
-  // Firebase 초기화
+  // Firebase 초기화 + 동기화
   try{
     const{initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
     const{getFirestore,doc,getDoc,setDoc}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
@@ -331,6 +325,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     profiles=loadData('somi_profiles',[]);
   }
 
+  // Firebase 완료 후 — 자동 로그인 체크
   // ── 선생님 자동 로그인 ──
   const tAuto=loadData(TEACHER_AUTO_KEY,null);
   if(tAuto?.token){
@@ -362,6 +357,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     }
   }
 
+  // 자동 로그인 없으면 로그인 화면
   showScreen('login-screen');
 });
 </script>
