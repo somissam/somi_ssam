@@ -172,7 +172,7 @@ button{font-family:inherit;cursor:pointer;}
 <!-- ══════════ 메인 앱 ══════════ -->
 <div id="app">
   <div class="app-header">
-    <a class="home-link" href="index.html">← 로그인</a>
+    <button class="home-link" onclick="goToSoMi()">🎤 임소미</button>
     <div class="brand-wrap">
       <div class="brand-title">소미쌤</div>
       <div class="brand-sub">TEACHER · SOMI_SSAM</div>
@@ -231,6 +231,12 @@ button{font-family:inherit;cursor:pointer;}
           <button class="gender-btn" id="t-theme-dark"  onclick="setTheme('dark')">🌙 다크</button>
           <button class="gender-btn" id="t-theme-ivory" onclick="setTheme('ivory')">☀️ 아이보리</button>
         </div>
+      </div>
+      <!-- ★ 로그아웃 -->
+      <div class="settings-box" style="border-color:#f76a6a33;">
+        <h4>로그아웃</h4>
+        <p style="font-size:0.8rem;color:var(--text2);margin-bottom:12px;">자동 로그인을 해제하고 로그인 화면으로 돌아갑니다. 연습 기록과 데이터는 그대로 유지돼요.</p>
+        <button onclick="teacherLogout()" style="padding:10px 20px;border-radius:10px;border:1px solid #f76a6a;background:transparent;color:#f76a6a;font-family:inherit;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#f76a6a';this.style.color='white';" onmouseout="this.style.background='transparent';this.style.color='#f76a6a';">로그아웃</button>
       </div>
     </div>
 
@@ -343,7 +349,7 @@ function getPatternModes(p) {
 /* ════════════════════════════════════════════════
    【 섹션 D 】 인증 / 화면 전환
 ════════════════════════════════════════════════ */
-const TEACHER_AUTO_KEY = 'somi_teacher_auto';
+const TEACHER_AUTO_KEY = 'somi_teacher_auto_login';
 
 function showScreen(id) {
   ['splash','pw-screen','app'].forEach(s=>{
@@ -372,6 +378,21 @@ function checkPw() {
     document.getElementById('pw-input').value='';
     document.getElementById('pw-input').focus();
   }
+}
+
+/* ── 임소미로 이동 (선생님 전용 테스트 계정) ── */
+function goToSoMi() {
+  const soMi = profiles.find(p => p.name === '임소미');
+  if (!soMi) { alert('임소미 프로필을 찾을 수 없어요.\n프로필 이름을 확인해주세요.'); return; }
+  localStorage.setItem('somi_current_profile_id', soMi.id);
+  window.location.href = 'somi_ssam_student.html';
+}
+
+/* ── 선생님 로그아웃 ── */
+function teacherLogout() {
+  if (!confirm('로그아웃 할까요?\n자동 로그인이 해제되고 로그인 화면으로 이동합니다.')) return;
+  localStorage.removeItem('somi_teacher_auto_login');
+  window.location.href = 'index.html';
 }
 
 function setTheme(t) {
