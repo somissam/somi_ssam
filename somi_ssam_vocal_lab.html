@@ -1459,8 +1459,8 @@ function _applyGlissandoVisual(vis){
   // fade-out 중이면 취소하고 즉시 복원 (깜빡임 방지)
   if(_glissFadeTimer){clearTimeout(_glissFadeTimer);_glissFadeTimer=null;}
   thumb.style.opacity='1';
-  lineL.style.opacity='1'; lineL.style.filter='blur(0px)';
-  lineR.style.opacity='1'; lineR.style.filter='blur(0px)';
+  lineL.style.opacity='1'; lineL.style.filter='blur(0px)'; lineL.style.transform='scaleX(1)';
+  lineR.style.opacity='1'; lineR.style.filter='blur(0px)'; lineR.style.transform='scaleX(1)';
 
   updateVocalLabelHighlight(step);
 
@@ -1507,12 +1507,14 @@ function _resetGlissandoSlider(instant){
     if(lineL){lineL.style.transition='none';lineL.style.opacity='1';lineL.style.width='0%';}
     if(lineR){lineR.style.transition='none';lineR.style.opacity='1';lineR.style.width='0%';}
   } else {
-    // 블러+opacity fade-out (패턴→카운팅 전환 시) — thumb는 건드리지 않음(깜빡임 방지)
-    if(lineL){lineL.style.transition='opacity 0.35s ease, filter 0.35s ease';lineL.style.opacity='0';lineL.style.filter='blur(4px)';}
-    if(lineR){lineR.style.transition='opacity 0.35s ease, filter 0.35s ease';lineR.style.opacity='0';lineR.style.filter='blur(4px)';}
+    // width 줄어들며 blur+opacity fade-out — thumb는 건드리지 않음(깜빡임 방지)
+    // lineL: left앵커 → scaleX로 오른쪽(썸)부터 줄어들게
+    // lineR: right앵커 → scaleX로 왼쪽(썸)부터 줄어들게
+    if(lineL){lineL.style.transformOrigin='left';lineL.style.transition='transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease';lineL.style.transform='scaleX(0)';lineL.style.opacity='0';lineL.style.filter='blur(4px)';}
+    if(lineR){lineR.style.transformOrigin='right';lineR.style.transition='transform 0.35s ease, opacity 0.35s ease, filter 0.35s ease';lineR.style.transform='scaleX(0)';lineR.style.opacity='0';lineR.style.filter='blur(4px)';}
     _glissFadeTimer=setTimeout(()=>{
-      if(lineL){lineL.style.transition='none';lineL.style.width='0%';lineL.style.opacity='1';lineL.style.filter='blur(0px)';}
-      if(lineR){lineR.style.transition='none';lineR.style.width='0%';lineR.style.opacity='1';lineR.style.filter='blur(0px)';}
+      if(lineL){lineL.style.transition='none';lineL.style.width='0%';lineL.style.transform='scaleX(1)';lineL.style.opacity='1';lineL.style.filter='blur(0px)';}
+      if(lineR){lineR.style.transition='none';lineR.style.width='0%';lineR.style.transform='scaleX(1)';lineR.style.opacity='1';lineR.style.filter='blur(0px)';}
       _glissFadeTimer=null;
     },380);
   }
