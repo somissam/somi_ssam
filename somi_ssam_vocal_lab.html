@@ -888,7 +888,7 @@ function getFullOffsets(){
 /* ════════════════════════════════════════════════
    【 섹션 D 】 오디오 엔진
 ════════════════════════════════════════════════ */
-console.log('[AUDIO-FIX v3] 세션활성화+샘플레이트순환 빌드 로드됨 — 2026-06-10');
+console.log('[AUDIO-FIX v4] SR기억+정찰병자동교체 빌드 로드됨 — 2026-06-10');
 let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null;
 let metronomeVol=1.0,pianoVol=1.0;
 // ── iPad Safari 오디오 언락 v3: 세션 활성화 + 샘플레이트 순환 + 진단 로그 ──
@@ -898,7 +898,15 @@ let metronomeVol=1.0,pianoVol=1.0;
 //      ③ 재생성 시 샘플레이트 순환: 기본 → 48000 → 44100 (하드웨어 SR 불일치 WebKit 버그 대응)
 const _SILENT_WAV='data:audio/wav;base64,UklGRoQJAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YWAJAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA=';
 let _silentEl=null,_clockWatchdog=null,_ctxRebuilds=0,_needGestureRebuild=false;
-const _SR_CYCLE=[0,48000,44100]; // 0=브라우저 기본
+let _probes=[]; // 샘플레이트 정찰병 컨텍스트 [{ctx,sr}]
+const _SR_KEY='somi_audio_sr'; // 이 기기에서 클럭이 도는 것으로 확인된 샘플레이트 기억
+function _storedSR(){try{const v=parseInt(localStorage.getItem(_SR_KEY)||'0',10);return(v===44100||v===48000)?v:0;}catch(e){return 0;}}
+function _rememberSR(sr){try{localStorage.setItem(_SR_KEY,String(sr));}catch(e){}}
+function _srForAttempt(n){
+  // 시도 순서: 기억된 SR(없으면 기본) → 44100 → 48000 (중복 제거)
+  const st=_storedSR();const seq=[st||0,44100,48000].filter((v,i,a)=>a.indexOf(v)===i);
+  return seq[n%seq.length];
+}
 function _setIOSSession(){
   try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback';}catch(e){}
 }
@@ -924,7 +932,7 @@ function _audioDiag(tag){
 function _buildCtx(){
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
   _setIOSSession();
-  const sr=_SR_CYCLE[_ctxRebuilds%_SR_CYCLE.length];
+  const sr=_srForAttempt(_ctxRebuilds);
   try{audioCtx=sr?new AC({sampleRate:sr}):new AC();}
   catch(e){audioCtx=new AC();}
   masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
@@ -948,6 +956,40 @@ function _unlockAudio(){
   }catch(e){}
   _playSilentElement();
 }
+// ── 샘플레이트 정찰병: 첫 탭 제스처 안에서 44100/48000 컨텍스트를 미리 만들어 두고,
+//    메인 클럭이 0.3초 안에 안 돌면 클럭이 도는 쪽으로 즉시 교체 → 탭 한 번에 소리 ──
+function _makeProbes(){
+  if(_probes.length||!audioCtx)return;
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  [44100,48000].forEach(sr=>{
+    if(audioCtx&&audioCtx.sampleRate===sr)return; // 메인과 같은 SR은 불필요
+    try{
+      const c=new AC({sampleRate:sr});
+      if(c.state!=='running')c.resume().catch(()=>{});
+      const b=c.createBuffer(1,1,22050),bs=c.createBufferSource();
+      bs.buffer=b;bs.connect(c.destination);bs.start(0);
+      _probes.push({ctx:c,sr:sr});
+    }catch(e){}
+  });
+  if(_probes.length)console.log('[AUDIO] 정찰병 컨텍스트 생성: '+_probes.map(p=>p.sr).join(', '));
+}
+function _closeProbes(){
+  _probes.forEach(p=>{try{p.ctx.close().catch(()=>{});}catch(e){}});
+  _probes=[];
+}
+function _adoptProbe(p){
+  // 메인은 죽었고 정찰병 클럭이 돌고 있음 → 정찰병을 메인으로 승격, 게인 재배선
+  console.log('[AUDIO] 🔄 정찰병 채택: sr='+p.sr+' t='+p.ctx.currentTime.toFixed(4));
+  try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
+  audioCtx=p.ctx;
+  masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+  metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
+  pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
+  _probes=_probes.filter(x=>x!==p);
+  _closeProbes();
+  _rememberSR(p.sr);
+  _awaitClock=true; // 스케줄러가 새 클럭에 자동 재앵커 → 연습 자동 시작
+}
 function _teardownCtx(){
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
   audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;
@@ -957,7 +999,7 @@ function _gestureRebuild(){
   _needGestureRebuild=false;
   _ctxRebuilds++;
   _teardownCtx();
-  if(_buildCtx()){_unlockAudio();_awaitClock=true;console.log('[AUDIO] 제스처 내 컨텍스트 재생성 #'+_ctxRebuilds+' (sr시도='+(_SR_CYCLE[_ctxRebuilds%_SR_CYCLE.length]||'기본')+')');}
+  if(_buildCtx()){_unlockAudio();_awaitClock=true;console.log('[AUDIO] 제스처 내 컨텍스트 재생성 #'+_ctxRebuilds+' (sr시도='+(_srForAttempt(_ctxRebuilds)||'기본')+')');}
 }
 function _startClockWatchdog(){
   // 클럭(currentTime) 기동 감시 — 제스처 밖에서는 재생성하지 않고 다음 터치를 기다림
@@ -967,10 +1009,15 @@ function _startClockWatchdog(){
     if(!audioCtx){clearInterval(_clockWatchdog);_clockWatchdog=null;return;}
     if(audioCtx.currentTime>0){
       clearInterval(_clockWatchdog);_clockWatchdog=null;_needGestureRebuild=false;_ctxRebuilds=0;
-      _stopSilentElement();
+      _stopSilentElement();_rememberSR(audioCtx.sampleRate);_closeProbes();
       console.log('[AUDIO] ✅ 클럭 정상 기동 t='+audioCtx.currentTime.toFixed(4)+' sr='+audioCtx.sampleRate);
       return;}
     tries++;
+    // 메인은 동결 — 클럭이 돌고 있는 정찰병이 있으면 즉시 승격 (같은 탭 안에서 자동 복구)
+    if(tries>=2&&_probes.length){
+      const live=_probes.find(p=>{try{return p.ctx.currentTime>0;}catch(e){return false;}});
+      if(live){_adoptProbe(live);return;} // 다음 틱에서 t>0 → 성공 처리
+    }
     if(tries===3){try{audioCtx.suspend().then(()=>audioCtx.resume()).catch(()=>{});}catch(e){}_audioDiag('정지·소생시도');}
     else if(tries>=10){
       clearInterval(_clockWatchdog);_clockWatchdog=null;_needGestureRebuild=true;
@@ -989,7 +1036,7 @@ function ensureAudio(){
   if(_needGestureRebuild){_gestureRebuild();}
   else if(!audioCtx)initAudio();
   else _unlockAudio();
-  if(audioCtx&&audioCtx.currentTime<=0)_startClockWatchdog();
+  if(audioCtx&&audioCtx.currentTime<=0){_makeProbes();_startClockWatchdog();}
 }
 // ★ touchstart는 iOS 오디오 언락 제스처 불인정 — 컨텍스트 '생성' 금지, 기존 ctx resume만 허용
 document.addEventListener('touchstart',()=>{if(audioCtx)_unlockAudio();},{passive:true,capture:true});
@@ -1089,6 +1136,8 @@ function startEngine(){
   if(!audioCtx){if(!_buildCtx())return;}
   // 2) resume() fire-and-forget + 언락 오실레이터 + 무음 엘리먼트 — 전부 동기 실행
   _unlockAudio();
+  // 클럭 미기동 상태면 같은 제스처 안에서 정찰병(44100/48000)도 함께 기동 — 탭 한 번에 자동 복구
+  if(audioCtx.currentTime<=0)_makeProbes();
   // 3) 스케줄러/타이머 셋업 — 콜백 없이 같은 콜스택에서 즉시 실행
   isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
   beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
