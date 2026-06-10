@@ -21,13 +21,20 @@ button{font-family:inherit;cursor:pointer;}
 .home-link:hover{border-color:var(--accent);color:var(--text);}
 .student-tabs{display:flex;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;overflow-x:auto;scrollbar-width:none;}
 .student-tabs::-webkit-scrollbar{display:none;}
-.stab{flex:1;min-width:80px;padding:12px 8px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:0.88rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;white-space:nowrap;}
+.stab{flex:1;min-width:80px;padding:12px 8px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:0.88rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;white-space:nowrap;position:relative;}
 .stab:hover{color:var(--text);}
 .stab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700;}
+/* ── 설정 탭 빨간 점 ── */
+.stab-dot{position:absolute;top:8px;right:10px;width:7px;height:7px;border-radius:50%;background:#f76a6a;display:none;}
+.stab-dot.show{display:block;}
 .home-content{padding:20px;max-width:600px;margin:0 auto;}
+/* ── 오늘의 요약 ── */
 .today-summary{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:24px;}
 .today-summary h3{font-size:0.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
-.summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.summary-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;}
+/* ── 도넛 그래프 영역 ── */
+.sum-donut-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.sum-donut-wrap .lbl{font-size:0.7rem;color:var(--text2);margin-top:2px;}
 .sum-stat{text-align:center;}
 .sum-stat .val{font-size:1.6rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);}
 .sum-stat .lbl{font-size:0.7rem;color:var(--text2);margin-top:4px;}
@@ -52,11 +59,18 @@ button{font-family:inherit;cursor:pointer;}
 .student-stamp svg{width:85%;height:85%;opacity:0.55;}
 .practice-bar-wrap{position:absolute;bottom:2px;left:2px;right:2px;height:3px;display:flex;gap:1px;border-radius:2px;overflow:hidden;z-index:1;}
 .practice-bar-seg{height:100%;border-radius:1px;}
-.stamp-picker{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;}
+/* ── 도장 피커 + 로딩 스피너 ── */
+.stamp-picker{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;position:relative;}
 .stamp-picker h4{font-size:0.8rem;color:var(--text2);margin-bottom:10px;}
 .stamp-options{display:flex;gap:10px;flex-wrap:wrap;}
 .stamp-opt{width:44px;height:44px;border-radius:10px;border:2px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
 .stamp-opt:hover,.stamp-opt.active{border-color:var(--accent3);background:rgba(106,247,200,0.1);}
+/* 도장 선택 로딩 오버레이 */
+.stamp-loading-overlay{display:none;position:absolute;inset:0;border-radius:14px;background:rgba(10,10,15,0.55);align-items:center;justify-content:center;z-index:10;}
+.stamp-loading-overlay.show{display:flex;}
+.theme-ivory .stamp-loading-overlay{background:rgba(245,240,232,0.65);}
+.stamp-spinner{width:24px;height:24px;border:2px solid var(--border);border-top:2px solid var(--accent3);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 .chapter-goto{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:16px;padding:40px 20px;}
 .chapter-goto .icon{font-size:3rem;}
 .chapter-goto p{font-size:0.9rem;color:var(--text2);}
@@ -80,6 +94,9 @@ button{font-family:inherit;cursor:pointer;}
 .gender-btn.active{border-color:var(--accent);color:var(--text);background:rgba(124,106,247,0.15);}
 .gender-select{display:flex;gap:10px;}
 .settings-tab-wrap{padding:20px;max-width:400px;margin:0 auto;background:var(--bg);min-height:100vh;}
+/* ── 미입력 안내 ── */
+.info-missing-banner{padding:8px 12px;border-radius:10px;background:rgba(247,106,106,0.1);border:1px solid rgba(247,106,106,0.3);color:#f76a6a;font-size:0.78rem;margin-bottom:14px;display:none;}
+.info-missing-banner.show{display:block;}
 </style>
 </head>
 <body>
@@ -100,14 +117,18 @@ button{font-family:inherit;cursor:pointer;}
     <button class="stab"        id="tab-breath"   onclick="showTab('breath',this)">🫁 호흡</button>
     <button class="stab"        id="tab-vocal"    onclick="showTab('vocal',this)">🎵 발성</button>
     <button class="stab"        id="tab-rhythm"   onclick="showTab('rhythm',this)">🥁 리듬</button>
-    <button class="stab"        id="tab-settings" onclick="showTab('settings',this)">⚙️ 설정</button>
+    <button class="stab"        id="tab-settings" onclick="showTab('settings',this)">⚙️ 설정<span class="stab-dot" id="settings-dot"></span></button>
   </div>
   <div id="stab-home" class="home-content">
     <div class="today-summary">
       <h3>오늘의 연습 성과</h3>
       <div class="summary-stats">
-        <div class="sum-stat"><div class="val" id="sum-count">0</div><div class="lbl">연습 횟수</div></div>
-        <div class="sum-stat"><div class="val" id="sum-time">0m</div><div class="lbl">총 시간</div></div>
+        <!-- 도넛 그래프 (연습 비율) -->
+        <div class="sum-donut-wrap">
+          <svg id="sum-donut" width="64" height="64" viewBox="0 0 64 64"></svg>
+          <div class="lbl">오늘 비율</div>
+        </div>
+        <div class="sum-stat"><div class="val" id="sum-time">0</div><div class="lbl">총 시간</div></div>
         <div class="sum-stat"><div class="val" id="sum-streak">0</div><div class="lbl">연속 일수</div></div>
       </div>
       <div class="sum-chapters" id="sum-chapters"></div>
@@ -120,13 +141,18 @@ button{font-family:inherit;cursor:pointer;}
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <div class="stamp-picker" style="margin-top:16px">
+    <!-- 도장 피커 -->
+    <div class="stamp-picker" style="margin-top:16px" id="stamp-picker-wrap">
       <h4>이번 주 도장 선택</h4>
       <div class="stamp-options">
         <div class="stamp-opt active" data-stamp="apple"     onclick="selectStamp('apple',this)"></div>
         <div class="stamp-opt"        data-stamp="sunflower" onclick="selectStamp('sunflower',this)"></div>
         <div class="stamp-opt"        data-stamp="cloud"     onclick="selectStamp('cloud',this)"></div>
         <div class="stamp-opt"        data-stamp="acorn"     onclick="selectStamp('acorn',this)"></div>
+      </div>
+      <!-- 도장 선택 로딩 오버레이 -->
+      <div class="stamp-loading-overlay" id="stamp-loading">
+        <div class="stamp-spinner"></div>
       </div>
     </div>
   </div>
@@ -141,6 +167,10 @@ button{font-family:inherit;cursor:pointer;}
   </div>
   <div id="stab-settings" style="display:none">
     <div class="settings-tab-wrap">
+      <!-- 기본 정보 미입력 안내 배너 -->
+      <div class="info-missing-banner" id="info-missing-banner">
+        ⚠️ 기본 정보(이름·성별·생년월일)를 모두 입력하면 이 안내가 사라져요
+      </div>
       <div class="settings-box"><h4>이름 변경</h4>
         <div class="settings-row"><input type="text" class="settings-input" id="s-name-input" placeholder="이름"><button class="settings-save" onclick="saveStudentSettings()">저장</button></div>
       </div>
@@ -148,6 +178,13 @@ button{font-family:inherit;cursor:pointer;}
         <div class="gender-select" style="max-width:220px;">
           <button class="gender-btn" id="s-gbtn-f" onclick="sSelectGender('female')">여자</button>
           <button class="gender-btn" id="s-gbtn-m" onclick="sSelectGender('male')">남자</button>
+        </div>
+      </div>
+      <!-- ★ 생년월일 설정 -->
+      <div class="settings-box"><h4>생년월일</h4>
+        <div class="settings-row">
+          <input type="date" class="settings-input" id="s-birth-input">
+          <button class="settings-save" onclick="saveStudentBirth()">저장</button>
         </div>
       </div>
       <div class="settings-box"><h4>테마 색상</h4>
@@ -183,7 +220,6 @@ let currentTheme=loadData('somi_theme','dark');
 let currentProfile=null, currentStamp='apple', calYear, calMonth;
 
 function saveProfiles(){
-  // 빈 배열로 덮어쓰는 사고 방지 — profiles가 비어있으면 저장 안 함
   if(!profiles||profiles.length===0) return;
   saveData('somi_profiles',profiles);
 }
@@ -197,58 +233,93 @@ function studentLogout(){
   window.location.href='index.html';
 }
 
+/* ════════════════════════════════════
+   시간 한글 포맷 (5번 요구사항)
+════════════════════════════════════ */
+function formatDur(s){
+  s=Math.round(s)||0;
+  if(s<=0) return '0초';
+  const h=Math.floor(s/3600);
+  const m=Math.floor((s%3600)/60);
+  const sec=s%60;
+  if(h>0){
+    if(m>0) return h+'시간 '+m+'분';
+    return h+'시간';
+  }
+  if(m>0){
+    if(sec>0) return m+'분 '+sec+'초';
+    return m+'분';
+  }
+  return sec+'초';
+}
+
 /* ── 보컬랩 성별 미리보기 토글 (소미쌤 기기 전용) ── */
-let _vocalPreviewGender = localStorage.getItem('somi_vocal_preview_gender') || null;
+let _vocalPreviewGender=localStorage.getItem('somi_vocal_preview_gender')||null;
 
 function _updateVocalGenderToggleBtn(){
-  const btn = document.getElementById('vocal-gender-toggle');
+  const btn=document.getElementById('vocal-gender-toggle');
   if(!btn) return;
-  // null이면 프로필 성별 그대로 → 표시는 현재 적용 중인 성별 기준
-  const isTeacherDevice = !!localStorage.getItem(TEACHER_AUTO_KEY);
-  if(!isTeacherDevice){ btn.style.display='none'; return; }
+  const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
+  if(!isTeacherDevice){btn.style.display='none';return;}
   btn.style.display='inline-flex';
-  const effectiveGender = _vocalPreviewGender || (currentProfile ? currentProfile.gender||'female' : 'female');
-  if(effectiveGender === 'male'){
-    btn.textContent = '👨 남성';
-    btn.style.borderColor = 'var(--accent3)';
-    btn.style.color = 'var(--accent3)';
+  const effectiveGender=_vocalPreviewGender||(currentProfile?currentProfile.gender||'female':'female');
+  if(effectiveGender==='male'){
+    btn.textContent='👨 남성';
+    btn.style.borderColor='var(--accent3)';
+    btn.style.color='var(--accent3)';
   } else {
-    btn.textContent = '👩 여성';
-    btn.style.borderColor = 'var(--accent2)';
-    btn.style.color = 'var(--accent2)';
+    btn.textContent='👩 여성';
+    btn.style.borderColor='var(--accent2)';
+    btn.style.color='var(--accent2)';
   }
 }
 
 function toggleVocalGender(){
-  const effectiveGender = _vocalPreviewGender || (currentProfile ? currentProfile.gender||'female' : 'female');
-  _vocalPreviewGender = (effectiveGender === 'male') ? 'female' : 'male';
-  localStorage.setItem('somi_vocal_preview_gender', _vocalPreviewGender);
+  const effectiveGender=_vocalPreviewGender||(currentProfile?currentProfile.gender||'female':'female');
+  _vocalPreviewGender=(effectiveGender==='male')?'female':'male';
+  localStorage.setItem('somi_vocal_preview_gender',_vocalPreviewGender);
   _updateVocalGenderToggleBtn();
+}
+
+/* ════════════════════════════════════
+   설정 탭 빨간 점 (6번 요구사항)
+════════════════════════════════════ */
+function updateSettingsDot(){
+  const dot=document.getElementById('settings-dot');
+  if(!dot||!currentProfile) return;
+  const missing=!currentProfile.name||!currentProfile.gender||!currentProfile.birth;
+  dot.classList.toggle('show',!!missing);
+  // 배너도 함께 갱신
+  const banner=document.getElementById('info-missing-banner');
+  if(banner) banner.classList.toggle('show',!!missing);
 }
 
 function enterStudentApp(){
   document.getElementById('app').style.display='flex';
   document.getElementById('tab-name-label').textContent=currentProfile.name;
   currentStamp=currentProfile.stamp||'apple';
-  // 도장 SVG 재주입 — 아이패드 타이밍 문제 방지 (빈 경우 무조건 채움)
-  document.querySelectorAll('.stamp-opt[data-stamp]').forEach(el=>{
-    el.innerHTML=getStampSVG(el.getAttribute('data-stamp'));
-  });
+  // 도장 SVG 재주입 — 아이패드 타이밍 문제 방지
+  _reinjectStampSVGs();
   document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
-  // 소미쌤 버튼: somi_teacher_auto_login 키가 있는 기기에서만 표시
+  // 소미쌤 버튼
   const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
   const teacherBtn=document.getElementById('teacher-mode-btn');
   const spacer=document.getElementById('header-spacer');
   if(isTeacherDevice){teacherBtn.style.display='inline-flex';if(spacer)spacer.style.display='none';}
   else{teacherBtn.style.display='none';if(spacer)spacer.style.display='block';}
-  // 소미쌤 기기에서만 vocal gender 토글 표시 및 초기화
   _updateVocalGenderToggleBtn();
-  // 헤더 높이 동적 계산 → 탭 sticky top 정확히 맞춤 (버튼 2줄 등 높이 변화 대응)
   requestAnimationFrame(()=>{
     const hdr=document.querySelector('.app-header');
-    if(hdr)document.documentElement.style.setProperty('--header-h', hdr.offsetHeight+'px');
+    if(hdr)document.documentElement.style.setProperty('--header-h',hdr.offsetHeight+'px');
   });
   showTab('home',document.getElementById('tab-home'));
+}
+
+/* ── 도장 SVG 재주입 공통 함수 (3번 버그 핵심) ── */
+function _reinjectStampSVGs(){
+  document.querySelectorAll('.stamp-opt[data-stamp]').forEach(el=>{
+    el.innerHTML=getStampSVG(el.getAttribute('data-stamp'));
+  });
 }
 
 function showTab(tab,btn){
@@ -257,23 +328,26 @@ function showTab(tab,btn){
   const target=document.getElementById('stab-'+tab);if(target)target.style.display='block';
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  if(tab==='home')renderStudentHome();
-  else if(tab==='settings')initStudentSettings();
+  if(tab==='home'){renderStudentHome();}
+  else if(tab==='settings'){initStudentSettings();}
 }
 function goToChapter(tab){
   if(currentProfile)localStorage.setItem('somi_current_profile_id',currentProfile.id);
   if(tab==='breath'){window.location.href='somi_ssam_breath.html';}
   else if(tab==='vocal'){
-    // 소미쌤 기기: 토글 우선 / 일반 학생: 본인 성별
     const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
-    const gender = (isTeacherDevice && _vocalPreviewGender)
-      ? _vocalPreviewGender
-      : (currentProfile ? currentProfile.gender||'female' : 'female');
-    window.location.href = (gender==='male') ? 'somi_ssam_vocal_lab_male.html' : 'somi_ssam_vocal_lab.html';
+    const gender=(isTeacherDevice&&_vocalPreviewGender)?_vocalPreviewGender:(currentProfile?currentProfile.gender||'female':'female');
+    window.location.href=(gender==='male')?'somi_ssam_vocal_lab_male.html':'somi_ssam_vocal_lab.html';
   }
   else if(tab==='rhythm'){window.location.href='somi_ssam_rhythm_groove.html';}
 }
-function renderStudentHome(){const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();renderClassInfo();updateSummary();renderCalendar();}
+function renderStudentHome(){
+  const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
+  renderClassInfo();updateSummary();renderCalendar();
+  // 홈 렌더 시마다 도장 SVG 재주입 — Firebase 재렌더 타이밍 보정
+  _reinjectStampSVGs();
+  document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
+}
 function renderClassInfo(){
   classSettings=loadData('somi_class_settings',{});lessonStarts=loadData('somi_lesson_starts',{});
   const ci=getClassInfo(currentProfile.id),voClass=ci.voClass||'(반 미설정)',extras=ci.extras||[],days=getDaysSinceLesson(currentProfile.id);
@@ -283,19 +357,94 @@ function renderClassInfo(){
   box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;"><div style="display:flex;align-items:center;gap:12px;flex:1;flex-wrap:wrap;"><span style="font-size:2rem;font-weight:800;">${currentProfile.name}</span><span style="font-size:2rem;font-weight:800;color:var(--accent);">${voClass}</span><div style="display:flex;flex-direction:column;gap:4px;">${['리베','시창'].map(ex=>{const on=extras.includes(ex);return`<span style="padding:2px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1.5px solid ${on?'var(--accent3)':'var(--border)'};color:${on?'var(--accent3)':'var(--text2)'};background:${on?'rgba(106,247,200,0.1)':'var(--surface2)'};${on?'':'opacity:0.45;'}">${ex}</span>`;}).join('')}</div></div>${days?`<div style="text-align:center;"><div style="font-size:0.72rem;font-weight:700;color:var(--accent2);">소미쌤과</div><div style="font-size:2rem;font-weight:800;color:var(--accent2);">+${days}일✨</div></div>`:''}</div>`;
 }
 function toDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function formatDur(s){return s>=60?Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s':s+'s';}
+
+/* ════════════════════════════════════
+   도넛 그래프 렌더 (4번 요구사항)
+════════════════════════════════════ */
+function renderDonut(logs){
+  const svg=document.getElementById('sum-donut');
+  if(!svg) return;
+  svg.innerHTML='';
+  const R=28,cx=32,cy=32,stroke=8;
+  const total=logs.length;
+  // 챕터별 집계
+  const counts={breath:0,vocal:0,rhythm:0};
+  logs.forEach(l=>{if(counts[l.chapter]!==undefined)counts[l.chapter]++;});
+  const colors={breath:'var(--accent)',vocal:'var(--accent2)',rhythm:'var(--accent3)'};
+  const order=['breath','vocal','rhythm'];
+
+  if(total===0){
+    // 빈 원
+    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',cx);circle.setAttribute('cy',cy);circle.setAttribute('r',R);
+    circle.setAttribute('fill','none');circle.setAttribute('stroke','var(--border)');
+    circle.setAttribute('stroke-width',stroke);
+    svg.appendChild(circle);
+    // 중앙 텍스트
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',cx);t.setAttribute('y',cy+5);t.setAttribute('text-anchor','middle');
+    t.setAttribute('font-size','11');t.setAttribute('fill','var(--text2)');t.setAttribute('font-family','DM Mono,monospace');
+    t.textContent='0';
+    svg.appendChild(t);
+    return;
+  }
+
+  const circumference=2*Math.PI*R;
+  let offset=0;
+  // 배경 원
+  const bg=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  bg.setAttribute('cx',cx);bg.setAttribute('cy',cy);bg.setAttribute('r',R);
+  bg.setAttribute('fill','none');bg.setAttribute('stroke','var(--border)');
+  bg.setAttribute('stroke-width',stroke);
+  svg.appendChild(bg);
+
+  order.forEach(ch=>{
+    const cnt=counts[ch];
+    if(cnt===0) return;
+    const frac=cnt/total;
+    const dash=frac*circumference;
+    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    arc.setAttribute('cx',cx);arc.setAttribute('cy',cy);arc.setAttribute('r',R);
+    arc.setAttribute('fill','none');arc.setAttribute('stroke',colors[ch]);
+    arc.setAttribute('stroke-width',stroke);
+    arc.setAttribute('stroke-dasharray',dash+' '+(circumference-dash));
+    arc.setAttribute('stroke-dashoffset',-offset);
+    arc.setAttribute('transform',`rotate(-90 ${cx} ${cy})`);
+    svg.appendChild(arc);
+    offset+=dash;
+  });
+
+  // 중앙 숫자 (총 횟수)
+  const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x',cx);t.setAttribute('y',cy+5);t.setAttribute('text-anchor','middle');
+  t.setAttribute('font-size','13');t.setAttribute('font-weight','700');
+  t.setAttribute('fill','var(--text)');t.setAttribute('font-family','DM Mono,monospace');
+  t.textContent=total;
+  svg.appendChild(t);
+}
+
 function updateSummary(){
   practiceLogs=loadData('somi_logs',{});
   const today=toDateStr(new Date()),logs=(practiceLogs[currentProfile.id]||[]).filter(l=>l.date===today);
-  document.getElementById('sum-count').textContent=logs.length;
-  const sec=logs.reduce((a,l)=>a+(l.duration||0),0);document.getElementById('sum-time').textContent=sec>=60?Math.floor(sec/60)+'m':sec+'s';
-  let streak=0,d=new Date();for(let i=0;i<365;i++){if((practiceLogs[currentProfile.id]||[]).some(l=>l.date===toDateStr(d))){streak++;d.setDate(d.getDate()-1);}else break;}
+  // 도넛 그래프
+  renderDonut(logs);
+  // 총 시간 한글
+  const sec=logs.reduce((a,l)=>a+(l.duration||0),0);
+  document.getElementById('sum-time').textContent=sec>0?formatDur(sec):'0초';
+  // 연속 일수
+  let streak=0,d=new Date();
+  for(let i=0;i<365;i++){if((practiceLogs[currentProfile.id]||[]).some(l=>l.date===toDateStr(d))){streak++;d.setDate(d.getDate()-1);}else break;}
   document.getElementById('sum-streak').textContent=streak;
-  const ch=[...new Set(logs.map(l=>l.chapter))];document.getElementById('sum-chapters').innerHTML=ch.map(c=>`<span class="sum-chapter-tag ${c}">${c==='breath'?'호흡':c==='vocal'?'발성':'리듬'}</span>`).join('');
+  // 챕터 태그
+  const ch=[...new Set(logs.map(l=>l.chapter))];
+  document.getElementById('sum-chapters').innerHTML=ch.map(c=>`<span class="sum-chapter-tag ${c}">${c==='breath'?'호흡':c==='vocal'?'발성':'리듬'}</span>`).join('');
 }
+
 function renderCalendar(){
   practiceLogs=loadData('somi_logs',{});teacherStamps=loadData('somi_teacher_stamps',{});
-  const grid=document.getElementById('cal-grid');document.getElementById('cal-title').textContent=calYear+'년 '+(calMonth+1)+'월';grid.innerHTML='';
+  const grid=document.getElementById('cal-grid');
+  document.getElementById('cal-title').textContent=calYear+'년 '+(calMonth+1)+'월';
+  grid.innerHTML='';
   ['일','월','화','수','목','금','토'].forEach(d=>{const l=document.createElement('div');l.className='cal-day-label';l.textContent=d;grid.appendChild(l);});
   const first=new Date(calYear,calMonth,1).getDay(),days=new Date(calYear,calMonth+1,0).getDate(),prev=new Date(calYear,calMonth,0).getDate();
   const today=toDateStr(new Date()),logs=practiceLogs[currentProfile.id]||[];
@@ -315,7 +464,28 @@ function renderCalendar(){
   }
 }
 function calMove(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
-function selectStamp(key,el){currentStamp=key;if(currentProfile){currentProfile.stamp=key;saveProfiles();}document.querySelectorAll('.stamp-opt').forEach(o=>o.classList.remove('active'));el.classList.add('active');renderCalendar();}
+
+/* ── 도장 선택 (로딩 스피너 포함, 3번 수정) ── */
+let _stampSaving=false;
+function selectStamp(key,el){
+  if(_stampSaving) return; // 저장 중 중복 클릭 방지
+  _stampSaving=true;
+  // 스피너 표시
+  const overlay=document.getElementById('stamp-loading');
+  if(overlay) overlay.classList.add('show');
+  // 즉시 UI 업데이트
+  currentStamp=key;
+  if(currentProfile){currentProfile.stamp=key;saveProfiles();}
+  document.querySelectorAll('.stamp-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+  renderCalendar();
+  // 스피너 해제 (단시간 후)
+  setTimeout(()=>{
+    if(overlay) overlay.classList.remove('show');
+    _stampSaving=false;
+  },400);
+}
+
 function showDayLog(dateStr){
   const logs=(practiceLogs[currentProfile.id]||[]).filter(l=>l.date===dateStr);
   let box=document.getElementById('inline-day-log');
@@ -324,22 +494,60 @@ function showDayLog(dateStr){
   box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1rem;font-weight:700">${dateStr} 연습 기록</h3><button onclick="document.getElementById('inline-day-log').remove()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button></div>`+(logs.length?`<table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${l.time||''}</td><td><span class="pill ${pc(l.chapter)}">${cn(l.chapter)}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text2);text-align:center;padding:16px">연습 기록이 없어요</p>');
   box.scrollIntoView({behavior:'smooth'});
 }
+
+/* ════════════════════════════════════
+   설정 탭 초기화 (6번 반영)
+════════════════════════════════════ */
 function initStudentSettings(){
-  const ni=document.getElementById('s-name-input');if(ni)ni.value=currentProfile.name;
+  const ni=document.getElementById('s-name-input');if(ni)ni.value=currentProfile.name||'';
   document.getElementById('s-gbtn-f').classList.toggle('active',currentProfile.gender==='female');
   document.getElementById('s-gbtn-m').classList.toggle('active',currentProfile.gender==='male');
+  // 생년월일
+  const bi=document.getElementById('s-birth-input');
+  if(bi) bi.value=currentProfile.birth||'';
   document.getElementById('theme-dark').classList.toggle('active',currentTheme==='dark');
   document.getElementById('theme-ivory').classList.toggle('active',currentTheme==='ivory');
+  updateSettingsDot();
 }
 let sGender='';
 function sSelectGender(g){sGender=g;document.getElementById('s-gbtn-f').classList.toggle('active',g==='female');document.getElementById('s-gbtn-m').classList.toggle('active',g==='male');}
-function saveStudentSettings(){const name=document.getElementById('s-name-input').value.trim();if(name)currentProfile.name=name;if(sGender)currentProfile.gender=sGender;saveProfiles();document.getElementById('tab-name-label').textContent=currentProfile.name;alert('저장됐어요!');}
+function saveStudentSettings(){
+  const name=document.getElementById('s-name-input').value.trim();
+  if(name) currentProfile.name=name;
+  if(sGender) currentProfile.gender=sGender;
+  saveProfiles();
+  document.getElementById('tab-name-label').textContent=currentProfile.name;
+  updateSettingsDot();
+  alert('저장됐어요!');
+}
+function saveStudentBirth(){
+  const bi=document.getElementById('s-birth-input');
+  if(!bi) return;
+  currentProfile.birth=bi.value||'';
+  saveProfiles();
+  updateSettingsDot();
+  alert('생년월일이 저장됐어요!');
+}
 function saveStudentPw(){const pw=document.getElementById('s-pw-input').value;if(!pw)return;currentProfile.password=pw;saveProfiles();alert('비밀번호가 변경됐어요!');document.getElementById('s-pw-input').value='';}
 function setTheme(t){currentTheme=t;saveData('somi_theme',t);document.body.classList.toggle('theme-ivory',t==='ivory');document.getElementById('theme-dark').classList.toggle('active',t==='dark');document.getElementById('theme-ivory').classList.toggle('active',t==='ivory');}
-const STAMPS={apple:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M20.3 9.1 C20.1 9 17.2 6.3 14.8 7.1 C14.7 7.1 13.2 4.3 15.9 3.3 C16 3.3 18.7 2.2 20.2 5.6" stroke="#e85555" stroke-width="1.7" stroke-linecap="round" fill="none"/><path d="M20.2 9.1 C14.1 8.5 9.2 13.2 8.7 22.1 C9.9 28.5 13.6 33.5 17.6 34.7 C18.6 35 21.3 35.1 22.4 34.6 C27.1 32.8 31.8 19.4 20.2 9.1Z" stroke="#e85555" stroke-width="1.9" stroke-linecap="round" fill="rgba(232,85,85,0.13)"/><path d="M20.2 9.1 C21.3 6.9 23.8 6.3 25.8 7.4" stroke="#4a8c3f" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>`},sunflower:{svg:`<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="5" stroke="#7a4f1e" stroke-width="1.8" fill="rgba(122,79,30,0.15)"/><path d="M20 7v4M20 29v4M7 20h4M29 20h4" stroke="#f5c842" stroke-width="2.1" stroke-linecap="round"/><path d="M11.5 11.5l2.8 2.8M25.7 25.7l2.8 2.8M28.5 11.5l-2.8 2.8M14.3 25.7l-2.8 2.8" stroke="#f5c842" stroke-width="2" stroke-linecap="round"/></svg>`},cloud:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M10.3 27.2 C6.1 27.4 3.8 24.3 3.9 21.1 C4 17.8 6.4 15.3 9.6 15.2 C9.8 9.2 15.6 8.3 23.1 13.1 C24.6 12.5 27.7 12.9 29.2 14.8 C32.8 16.3 34.3 21.1 31.6 25.2 C30.4 27.1 28 28.3 25.6 28.1M10.3 27.2 C14 27.8 20.3 28 25.6 28.1" stroke="#6ab4f7" stroke-width="1.9" stroke-linecap="round" fill="rgba(106,180,247,0.13)"/></svg>`},acorn:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M12.8 12.1 C12.6 11.2 13.5 10.8 20.1 10.9 C26.7 11 27.4 11.4 27.2 12.3 C26.9 14.8 25.1 17.3 20.1 17.4 C15 17.5 13.1 14.9 12.8 12.1Z" stroke="#8b6914" stroke-width="1.8" fill="rgba(139,105,20,0.15)"/><path d="M15.3 17.8 C14.8 21.9 17.3 29.8 20.1 32.3 C22.9 29.8 25.4 21.8 24.9 17.8" stroke="#c8902a" stroke-width="1.9" fill="rgba(200,144,42,0.15)"/></svg>`}};
+
+/* ════════════════════════════════════
+   도장 SVG 정의
+════════════════════════════════════ */
+const STAMPS={
+  apple:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M20.3 9.1 C20.1 9 17.2 6.3 14.8 7.1 C14.7 7.1 13.2 4.3 15.9 3.3 C16 3.3 18.7 2.2 20.2 5.6" stroke="#e85555" stroke-width="1.7" stroke-linecap="round" fill="none"/><path d="M20.2 9.1 C14.1 8.5 9.2 13.2 8.7 22.1 C9.9 28.5 13.6 33.5 17.6 34.7 C18.6 35 21.3 35.1 22.4 34.6 C27.1 32.8 31.8 19.4 20.2 9.1Z" stroke="#e85555" stroke-width="1.9" stroke-linecap="round" fill="rgba(232,85,85,0.13)"/><path d="M20.2 9.1 C21.3 6.9 23.8 6.3 25.8 7.4" stroke="#4a8c3f" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>`},
+  sunflower:{svg:`<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="5" stroke="#7a4f1e" stroke-width="1.8" fill="rgba(122,79,30,0.15)"/><path d="M20 7v4M20 29v4M7 20h4M29 20h4" stroke="#f5c842" stroke-width="2.1" stroke-linecap="round"/><path d="M11.5 11.5l2.8 2.8M25.7 25.7l2.8 2.8M28.5 11.5l-2.8 2.8M14.3 25.7l-2.8 2.8" stroke="#f5c842" stroke-width="2" stroke-linecap="round"/></svg>`},
+  cloud:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M10.3 27.2 C6.1 27.4 3.8 24.3 3.9 21.1 C4 17.8 6.4 15.3 9.6 15.2 C9.8 9.2 15.6 8.3 23.1 13.1 C24.6 12.5 27.7 12.9 29.2 14.8 C32.8 16.3 34.3 21.1 31.6 25.2 C30.4 27.1 28 28.3 25.6 28.1M10.3 27.2 C14 27.8 20.3 28 25.6 28.1" stroke="#6ab4f7" stroke-width="1.9" stroke-linecap="round" fill="rgba(106,180,247,0.13)"/></svg>`},
+  acorn:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M12.8 12.1 C12.6 11.2 13.5 10.8 20.1 10.9 C26.7 11 27.4 11.4 27.2 12.3 C26.9 14.8 25.1 17.3 20.1 17.4 C15 17.5 13.1 14.9 12.8 12.1Z" stroke="#8b6914" stroke-width="1.8" fill="rgba(139,105,20,0.15)"/><path d="M15.3 17.8 C14.8 21.9 17.3 29.8 20.1 32.3 C22.9 29.8 25.4 21.8 24.9 17.8" stroke="#c8902a" stroke-width="1.9" fill="rgba(200,144,42,0.15)"/></svg>`}
+};
 function getStampSVG(key){return(STAMPS[key]||STAMPS.apple).svg;}
+
+/* ════════════════════════════════════
+   DOMContentLoaded
+════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',async function(){
   if(currentTheme==='ivory')document.body.classList.add('theme-ivory');
+  // 도장 SVG 초기 주입
   document.querySelectorAll('.stamp-opt[data-stamp]').forEach(el=>{el.innerHTML=getStampSVG(el.getAttribute('data-stamp'));});
   const savedId=localStorage.getItem('somi_current_profile_id');
   if(savedId){
@@ -350,7 +558,6 @@ document.addEventListener('DOMContentLoaded',async function(){
       document.body.style.visibility='visible';
       enterStudentApp();
     } else {
-      // 프로필 없으면 로그인으로
       document.body.style.visibility='visible';
       window.location.href='index.html';
     }
@@ -365,12 +572,20 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
     await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings'].map(async k=>{try{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}catch(e){}}));
-    profiles=loadData('somi_profiles',[]);practiceLogs=loadData('somi_logs',{});teacherStamps=loadData('somi_teacher_stamps',{});classSettings=loadData('somi_class_settings',{});lessonStarts=loadData('somi_lesson_starts',{});
-    // Firebase 완료 후 무조건 홈 재렌더링 — 새 기기에서 도장/기록이 뒤늦게 뜨는 문제 해결
+    profiles=loadData('somi_profiles',[]);
+    practiceLogs=loadData('somi_logs',{});
+    teacherStamps=loadData('somi_teacher_stamps',{});
+    classSettings=loadData('somi_class_settings',{});
+    lessonStarts=loadData('somi_lesson_starts',{});
+    // Firebase 완료 후 홈 재렌더링 — 도장 SVG 반드시 재주입
     if(currentProfile){
       const r=profiles.find(p=>p.id===currentProfile.id);
       if(r) currentProfile=r;
+      // 도장 재주입 후 렌더 (타이밍 버그 원천 차단)
+      _reinjectStampSVGs();
+      document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
       renderStudentHome();
+      updateSettingsDot();
     }
   }catch(e){console.warn('Firebase 연결 실패:',e);}
 });

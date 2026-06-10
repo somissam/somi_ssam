@@ -43,11 +43,12 @@ button{font-family:inherit;cursor:pointer;}
 .divider span{font-size:0.75rem;color:var(--text2);}
 
 /* ── 프로필 생성 ── */
-#create-profile-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;padding:24px;gap:20px;background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);}
+#create-profile-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;padding:24px;gap:20px;background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);overflow-y:auto;}
 .theme-ivory #create-profile-screen{background:radial-gradient(ellipse at 30% 20%,#e0d5c5 0%,var(--bg) 60%);}
 .create-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:20px;}
 .form-group{display:flex;flex-direction:column;gap:8px;}
 .form-label{font-size:0.8rem;color:var(--text2);}
+.form-hint{font-size:0.72rem;color:var(--accent3);margin-top:2px;}
 .form-input{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-size:0.95rem;font-family:inherit;outline:none;transition:border-color 0.2s;}
 .form-input:focus{border-color:var(--accent);}
 .gender-select{display:flex;gap:10px;}
@@ -98,6 +99,7 @@ button{font-family:inherit;cursor:pointer;}
     <div class="form-group">
       <div class="form-label">이름 (본명)</div>
       <input type="text" class="form-input" id="new-name" placeholder="이름을 입력하세요" autocomplete="off">
+      <div class="form-hint">✏️ 한글 이름도 입력할 수 있어요 (예: 홍길동, 김소미)</div>
     </div>
     <div class="form-group">
       <div class="form-label">성별</div>
@@ -105,6 +107,11 @@ button{font-family:inherit;cursor:pointer;}
         <button class="gender-btn" id="gbtn-f" onclick="selectGender('female')">여자</button>
         <button class="gender-btn" id="gbtn-m" onclick="selectGender('male')">남자</button>
       </div>
+    </div>
+    <div class="form-group">
+      <div class="form-label">생년월일</div>
+      <input type="date" class="form-input" id="new-birth" autocomplete="off">
+      <div class="form-hint">나이 확인용이에요. 입력하지 않아도 돼요.</div>
     </div>
     <div class="form-group">
       <div class="form-label">비밀번호 설정</div>
@@ -173,37 +180,37 @@ async function checkLogin(){
   const inputPw=document.getElementById('login-pw').value;
   const saveFlag=document.getElementById('save-login-check').checked;
   const errEl=document.getElementById('login-error');
+  errEl.style.display='none';
 
   if(!inputName||!inputPw){
-    errEl.textContent='이름과 비밀번호를 모두 입력해주세요';
+    errEl.textContent='이름과 비밀번호를 입력해주세요';
     errEl.style.display='block';
     return;
   }
 
   // ── 선생님 로그인 ──
-  if(inputName==='소미쌤'){
-    if(inputPw===teacherPw()){
-      if(saveFlag){
-        const ua=navigator.userAgent;
-        let deviceName='알 수 없는 기기';
-        if(/iPhone/.test(ua)) deviceName='iPhone · Safari';
-        else if(/iPad/.test(ua)) deviceName='iPad · Safari';
-        else if(/Android.*Chrome/.test(ua)) deviceName='Android · Chrome';
-        else if(/Macintosh.*Safari/.test(ua)&&!/Chrome/.test(ua)) deviceName='Mac · Safari';
-        else if(/Macintosh.*Chrome/.test(ua)) deviceName='Mac · Chrome';
-        else if(/Windows.*Chrome/.test(ua)) deviceName='Windows · Chrome';
-        else if(/Windows/.test(ua)) deviceName='Windows · 브라우저';
-        const token=Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
-        saveData(TEACHER_AUTO_KEY,{token,deviceName,registeredAt:new Date().toISOString()});
-        await registerTeacherDevice(token,deviceName);
-      }
-      window.location.href='somi_ssam_home.html?mode=teacher';
-    } else {
-      errEl.textContent='비밀번호가 틀렸어요';
-      errEl.style.display='block';
-      document.getElementById('login-pw').value='';
-      document.getElementById('login-pw').focus();
+  if(inputPw===teacherPw()){
+    if(saveFlag){
+      const ua=navigator.userAgent;
+      const isIpadOS=/Macintosh/.test(ua)&&navigator.maxTouchPoints>1;
+      let deviceName='알 수 없는 기기';
+      if(/iPhone/.test(ua)) deviceName='iPhone · Safari';
+      else if(/iPad/.test(ua)||isIpadOS) deviceName='iPad · Safari';
+      else if(/Android.*Chrome/.test(ua)) deviceName='Android · Chrome';
+      else if(/Macintosh/.test(ua)&&!/Chrome/.test(ua)) deviceName='MacBook · Safari';
+      else if(/Macintosh/.test(ua)&&/Chrome/.test(ua)) deviceName='MacBook · Chrome';
+      else if(/Windows.*Chrome/.test(ua)) deviceName='Windows · Chrome';
+      else if(/Windows/.test(ua)) deviceName='Windows · 브라우저';
+      const token=Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
+      saveData(TEACHER_AUTO_KEY,{token,deviceName,registeredAt:new Date().toISOString()});
+      await registerTeacherDevice(token,deviceName);
     }
+    window.location.href='somi_ssam_home.html?mode=teacher';
+  } else {
+    errEl.textContent='비밀번호가 틀렸어요';
+    errEl.style.display='block';
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-pw').focus();
     return;
   }
 
@@ -244,6 +251,7 @@ let selectedGender='';
 function showCreateProfile(){
   document.getElementById('new-name').value='';
   document.getElementById('new-pw').value='';
+  document.getElementById('new-birth').value='';
   selectedGender='';
   document.getElementById('gbtn-f').classList.remove('active');
   document.getElementById('gbtn-m').classList.remove('active');
@@ -264,6 +272,7 @@ function selectGender(g){
 async function createProfile(){
   const name=document.getElementById('new-name').value.trim();
   const pw=document.getElementById('new-pw').value;
+  const birth=document.getElementById('new-birth').value||''; // 선택 항목 — 빈 값 허용
   document.getElementById('create-error').style.display='none';
   document.getElementById('create-duplicate-error').style.display='none';
 
@@ -275,13 +284,29 @@ async function createProfile(){
   document.getElementById('create-loading').style.display='block';
 
   const newId=Date.now().toString();
-  const newProfile={id:newId,name,gender:selectedGender,password:pw,stamp:'apple',createdAt:new Date().toISOString()};
+  const newProfile={
+    id:newId,
+    name,
+    gender:selectedGender,
+    password:pw,
+    birth,           // ★ 생년월일
+    stamp:'apple',
+    createdAt:new Date().toISOString()
+  };
   const updatedProfiles=[...fresh,newProfile];
   saveData('somi_profiles',updatedProfiles);
   profiles=updatedProfiles;
 
+  // ★ 신규 프로필: 모든 패턴을 잠금(false)으로 초기화
+  // 패턴 목록을 localStorage에서 읽어 전부 false 처리
   const locks=loadData('somi_pattern_locks',{});
+  const allPatterns=[
+    ...JSON.parse(localStorage.getItem('somi_breath_patterns')||'[]'),
+    ...JSON.parse(localStorage.getItem('somi_vocal_patterns')||'[]'),
+    ...JSON.parse(localStorage.getItem('somi_rhythm_patterns')||'[]'),
+  ];
   locks[newId]={};
+  allPatterns.forEach(pat=>{ locks[newId][pat.id]=false; });
   saveData('somi_pattern_locks',locks);
 
   if(_fsSet){

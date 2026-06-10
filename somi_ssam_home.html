@@ -505,14 +505,14 @@ function renderTeacher() {
   document.getElementById('t-today').textContent = profiles.filter(p=>(practiceLogs[p.id]||[]).some(l=>l.date===today)).length;
   let ws=0; const now=new Date();
   for(const p of profiles) for(let i=0;i<7;i++){ const d=new Date(now); d.setDate(d.getDate()-i); (practiceLogs[p.id]||[]).filter(l=>l.date===toDateStr(d)).forEach(l=>ws+=(l.duration||0)); }
-  document.getElementById('t-week').textContent = ws>=60?Math.floor(ws/60)+'m':ws+'s';
+  document.getElementById('t-week').textContent = formatDur(ws);
 
   const list=document.getElementById('t-student-list'); list.innerHTML='';
   if(!profiles.length) { list.innerHTML='<p style="color:var(--text2);text-align:center;padding:20px">등록된 학생이 없어요</p>'; }
   profiles.forEach((p,i)=>{
     const tl=(practiceLogs[p.id]||[]).filter(l=>l.date===today), ts=tl.reduce((a,l)=>a+(l.duration||0),0);
     const div=document.createElement('div'); div.className='student-row';
-    div.innerHTML=`<div class="s-avatar ${p.gender==='female'?'f':'m'}">${p.name[0]}</div><div class="s-info"><h4>${p.name}</h4><p>${p.gender==='female'?'여성':'남성'} · ${getLastAccess(p.id)}</p></div><div class="s-stats"><div class="s-stat"><div class="val">${ts>0?formatDur(ts):'—'}</div><div class="lbl">오늘</div></div></div>`;
+    div.innerHTML=`<div class="s-avatar ${p.gender==='female'?'f':'m'}">${p.name[0]}</div><div class="s-info"><h4>${p.name}</h4><p>${p.gender==='female'?'여성':'남성'}${p.birth?' · '+calcAge(p.birth):''} · ${getLastAccess(p.id)}</p></div><div class="s-stats"><div class="s-stat"><div class="val">${ts>0?formatDur(ts):'—'}</div><div class="lbl">오늘</div></div></div>`;
     div.onclick=()=>showStudentDetail(i); list.appendChild(div);
   });
 
@@ -594,7 +594,7 @@ function showStudentDetail(idx) {
 function renderDetailContent(p) {
   const logs=practiceLogs[p.id]||[], today=toDateStr(new Date());
   const tl=logs.filter(l=>l.date===today), ts=tl.reduce((a,l)=>a+(l.duration||0),0);
-  let html=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px"><div class="s-avatar ${p.gender==='female'?'f':'m'}" style="width:52px;height:52px;font-size:1.2rem">${p.name[0]}</div><div><h2 style="font-size:1.3rem;font-weight:700">${p.name}</h2><p style="color:var(--text2);font-size:0.8rem">${p.gender==='female'?'여성':'남성'}</p></div></div>`;
+  let html=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px"><div class="s-avatar ${p.gender==='female'?'f':'m'}" style="width:52px;height:52px;font-size:1.2rem">${p.name[0]}</div><div><h2 style="font-size:1.3rem;font-weight:700">${p.name}</h2><p style="color:var(--text2);font-size:0.8rem">${p.gender==='female'?'여성':'남성'}${p.birth?' · '+calcAge(p.birth):''}</p></div></div>`;
   html+=`<div class="stats-grid" style="margin-bottom:20px"><div class="stat-card"><div class="stat-label">오늘 연습</div><div class="stat-value a1">${ts>0?formatDur(ts):'없음'}</div></div><div class="stat-card"><div class="stat-label">총 연습 횟수</div><div class="stat-value a3">${logs.length}</div></div></div>`;
   html+=`<div class="teacher-cal" id="t-cal-wrap"><div class="cal-header"><button class="cal-nav" onclick="tCalMove(-1)">‹</button><h3 id="t-cal-title"></h3><button class="cal-nav" onclick="tCalMove(1)">›</button></div><div class="cal-grid" id="t-cal-grid"></div></div>`;
   html+=`<div class="comment-box"><h4>📮 도장 + 코멘트 보내기 (<span id="selected-date-label">날짜를 선택해주세요</span>)</h4><textarea class="comment-input" id="teacher-comment" placeholder="코멘트를 입력해주세요 (선택사항)"></textarea><button class="send-stamp-btn" onclick="sendTeacherStamp()">⭐ 잘했어요 도장 보내기</button></div>`;
@@ -1378,20 +1378,21 @@ function renderProfileManage() {
         if(backups[p.id]){
           locks[p.id]=backups[p.id]; delete backups[p.id];
         } else {
+          // 숨고르기 → 일반 반: 전체 잠금 후 breath_full만 열기
           locks[p.id]={};
-          allPatterns.forEach(pat=>{
-            const lvKey=Object.keys(patternLevelOverrides).find(k=>k===pat.id||k.startsWith(pat.id+'__'));
-            const lvId=lvKey?patternLevelOverrides[lvKey]:null;
-            locks[p.id][pat.id]=lvId==='lv1';
-          });
+          allPatterns.forEach(pat=>{ locks[p.id][pat.id]=false; });
+          if(locks[p.id]['breath_full']!==undefined) locks[p.id]['breath_full']=true;
+          else {
+            // breath_full이 패턴 목록에 없을 경우 대비 (혹시 없으면 그냥 false 유지)
+            const hasBreathFull=allPatterns.some(pat=>pat.id==='breath_full');
+            if(!hasBreathFull) locks[p.id]['breath_full']=true; // 패턴 미로딩 환경 대비
+          }
         }
       } else if(!prevClass&&newClass&&newClass!=='숨고르기'){
+        // 반 없음 → 반 배정: 전체 잠금 후 breath_full만 열기
         if(!locks[p.id]) locks[p.id]={};
-        allPatterns.forEach(pat=>{
-          const lvKey=Object.keys(patternLevelOverrides).find(k=>k===pat.id||k.startsWith(pat.id+'__'));
-          const lvId=lvKey?patternLevelOverrides[lvKey]:null;
-          locks[p.id][pat.id]=lvId==='lv1';
-        });
+        allPatterns.forEach(pat=>{ locks[p.id][pat.id]=false; });
+        locks[p.id]['breath_full']=true;
       }
     });
     patternLocks=locks; savePatternLocks();
@@ -1431,7 +1432,7 @@ function renderProfileManage() {
       // 이름
       const nameSpan=document.createElement('span');
       nameSpan.style.cssText='font-size:0.9rem;font-weight:700;min-width:60px;';
-      nameSpan.textContent=p.name+' ('+(p.gender==='female'?'여':'남')+')';
+      nameSpan.textContent=p.name+' ('+(p.gender==='female'?'여':'남')+(p.birth?', '+calcAge(p.birth):'')+')';
       line1.appendChild(nameSpan);
 
       // ★ 비밀번호 표시 (눈 아이콘 토글)
@@ -1595,7 +1596,26 @@ function renderLevelManager() {
    【 섹션 K 】 유틸 / 초기화
 ════════════════════════════════════════════════ */
 function toDateStr(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function formatDur(s) { return s>=60?Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s':s+'s'; }
+function calcAge(birthStr){
+  if(!birthStr) return '';
+  try{
+    const b=new Date(birthStr),now=new Date();
+    let age=now.getFullYear()-b.getFullYear();
+    const m=now.getMonth()-b.getMonth();
+    if(m<0||(m===0&&now.getDate()<b.getDate())) age--;
+    return age>=0?age+'세':'';
+  }catch(e){return '';}
+}
+function formatDur(s){
+  s=Math.round(s)||0;
+  if(s<=0) return '0초';
+  const h=Math.floor(s/3600);
+  const m=Math.floor((s%3600)/60);
+  const sec=s%60;
+  if(h>0){ if(m>0) return h+'시간 '+m+'분'; return h+'시간'; }
+  if(m>0){ if(sec>0) return m+'분 '+sec+'초'; return m+'분'; }
+  return sec+'초';
+}
 
 document.addEventListener('DOMContentLoaded', async function() {
   if(currentTheme==='ivory') document.body.classList.add('theme-ivory');
