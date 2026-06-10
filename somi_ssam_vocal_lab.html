@@ -904,7 +904,7 @@ document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true});
 function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
 function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
-function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
+function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),_getAudioNow()+0.01,0.5);}
 
 // 스타카토: 전체 박자의 50%만 재생
 function playPianoNoteStaccato(freq,startTime,fullDuration){
@@ -952,15 +952,25 @@ let _fn_applyVisual     = null;
 let _fn_onComplete      = null; // 완료 시 처리
 
 let currentNoteInterval=1; // 실제 틱 간격 — 카운팅=beatInterval, 패턴=beatInterval*(4/noteDiv)
+// wallStartTime: startEngine 시점의 Date.now() (ms)
+// audioCtx.currentTime이 0에 묶여도 wall clock 기반으로 스케줄링
+let wallStartTime=0;
+function _getAudioNow(){
+  // Safari에서 currentTime이 0이면 wall clock으로 대체
+  if(audioCtx&&audioCtx.currentTime>0)return audioCtx.currentTime;
+  if(wallStartTime>0)return(Date.now()-wallStartTime)/1000;
+  return 0;
+}
 function schedulerTick(){
   if(!audioCtx||!_fn_scheduleOneBeat)return;
   try{
-    while(nextBeatTime<audioCtx.currentTime+0.15){_fn_scheduleOneBeat(nextBeatTime);nextBeatTime+=currentNoteInterval;}
+    const now=_getAudioNow();
+    while(nextBeatTime<now+0.15){_fn_scheduleOneBeat(nextBeatTime);nextBeatTime+=currentNoteInterval;}
   }catch(e){console.error('[schedulerTick]',e);}
 }
 function timerFrame(){
   if(!audioCtx){timerRafId=requestAnimationFrame(timerFrame);return;}
-  const now=audioCtx.currentTime;
+  const now=_getAudioNow();
   while(beatQueue.length&&beatQueue[0].time<=now+0.050){if(_fn_applyVisual)_fn_applyVisual(beatQueue.shift().vis);else beatQueue.shift();}
   if(stopScheduled&&now>=stopAudioTime-0.01){
     stopScheduled=false;
@@ -1003,13 +1013,14 @@ function startEngine(){
   }
   const _realStart=()=>{
     _dbg('_realStart, currentTime='+audioCtx.currentTime.toFixed(4));
+    wallStartTime=Date.now(); // wall clock 기준점 세팅
     isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
     beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
     const glissWrap=document.getElementById('glissando-slider-wrap');
     if(glissWrap&&glissWrap._setTransition)glissWrap._setTransition(Math.round(beatInterval*1000));
     if(isPaused){isPaused=false;stopScheduled=false;beatQueue=[];
       if(pausedElapsed>0)mainStartWallTime=Date.now()-pausedElapsed*1000;
-      nextBeatTime=audioCtx.currentTime+0.05;
+      nextBeatTime=_getAudioNow()+0.05;
       schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
       _dbg('resumed from pause');return;}
     stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
@@ -1017,9 +1028,9 @@ function startEngine(){
     if(isGlissandoPat())_resetGlissandoSlider(true);
     _fn_onEngineStart();
     prevRootMidi=_fn_getCurrentRootMidi();
-    nextBeatTime=audioCtx.currentTime+0.05;
+    nextBeatTime=_getAudioNow()+0.05;
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
-    _dbg('scheduler started, nextBeatTime='+nextBeatTime.toFixed(3));
+    _dbg('scheduler started, nextBeatTime='+nextBeatTime.toFixed(3)+' audioNow='+_getAudioNow().toFixed(4));
   };
   const _doStart=()=>{
     _dbg('_doStart, currentTime='+audioCtx.currentTime.toFixed(4));
@@ -1071,7 +1082,7 @@ function _commonScheduleCounting(time, getRoot, getNextRoot, getNextRootDir, onF
     activeBarType=BAR_TYPE_PATTERN;seqStep=0;patStep=0;
     currentNoteInterval=beatInterval; // 패턴도 4박 기준이므로 beatInterval 그대로
     const firstMain=time+beatInterval;
-    if(mainStartWallTime===0)mainStartWallTime=Date.now()+(firstMain-audioCtx.currentTime)*1000;
+    if(mainStartWallTime===0)mainStartWallTime=Date.now()+(firstMain-_getAudioNow())*1000;
     if(loopCount>0)_fn_advanceKey();
     prevRootMidi=_fn_getCurrentRootMidi();loopCount++;
   }
