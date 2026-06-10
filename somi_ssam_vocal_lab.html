@@ -981,9 +981,15 @@ function timerFrame(){
 }
 function togglePlay(){if(isPlaying)pauseEngine();else startEngine();}
 function startEngine(){
-  if(!audioCtx)initAudio();
-  // iOS Safari: AudioContext가 suspended 상태면 resume() 후 스케줄링
-  // resume()은 Promise를 반환하므로 then()으로 이어서 처리
+  // Safari: AudioContext는 반드시 터치 이벤트 핸들러 안에서 생성+resume해야 소리남
+  if(!audioCtx){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    audioCtx=new AC();
+    masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+    metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
+    pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
+  }
   const _doStart=()=>{
     isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
     beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
@@ -1001,11 +1007,8 @@ function startEngine(){
     nextBeatTime=audioCtx.currentTime+0.05;
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
   };
-  if(audioCtx.state==='suspended'){
-    audioCtx.resume().then(_doStart).catch(_doStart);
-  } else {
-    _doStart();
-  }
+  // suspended 여부 관계없이 항상 resume() Promise 체인 — Safari 터치 이벤트 안에서 실행 보장
+  audioCtx.resume().then(_doStart).catch(_doStart);
 }
 function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
