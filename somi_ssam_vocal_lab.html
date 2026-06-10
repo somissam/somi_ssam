@@ -1823,8 +1823,15 @@ function buildPracticeUI(){
 
   /* ── 컨트롤 ── */
   const ctrl=document.createElement('div');ctrl.className='controls';
-  ctrl.innerHTML='<button class="ctrl-btn reset" onclick="hardReset()">↺</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶</button><button class="ctrl-btn stop" onclick="stopExercise()">■</button>';
+  ctrl.innerHTML='<button class="ctrl-btn reset" id="reset-btn">↺</button><button class="ctrl-btn play" id="play-btn">▶</button><button class="ctrl-btn stop" id="stop-btn">■</button>';
   body.appendChild(ctrl);
+  // Safari: onclick 대신 touchend+click 둘 다 — 터치 이벤트 안에서 AudioContext 동작 보장
+  const _addBtn=(id,fn)=>{const b=document.getElementById(id);if(!b)return;
+    b.addEventListener('touchend',function(e){e.preventDefault();fn();},{passive:false});
+    b.addEventListener('click',fn);};
+  _addBtn('play-btn',togglePlay);
+  _addBtn('reset-btn',hardReset);
+  _addBtn('stop-btn',stopExercise);
 
   /* ── 모드별 키 UI ── */
   if(TMODE===MODE_BASIC){buildVowelSelector(body);buildBasicKeyUI(body);buildTempoUI(body);}
