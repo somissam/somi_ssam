@@ -1001,13 +1001,8 @@ function startEngine(){
   } else {
     _dbg('audioCtx exists, state='+audioCtx.state);
   }
-  const _doStart=()=>{
-    _dbg('_doStart called, ctx.state='+audioCtx.state+' currentTime='+audioCtx.currentTime.toFixed(3));
-    // Safari: resume() 후에도 currentTime=0이면 아직 실제로 안 깨어난 것 — 짧게 대기 후 재시도
-    if(audioCtx.currentTime===0){
-      _dbg('currentTime=0! waiting for ctx to tick...');
-      setTimeout(_doStart, 50); return;
-    }
+  const _realStart=()=>{
+    _dbg('_realStart, currentTime='+audioCtx.currentTime.toFixed(4));
     isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
     beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
     const glissWrap=document.getElementById('glissando-slider-wrap');
@@ -1025,6 +1020,29 @@ function startEngine(){
     nextBeatTime=audioCtx.currentTime+0.05;
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
     _dbg('scheduler started, nextBeatTime='+nextBeatTime.toFixed(3));
+  };
+  const _doStart=()=>{
+    _dbg('_doStart, currentTime='+audioCtx.currentTime.toFixed(4));
+    if(audioCtx.currentTime===0){
+      // Safari: 무음 버퍼 재생으로 AudioContext 클럭 강제 활성화
+      _dbg('firing silent buffer to unlock ctx...');
+      const buf=audioCtx.createBuffer(1,1,audioCtx.sampleRate);
+      const src=audioCtx.createBufferSource();src.buffer=buf;
+      src.connect(audioCtx.destination);src.start(0);
+      // 클럭이 움직일 때까지 폴링
+      let tries=0;
+      const wait=setInterval(()=>{
+        tries++;
+        _dbg('poll #'+tries+' currentTime='+audioCtx.currentTime.toFixed(4));
+        if(audioCtx.currentTime>0||tries>40){
+          clearInterval(wait);
+          _dbg('ctx unlocked! currentTime='+audioCtx.currentTime.toFixed(4));
+          _realStart();
+        }
+      },25);
+    } else {
+      _realStart();
+    }
   };
   _dbg('calling resume()...');
   audioCtx.resume().then(()=>{_dbg('resume() resolved, state='+audioCtx.state);_doStart();}).catch(e=>{_dbg('resume() CATCH: '+e);_doStart();});
