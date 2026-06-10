@@ -1161,7 +1161,31 @@ function startEngine(){
 }
 function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
-function stopExercise(){stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
+function logPractice(){
+  if(!_currentProfileId||elapsedSeconds<2) return;
+  const pat=currentPat(); if(!pat) return;
+  const modeLabel={
+    [MODE_BASIC]:'기본',[MODE_PRACTICE]:'연습',
+    [MODE_WARMUP_1]:'목풀기1',[MODE_WARMUP_2]:'목풀기2',
+    [MODE_ADVANCED_1]:'심화'
+  }[TMODE]||'기본';
+  try{
+    let logs=JSON.parse(localStorage.getItem('somi_logs')||'{}');
+    if(!logs[_currentProfileId]) logs[_currentProfileId]=[];
+    const now=new Date();
+    logs[_currentProfileId].push({
+      date:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'),
+      time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),
+      chapter:'vocal',
+      exercise:pat.name+' ('+modeLabel+')',
+      duration:Math.floor(elapsedSeconds),
+    });
+    const j=JSON.stringify(logs);
+    localStorage.setItem('somi_logs',j);
+    if(window._fsSet) window._fsSet('somi_logs',j);
+  }catch(e){}
+}
+function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
 function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
 
 // 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
