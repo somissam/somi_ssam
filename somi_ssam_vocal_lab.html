@@ -980,17 +980,29 @@ function timerFrame(){
   if(isPlaying||stopScheduled)timerRafId=requestAnimationFrame(timerFrame);
 }
 function togglePlay(){if(isPlaying)pauseEngine();else startEngine();}
+function _dbg(msg){
+  console.log('[DBG]',msg);
+  let el=document.getElementById('_dbg_box');
+  if(!el){el=document.createElement('div');el.id='_dbg_box';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,0.85);color:#0f0;font-size:11px;padding:6px 8px;max-height:160px;overflow-y:auto;';
+    document.body.appendChild(el);}
+  el.innerHTML+='<div>'+msg+'</div>';el.scrollTop=el.scrollHeight;
+}
 function startEngine(){
-  // Safari: AudioContext는 반드시 터치 이벤트 핸들러 안에서 생성+resume해야 소리남
+  _dbg('startEngine called');
   if(!audioCtx){
     const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
+    if(!AC){_dbg('NO AudioContext API');return;}
     audioCtx=new AC();
+    _dbg('AudioContext created, state='+audioCtx.state);
     masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
     metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
     pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
+  } else {
+    _dbg('audioCtx exists, state='+audioCtx.state);
   }
   const _doStart=()=>{
+    _dbg('_doStart called, ctx.state='+audioCtx.state+' currentTime='+audioCtx.currentTime.toFixed(3));
     isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
     beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
     const glissWrap=document.getElementById('glissando-slider-wrap');
@@ -998,7 +1010,8 @@ function startEngine(){
     if(isPaused){isPaused=false;stopScheduled=false;beatQueue=[];
       if(pausedElapsed>0)mainStartWallTime=Date.now()-pausedElapsed*1000;
       nextBeatTime=audioCtx.currentTime+0.05;
-      schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);return;}
+      schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
+      _dbg('resumed from pause');return;}
     stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
     activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
     if(isGlissandoPat())_resetGlissandoSlider(true);
@@ -1006,9 +1019,10 @@ function startEngine(){
     prevRootMidi=_fn_getCurrentRootMidi();
     nextBeatTime=audioCtx.currentTime+0.05;
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
+    _dbg('scheduler started, nextBeatTime='+nextBeatTime.toFixed(3));
   };
-  // suspended 여부 관계없이 항상 resume() Promise 체인 — Safari 터치 이벤트 안에서 실행 보장
-  audioCtx.resume().then(_doStart).catch(_doStart);
+  _dbg('calling resume()...');
+  audioCtx.resume().then(()=>{_dbg('resume() resolved, state='+audioCtx.state);_doStart();}).catch(e=>{_dbg('resume() CATCH: '+e);_doStart();});
 }
 function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
