@@ -888,10 +888,30 @@ function getFullOffsets(){
 /* ════════════════════════════════════════════════
    【 섹션 D 】 오디오 엔진
 ════════════════════════════════════════════════ */
+console.log('[AUDIO-FIX v2] 동기식 언락+워치독 빌드 로드됨 — 2026-06-10');
 let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null;
 let metronomeVol=1.0,pianoVol=1.0;
 // ── iPad Safari 오디오 언락: 유저 제스처 컨텍스트 안에서 '동기식'으로만 실행 ──
 // 비동기(.then/setTimeout) 경유 시 Safari가 제스처 컨텍스트 소실로 판단 → currentTime이 0에서 멈춤
+// ★ 추가 원인: touchstart는 iOS에서 오디오 언락 제스처로 인정되지 않음 — touchend/click에서만 생성할 것
+//    touchstart에서 생성된 컨텍스트는 state='running'이어도 클럭이 0에 고착되는 '좀비'가 됨
+const _SILENT_WAV='data:audio/wav;base64,UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA==';
+let _silentEl=null,_clockWatchdog=null,_ctxRebuilds=0,_needGestureRebuild=false;
+function _playSilentElement(){
+  // iOS 오디오 세션을 'playback'으로 전환 — 무음 스위치/세션 잠금 해제 (unmute 기법)
+  try{
+    if(!_silentEl){_silentEl=document.createElement('audio');_silentEl.setAttribute('playsinline','');_silentEl.src=_SILENT_WAV;}
+    const p=_silentEl.play();if(p&&p.catch)p.catch(()=>{});
+  }catch(e){}
+}
+function _buildCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
+  audioCtx=new AC();
+  masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+  metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
+  pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
+  return true;
+}
 function _unlockAudio(){
   if(!audioCtx)return;
   try{
@@ -902,17 +922,43 @@ function _unlockAudio(){
     g.gain.value=0.0001;o.connect(g);g.connect(audioCtx.destination);
     o.start(0);o.stop(audioCtx.currentTime+0.05);
   }catch(e){}
+  _playSilentElement();
+}
+function _rebuildCtx(){
+  // 클럭이 죽은 좀비 컨텍스트 폐기 → 새로 생성 (최대 2회)
+  if(_ctxRebuilds>=2){_needGestureRebuild=true;return;}
+  _ctxRebuilds++;
+  try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
+  audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;
+  if(_buildCtx()){_unlockAudio();_awaitClock=true;console.log('[AUDIO] 컨텍스트 재생성 #'+_ctxRebuilds);}
+}
+function _startClockWatchdog(){
+  // 클럭(currentTime)이 실제로 움직이는지 감시 — 멈춰 있으면 단계적 소생 시도
+  if(_clockWatchdog)clearInterval(_clockWatchdog);
+  let tries=0;
+  _clockWatchdog=setInterval(()=>{
+    if(!audioCtx){clearInterval(_clockWatchdog);_clockWatchdog=null;return;}
+    if(audioCtx.currentTime>0){clearInterval(_clockWatchdog);_clockWatchdog=null;_needGestureRebuild=false;console.log('[AUDIO] 클럭 정상 기동 t='+audioCtx.currentTime.toFixed(4));return;}
+    tries++;
+    if(tries===3){try{audioCtx.suspend().then(()=>audioCtx.resume()).catch(()=>{});}catch(e){}console.log('[AUDIO] 클럭 정지 → suspend/resume 사이클');}
+    else if(tries===8||tries===14){_rebuildCtx();}
+    else if(tries>20){clearInterval(_clockWatchdog);_clockWatchdog=null;_needGestureRebuild=true;console.warn('[AUDIO] 클럭 기동 실패 — 다음 터치에서 재생성 대기');}
+  },100);
 }
 function initAudio(){
-  if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
-    audioCtx=new AC();
-    masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
-    metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
-    pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);}
+  if(!audioCtx){if(!_buildCtx())return;}
   _unlockAudio();
 }
-function ensureAudio(){if(!audioCtx)initAudio();else _unlockAudio();}
-document.addEventListener('touchstart',ensureAudio,{passive:true,capture:true});
+function ensureAudio(){
+  // 직전 시도에서 클럭 기동 실패 시 → 이 제스처 안에서 컨텍스트 새로 생성
+  if(_needGestureRebuild&&audioCtx){_needGestureRebuild=false;_ctxRebuilds=0;
+    try{audioCtx.close().catch(()=>{});}catch(e){}
+    audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;}
+  if(!audioCtx)initAudio();else _unlockAudio();
+  if(audioCtx&&audioCtx.currentTime<=0)_startClockWatchdog();
+}
+// ★ touchstart는 iOS 오디오 언락 제스처 불인정 — 컨텍스트 '생성' 금지, 기존 ctx resume만 허용
+document.addEventListener('touchstart',()=>{if(audioCtx)_unlockAudio();},{passive:true,capture:true});
 document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true});
 function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
@@ -1004,22 +1050,13 @@ function togglePlay(){if(isPlaying)pauseEngine();else startEngine();}
 function startEngine(){
   // ═══ iPad Safari 핵심: 이 함수 전체가 유저 제스처 핸들러 안에서 '동기식'으로 끝까지 실행됨 ═══
   // .then() 비동기 콜백 안에서 셋업하면 Safari가 제스처 컨텍스트 소실로 판단 → currentTime 0 고착
-  // 1) AudioContext 생성 — 동기
-  if(!audioCtx){
-    const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
-    audioCtx=new AC();
-    masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
-    metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
-    pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
-  }
-  // 2) resume()은 fire-and-forget (Promise를 기다리지 않음) + 언락 오실레이터 즉시 발사 — 동기
-  if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});
-  try{
-    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-    g.gain.value=0.0001;o.connect(g);g.connect(audioCtx.destination);
-    o.start(0);o.stop(audioCtx.currentTime+0.05);
-  }catch(e){}
+  // 1) 직전 클럭 기동 실패 흔적이 있으면 이 제스처 안에서 컨텍스트 폐기 후 재생성
+  if(_needGestureRebuild&&audioCtx){_needGestureRebuild=false;_ctxRebuilds=0;
+    try{audioCtx.close().catch(()=>{});}catch(e){}
+    audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;}
+  if(!audioCtx){if(!_buildCtx())return;}
+  // 2) resume() fire-and-forget + 언락 오실레이터 + 무음 엘리먼트 — 전부 동기 실행
+  _unlockAudio();
   // 3) 스케줄러/타이머 셋업 — 콜백 없이 같은 콜스택에서 즉시 실행
   isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
   beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
@@ -1029,7 +1066,8 @@ function startEngine(){
     if(pausedElapsed>0)mainStartWallTime=Date.now()-pausedElapsed*1000;
     nextBeatTime=audioCtx.currentTime+0.05;
     _awaitClock=(audioCtx.currentTime<=0); // 클럭이 아직 0이면 첫 틱에서 재앵커
-    schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);return;}
+    schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
+    if(_awaitClock)_startClockWatchdog();return;}
   stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
   activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
   if(isGlissandoPat())_resetGlissandoSlider(true);
@@ -1038,6 +1076,7 @@ function startEngine(){
   nextBeatTime=audioCtx.currentTime+0.05;
   _awaitClock=(audioCtx.currentTime<=0); // 클럭이 아직 0이면 첫 틱에서 재앵커
   schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
+  if(_awaitClock)_startClockWatchdog(); // 클럭 미기동 시 단계적 소생 (suspend/resume → 재생성)
 }
 function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
