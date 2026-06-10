@@ -22,7 +22,7 @@
 .theme-ivory{--bg:#f5f0e8;--surface:#fffdf7;--surface2:#f0ebe0;--border:#d8cfc0;--accent:#6b5ce7;--accent2:#e05fa0;--accent3:#2db89a;--counting:#c8960a;--text:#2a2420;--text2:#7a6e60;--tier-lv1:#6A7280;--tier-lv2:#E8C200;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-button{font-family:inherit;cursor:pointer;}
+button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 .lab-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
 .lab-brand{display:flex;flex-direction:column;gap:1px;text-align:right;}
@@ -90,7 +90,7 @@ button{font-family:inherit;cursor:pointer;}
 .timer-main.running{color:var(--accent3);}
 .timer-counter{font-family:'DM Mono',monospace;font-size:1rem;color:var(--text2);}
 .controls{display:flex;gap:14px;align-items:center;}
-.ctrl-btn{width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;font-size:1.3rem;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.ctrl-btn{width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;font-size:1.3rem;transition:all 0.2s;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;}
 .ctrl-btn.reset{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
 .ctrl-btn.reset:hover{border-color:var(--counting);color:var(--counting);}
 .ctrl-btn.play{background:var(--accent);color:white;width:68px;height:68px;font-size:1.5rem;}
@@ -259,8 +259,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_ha_4beat',
@@ -280,8 +280,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_ha_16beat',
@@ -301,8 +301,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_na_4beat_1',
@@ -339,8 +339,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_ma_4beat_1',
@@ -377,8 +377,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_ieaou_4beat',
@@ -397,8 +397,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
     warmup2: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_ieaoueueo_4beat',
@@ -417,8 +417,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
     warmup2: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_sung_4beat',
@@ -438,8 +438,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기1','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_iaiaiai_4beat',
@@ -458,8 +458,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['목풀기2','심화'],
     warmup1: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
     warmup2: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_ha_8beat_minor',
@@ -480,8 +480,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['기본','목풀기1','심화'],
     warmup1: { offsets:[0,2,3,5,7,5,3,2,0], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미b','파','솔','파','미b','레','도'] },
     warmup2: { offsets:[0,2,3,5,7,5,3,2,0], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미b','파','솔','파','미b','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_ha_4beat_minor',
@@ -509,8 +509,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['기본','목풀기1','심화'],
     warmup1: { offsets:[0,3,7,3,0], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미b','솔','미b','도'] },
     warmup2: { offsets:[0,3,7,3,0], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미b','솔','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_major_4beat',
@@ -537,8 +537,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,4,7,11,12,11,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시','도','시','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_dominant_4beat',
@@ -562,8 +562,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,4,7,10,12,10,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시b','도','시b','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_minor_4beat',
@@ -587,8 +587,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,3,7,10,12,10,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시b','도','시b','솔','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_minor_major_4beat',
@@ -612,8 +612,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,3,7,11,12,11,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시','도','시','솔','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_half_diminished_4beat',
@@ -637,8 +637,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,3,6,10,12,10,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','시b','도','시b','솔b','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_diminished_4beat',
@@ -662,8 +662,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,3,6,9,12,9,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','라','도','라','솔b','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_augmented_4beat',
@@ -687,8 +687,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,4,8,10,12,10,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시b','도','시b','솔#','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
   {
     id: 'vocal_7th_augmented_major_4beat',
@@ -712,8 +712,8 @@ const VOCAL_PATTERNS = [
     ],
     modeLabels: ['기본','목풀기2','심화'],
     warmup2: { offsets:[0,4,8,11,12,11,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시','도','시','솔#','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
 
   /* ── 패턴 23: Staccato Ah 8beat ── */
@@ -736,8 +736,8 @@ const VOCAL_PATTERNS = [
     modeLabels: ['기본','목풀기1','심화'],
     warmup1: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['','','','','','','','',''], korLabels:['도','레','미','파','솔','파','미','레','도'] },
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['','','','','','','','',''], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
 
   /* ── 패턴 24: Glissando H-a 4beat ── */
@@ -761,8 +761,8 @@ const VOCAL_PATTERNS = [
     glissando: true,
     modeLabels: ['기본','목풀기1','심화'],
     warmup1: { pattern:[1,5,1,5,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','솔','도','솔','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup1Seq: [48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,53],
+    warmup2Seq: [45,43,41,46,44,42,47,45,43,48,46,44,49,47,45,50,48,46,51,49,47,52,50,48,53,51,49],
   },
 
   /* ── 패턴 25: Vibrato Ah 4beat ── */
@@ -898,27 +898,10 @@ function initAudio(){
     pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);}
   if(audioCtx.state==='suspended')audioCtx.resume();
 }
-// iOS Safari: 사용자 제스처 시점에 AudioContext 생성 및 resume
-// touchstart/touchend/click 모두 등록 — 아이패드/아이폰 대응
 function ensureAudio(){if(!audioCtx)initAudio();else if(audioCtx.state==='suspended')audioCtx.resume();}
 document.addEventListener('touchstart',ensureAudio,{passive:true,capture:true});
 document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true,capture:true});
-// iOS: 재생 버튼 탭 시 AudioContext를 resume하고 완료 후 콜백 실행
-function ensureAudioThenRun(cb){
-  if(!audioCtx)initAudio();
-  if(!audioCtx){cb();return;}
-  if(audioCtx.state==='running'){cb();return;}
-  audioCtx.resume().then(()=>{
-    // resume 후 묵음 버퍼 재생으로 iOS unlock 확정
-    try{
-      const buf=audioCtx.createBuffer(1,1,audioCtx.sampleRate);
-      const src=audioCtx.createBufferSource();src.buffer=buf;
-      src.connect(audioCtx.destination);src.start(0);
-    }catch(e){}
-    cb();
-  }).catch(()=>{cb();});
-}
 function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
 function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
 function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
@@ -994,7 +977,7 @@ function timerFrame(){
   }
   if(isPlaying||stopScheduled)timerRafId=requestAnimationFrame(timerFrame);
 }
-function togglePlay(){if(isPlaying){pauseEngine();}else{ensureAudioThenRun(()=>startEngine());}}
+function togglePlay(){if(isPlaying)pauseEngine();else startEngine();}
 function startEngine(){
   if(!audioCtx)initAudio();
   // iOS Safari: AudioContext가 suspended 상태면 resume() 후 스케줄링
@@ -1016,7 +999,7 @@ function startEngine(){
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
   };
   if(audioCtx.state==='suspended'){
-    audioCtx.resume().then(_doStart).catch(()=>{_doStart();});
+    audioCtx.resume(); _doStart();
   } else {
     _doStart();
   }
@@ -1134,12 +1117,12 @@ function _setEl(id,val){const el=document.getElementById(id);if(el)el.textConten
    【 섹션 E-BASIC 】 기본 모드 — 완전 독립
    ※ 다른 모드와 변수/함수 공유 없음
 ════════════════════════════════════════════════ */
-// 남성 기본 음역: D3(50)~A3(57) 상행 후 하행 (여성 A3~E4 에서 -7반음)
+// 남성 기본 음역: A2(45)~E4(64) 상행 후 하행
 const BASIC_SEQ=[
-  {midi:50,dir:1},{midi:51,dir:1},{midi:52,dir:1},{midi:53,dir:1},
-  {midi:54,dir:1},{midi:55,dir:1},{midi:56,dir:1},{midi:57,dir:1},
-  {midi:56,dir:-1},{midi:55,dir:-1},{midi:54,dir:-1},{midi:53,dir:-1},
-  {midi:52,dir:-1},{midi:51,dir:-1},{midi:50,dir:-1}
+  {midi:45,dir:1},{midi:46,dir:1},{midi:47,dir:1},{midi:48,dir:1},
+  {midi:49,dir:1},{midi:50,dir:1},{midi:51,dir:1},{midi:52,dir:1},
+  {midi:51,dir:-1},{midi:50,dir:-1},{midi:49,dir:-1},{midi:48,dir:-1},
+  {midi:47,dir:-1},{midi:46,dir:-1},{midi:45,dir:-1}
 ];
 let basic_seqIdx=0;
 function basic_getCurrentMidi(){return BASIC_SEQ[Math.min(basic_seqIdx,BASIC_SEQ.length-1)].midi;}
@@ -1219,7 +1202,7 @@ function basic_onComplete(){
    【 섹션 E-PRACTICE 】 연습 모드 — 완전 독립
    ※ 다른 모드와 변수/함수 공유 없음
 ════════════════════════════════════════════════ */
-let prac_rangeStart=41,prac_rangeEnd=77;
+let prac_rangeStart=48,prac_rangeEnd=84;
 let prac_startDir=1;     // 1=상행시작, -1=하행시작
 let prac_keyIndex=0;
 let prac_keyDir=1;
@@ -1356,9 +1339,9 @@ function wu_onComplete(){
    ※ 다른 모드와 변수/함수 공유 없음
 ════════════════════════════════════════════════ */
 let adv_dir='basic';         // 'basic'|'loop'
-let adv_currentMidi=53;
+let adv_currentMidi=48;
 let adv_pendingMidi=-1;
-let adv_rangeMin=41,adv_rangeMax=77;
+let adv_rangeMin=36,adv_rangeMax=72;
 let adv_rangeStartDir=1;
 let adv_rangeSelected=false;
 let adv_rangeFirstMidi=null;
@@ -1366,7 +1349,7 @@ let adv_displayStart=null,adv_displayEnd=null; // 클릭 순서 기준 표시용
 let adv_intervalOrder=[];
 let adv_intervalRandom=false;
 let adv_intervalSeqIdx=0;
-let adv_loopStart=53,adv_loopEnd=65,adv_loopDir=1;
+let adv_loopStart=48,adv_loopEnd=60,adv_loopDir=1;
 
 function adv_getInterval(){
   if(adv_intervalRandom){
@@ -1422,9 +1405,9 @@ function adv_reset(){
   adv_intervalOrder=[];adv_intervalRandom=false;adv_intervalSeqIdx=0;
   adv_dir='basic';adv_rangeSelected=false;adv_rangeFirstMidi=null;
   adv_displayStart=null;adv_displayEnd=null;
-  adv_rangeMin=41;adv_rangeMax=77;adv_rangeStartDir=1;
-  adv_loopStart=53;adv_loopEnd=65;adv_loopDir=1;
-  adv_currentMidi=53;adv_pendingMidi=-1;
+  adv_rangeMin=36;adv_rangeMax=72;adv_rangeStartDir=1;
+  adv_loopStart=48;adv_loopEnd=60;adv_loopDir=1;
+  adv_currentMidi=48;adv_pendingMidi=-1;
 }
 
 function adv_scheduleOneBeat(time){
@@ -1903,7 +1886,7 @@ function buildBasicKeyUI(body){
 
 /* ── 연습 모드 키 UI ── */
 function buildPracticeKeyUI(body){
-  const PMIN=41,PMAX=85; // F2(41)~C#6(85) 남성 음역
+  const PMIN=36,PMAX=76; // C2(36)~E5(76) 남성 음역
   const COLS=9;
   const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
   const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
