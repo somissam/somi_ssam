@@ -1039,7 +1039,7 @@ function startEngine(){
     prevRootMidi=_fn_getCurrentRootMidi();
     nextBeatTime=_getScheduleNow()+0.05;
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
-    _dbg('scheduler started, nextBeatTime='+nextBeatTime.toFixed(3)+' audioNow='+_getAudioNow().toFixed(4));
+    _dbg('scheduler started, nextBeatTime='+nextBeatTime.toFixed(3)+' audioNow='+_getScheduleNow().toFixed(4));
   };
   const _doStart=()=>{
     _dbg('_doStart, currentTime='+audioCtx.currentTime.toFixed(4));
