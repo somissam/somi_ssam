@@ -953,16 +953,18 @@ let _fn_onComplete      = null; // 완료 시 처리
 
 let currentNoteInterval=1; // 실제 틱 간격 — 카운팅=beatInterval, 패턴=beatInterval*(4/noteDiv)
 function schedulerTick(){
-  if(!audioCtx)return;
-  while(nextBeatTime<audioCtx.currentTime+0.15){_fn_scheduleOneBeat(nextBeatTime);nextBeatTime+=currentNoteInterval;}
+  if(!audioCtx||!_fn_scheduleOneBeat)return;
+  try{
+    while(nextBeatTime<audioCtx.currentTime+0.15){_fn_scheduleOneBeat(nextBeatTime);nextBeatTime+=currentNoteInterval;}
+  }catch(e){console.error('[schedulerTick]',e);}
 }
 function timerFrame(){
   if(!audioCtx){timerRafId=requestAnimationFrame(timerFrame);return;}
   const now=audioCtx.currentTime;
-  while(beatQueue.length&&beatQueue[0].time<=now+0.050)_fn_applyVisual(beatQueue.shift().vis);
+  while(beatQueue.length&&beatQueue[0].time<=now+0.050){if(_fn_applyVisual)_fn_applyVisual(beatQueue.shift().vis);else beatQueue.shift();}
   if(stopScheduled&&now>=stopAudioTime-0.01){
     stopScheduled=false;
-    while(beatQueue.length)_fn_applyVisual(beatQueue.shift().vis);
+    while(beatQueue.length){if(_fn_applyVisual)_fn_applyVisual(beatQueue.shift().vis);else beatQueue.shift();}
     stopEngine();
     if(_fn_onComplete)_fn_onComplete();
     const tm=document.getElementById('timer-main');if(tm)tm.className='timer-main';
