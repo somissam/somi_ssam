@@ -890,20 +890,34 @@ function getFullOffsets(){
 ════════════════════════════════════════════════ */
 let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null;
 let metronomeVol=1.0,pianoVol=1.0;
+// ── iPad Safari 오디오 언락: 유저 제스처 컨텍스트 안에서 '동기식'으로만 실행 ──
+// 비동기(.then/setTimeout) 경유 시 Safari가 제스처 컨텍스트 소실로 판단 → currentTime이 0에서 멈춤
+function _unlockAudio(){
+  if(!audioCtx)return;
+  try{
+    // resume()은 fire-and-forget — 반환 Promise를 기다리지 않음 (동기 흐름 유지)
+    if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});
+    // 무음에 가까운 숏 오실레이터를 즉시 생성-연결-스타트 → Safari 오디오 스레드 강제 기동
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    g.gain.value=0.0001;o.connect(g);g.connect(audioCtx.destination);
+    o.start(0);o.stop(audioCtx.currentTime+0.05);
+  }catch(e){}
+}
 function initAudio(){
-  // AudioContext 생성은 startEngine()에서만 — 여기선 resume만
-  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+  if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    audioCtx=new AC();
+    masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+    metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
+    pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);}
+  _unlockAudio();
 }
-function ensureAudio(){
-  // AudioContext는 startEngine()에서만 생성 — 여기서는 이미 있을 때만 resume 시도
-  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
-}
+function ensureAudio(){if(!audioCtx)initAudio();else _unlockAudio();}
 document.addEventListener('touchstart',ensureAudio,{passive:true,capture:true});
 document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true});
-function playClickAt(type,time){if(!audioCtx)return;try{const at=_toAudioTime(time);const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,at);g.gain.exponentialRampToValueAtTime(0.001,at+0.1);o.start(at);o.stop(at+0.1);}catch(e){}}
-function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const at=_toAudioTime(startTime);startTime=at;const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
-function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),_getScheduleNow()+0.01,0.5);}
+function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
+function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
+function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
 
 // 스타카토: 전체 박자의 50%만 재생
 function playPianoNoteStaccato(freq,startTime,fullDuration){
@@ -914,18 +928,17 @@ function playPianoNoteStaccato(freq,startTime,fullDuration){
 function playPianoNoteVibrato(freq,startTime,duration){
   if(!audioCtx)return;
   try{
-    const st=_toAudioTime(startTime);
     const out=pianoGain||masterGain;
     [{n:1,vol:0.55},{n:2,vol:0.25},{n:3,vol:0.14},{n:4,vol:0.07}].forEach(h=>{
       const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
       osc.type='sine';osc.frequency.value=h.n*freq;
       osc.connect(g);g.connect(out);
       const v=0.30*h.vol;
-      g.gain.setValueAtTime(0,st);
-      g.gain.linearRampToValueAtTime(v,st+0.015);
-      g.gain.setValueAtTime(v,st+duration-0.05);
-      g.gain.linearRampToValueAtTime(0.0001,st+duration);
-      osc.start(st);osc.stop(st+duration+0.05);
+      g.gain.setValueAtTime(0,startTime);
+      g.gain.linearRampToValueAtTime(v,startTime+0.015);
+      g.gain.setValueAtTime(v,startTime+duration-0.05);
+      g.gain.linearRampToValueAtTime(0.0001,startTime+duration);
+      osc.start(startTime);osc.stop(startTime+duration+0.05);
     });
   }catch(e){}
 }
@@ -952,38 +965,23 @@ let _fn_applyVisual     = null;
 let _fn_onComplete      = null; // 완료 시 처리
 
 let currentNoteInterval=1; // 실제 틱 간격 — 카운팅=beatInterval, 패턴=beatInterval*(4/noteDiv)
-// wallStartTime: startEngine 시점의 Date.now() (ms)
-// Safari: audioCtx.currentTime이 0에 고정될 수 있음 — wall clock으로 보정
-let wallStartTime=0;    // startEngine 시점 Date.now()
-let audioStartTime=0;   // startEngine 시점 audioCtx.currentTime (보통 0)
-function _getScheduleNow(){
-  // 스케줄러용: wall clock 기반 경과 시간
-  if(wallStartTime>0)return(Date.now()-wallStartTime)/1000;
-  if(audioCtx&&audioCtx.currentTime>0)return audioCtx.currentTime;
-  return 0;
-}
-function _toAudioTime(wallBasedTime){
-  // Safari: audioCtx.currentTime이 0에 묶여있으면 즉시 재생(0)으로 처리
-  if(!audioCtx)return 0;
-  if(audioCtx.currentTime>0){
-    // 정상 동작: wall clock 오프셋을 audioCtx 시간으로 변환
-    const elapsed=(Date.now()-wallStartTime)/1000;
-    const offset=wallBasedTime-elapsed;
-    return Math.max(audioCtx.currentTime, audioCtx.currentTime+offset);
-  }
-  // currentTime=0: 스케줄링 불가 — 즉시 재생
-  return 0;
-}
+let _awaitClock=false; // 오디오 클럭(currentTime)이 0에서 아직 안 움직였을 때 대기 플래그
 function schedulerTick(){
   if(!audioCtx||!_fn_scheduleOneBeat)return;
+  const now=audioCtx.currentTime;
+  // Safari 안전장치: 클럭이 아직 0이면 스케줄하지 않고 대기, 움직이기 시작한 순간 재앵커
+  if(_awaitClock){
+    if(now<=0)return;
+    nextBeatTime=now+0.05;
+    _awaitClock=false;
+  }
   try{
-    const now=_getScheduleNow();
     while(nextBeatTime<now+0.15){_fn_scheduleOneBeat(nextBeatTime);nextBeatTime+=currentNoteInterval;}
   }catch(e){console.error('[schedulerTick]',e);}
 }
 function timerFrame(){
   if(!audioCtx){timerRafId=requestAnimationFrame(timerFrame);return;}
-  const now=_getScheduleNow();
+  const now=audioCtx.currentTime;
   while(beatQueue.length&&beatQueue[0].time<=now+0.050){if(_fn_applyVisual)_fn_applyVisual(beatQueue.shift().vis);else beatQueue.shift();}
   if(stopScheduled&&now>=stopAudioTime-0.01){
     stopScheduled=false;
@@ -1003,73 +1001,43 @@ function timerFrame(){
   if(isPlaying||stopScheduled)timerRafId=requestAnimationFrame(timerFrame);
 }
 function togglePlay(){if(isPlaying)pauseEngine();else startEngine();}
-function _dbg(msg){
-  console.log('[DBG]',msg);
-  let el=document.getElementById('_dbg_box');
-  if(!el){el=document.createElement('div');el.id='_dbg_box';
-    el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,0.85);color:#0f0;font-size:11px;padding:6px 8px;max-height:160px;overflow-y:auto;';
-    document.body.appendChild(el);}
-  el.innerHTML+='<div>'+msg+'</div>';el.scrollTop=el.scrollHeight;
-}
 function startEngine(){
-  _dbg('startEngine called');
+  // ═══ iPad Safari 핵심: 이 함수 전체가 유저 제스처 핸들러 안에서 '동기식'으로 끝까지 실행됨 ═══
+  // .then() 비동기 콜백 안에서 셋업하면 Safari가 제스처 컨텍스트 소실로 판단 → currentTime 0 고착
+  // 1) AudioContext 생성 — 동기
   if(!audioCtx){
     const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC){_dbg('NO AudioContext API');return;}
+    if(!AC)return;
     audioCtx=new AC();
-    _dbg('AudioContext created, state='+audioCtx.state);
     masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
     metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
     pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
-  } else {
-    _dbg('audioCtx exists, state='+audioCtx.state);
   }
-  const _realStart=()=>{
-    _dbg('_realStart, currentTime='+audioCtx.currentTime.toFixed(4));
-    wallStartTime=Date.now(); audioStartTime=audioCtx?audioCtx.currentTime:0; // 기준점 세팅
-    isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
-    beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
-    const glissWrap=document.getElementById('glissando-slider-wrap');
-    if(glissWrap&&glissWrap._setTransition)glissWrap._setTransition(Math.round(beatInterval*1000));
-    if(isPaused){isPaused=false;stopScheduled=false;beatQueue=[];
-      if(pausedElapsed>0)mainStartWallTime=Date.now()-pausedElapsed*1000;
-      nextBeatTime=_getScheduleNow()+0.05;
-      schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
-      _dbg('resumed from pause');return;}
-    stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
-    activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
-    if(isGlissandoPat())_resetGlissandoSlider(true);
-    _fn_onEngineStart();
-    prevRootMidi=_fn_getCurrentRootMidi();
-    nextBeatTime=_getScheduleNow()+0.05;
-    schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
-    _dbg('scheduler started, nextBeatTime='+nextBeatTime.toFixed(3)+' audioNow='+_getScheduleNow().toFixed(4));
-  };
-  const _doStart=()=>{
-    _dbg('_doStart, currentTime='+audioCtx.currentTime.toFixed(4));
-    if(audioCtx.currentTime===0){
-      // Safari: 무음 버퍼 재생으로 AudioContext 클럭 강제 활성화
-      _dbg('firing silent buffer to unlock ctx...');
-      const buf=audioCtx.createBuffer(1,1,audioCtx.sampleRate);
-      const src=audioCtx.createBufferSource();src.buffer=buf;
-      src.connect(audioCtx.destination);src.start(0);
-      // 클럭이 움직일 때까지 폴링
-      let tries=0;
-      const wait=setInterval(()=>{
-        tries++;
-        _dbg('poll #'+tries+' currentTime='+audioCtx.currentTime.toFixed(4));
-        if(audioCtx.currentTime>0||tries>40){
-          clearInterval(wait);
-          _dbg('ctx unlocked! currentTime='+audioCtx.currentTime.toFixed(4));
-          _realStart();
-        }
-      },25);
-    } else {
-      _realStart();
-    }
-  };
-  _dbg('calling resume()...');
-  audioCtx.resume().then(()=>{_dbg('resume() resolved, state='+audioCtx.state);_doStart();}).catch(e=>{_dbg('resume() CATCH: '+e);_doStart();});
+  // 2) resume()은 fire-and-forget (Promise를 기다리지 않음) + 언락 오실레이터 즉시 발사 — 동기
+  if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});
+  try{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    g.gain.value=0.0001;o.connect(g);g.connect(audioCtx.destination);
+    o.start(0);o.stop(audioCtx.currentTime+0.05);
+  }catch(e){}
+  // 3) 스케줄러/타이머 셋업 — 콜백 없이 같은 콜스택에서 즉시 실행
+  isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
+  beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
+  const glissWrap=document.getElementById('glissando-slider-wrap');
+  if(glissWrap&&glissWrap._setTransition)glissWrap._setTransition(Math.round(beatInterval*1000));
+  if(isPaused){isPaused=false;stopScheduled=false;beatQueue=[];
+    if(pausedElapsed>0)mainStartWallTime=Date.now()-pausedElapsed*1000;
+    nextBeatTime=audioCtx.currentTime+0.05;
+    _awaitClock=(audioCtx.currentTime<=0); // 클럭이 아직 0이면 첫 틱에서 재앵커
+    schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);return;}
+  stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
+  activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
+  if(isGlissandoPat())_resetGlissandoSlider(true);
+  _fn_onEngineStart();
+  prevRootMidi=_fn_getCurrentRootMidi();
+  nextBeatTime=audioCtx.currentTime+0.05;
+  _awaitClock=(audioCtx.currentTime<=0); // 클럭이 아직 0이면 첫 틱에서 재앵커
+  schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
 }
 function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
@@ -1095,7 +1063,7 @@ function _commonScheduleCounting(time, getRoot, getNextRoot, getNextRootDir, onF
     activeBarType=BAR_TYPE_PATTERN;seqStep=0;patStep=0;
     currentNoteInterval=beatInterval; // 패턴도 4박 기준이므로 beatInterval 그대로
     const firstMain=time+beatInterval;
-    if(mainStartWallTime===0)mainStartWallTime=Date.now()+(firstMain-_getScheduleNow())*1000;
+    if(mainStartWallTime===0)mainStartWallTime=Date.now()+(firstMain-audioCtx.currentTime)*1000;
     if(loopCount>0)_fn_advanceKey();
     prevRootMidi=_fn_getCurrentRootMidi();loopCount++;
   }
@@ -1884,15 +1852,8 @@ function buildPracticeUI(){
 
   /* ── 컨트롤 ── */
   const ctrl=document.createElement('div');ctrl.className='controls';
-  ctrl.innerHTML='<button class="ctrl-btn reset" id="reset-btn">↺</button><button class="ctrl-btn play" id="play-btn">▶</button><button class="ctrl-btn stop" id="stop-btn">■</button>';
+  ctrl.innerHTML='<button class="ctrl-btn reset" onclick="hardReset()">↺</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶</button><button class="ctrl-btn stop" onclick="stopExercise()">■</button>';
   body.appendChild(ctrl);
-  // Safari: onclick 대신 touchend+click 둘 다 — 터치 이벤트 안에서 AudioContext 동작 보장
-  const _addBtn=(id,fn)=>{const b=document.getElementById(id);if(!b)return;
-    b.addEventListener('touchend',function(e){e.preventDefault();fn();},{passive:false});
-    b.addEventListener('click',fn);};
-  _addBtn('play-btn',togglePlay);
-  _addBtn('reset-btn',hardReset);
-  _addBtn('stop-btn',stopExercise);
 
   /* ── 모드별 키 UI ── */
   if(TMODE===MODE_BASIC){buildVowelSelector(body);buildBasicKeyUI(body);buildTempoUI(body);}
