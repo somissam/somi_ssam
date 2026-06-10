@@ -891,14 +891,13 @@ function getFullOffsets(){
 let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null;
 let metronomeVol=1.0,pianoVol=1.0;
 function initAudio(){
-  if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
-    audioCtx=new AC();
-    masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
-    metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
-    pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);}
-  if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+  // AudioContext 생성은 startEngine()에서만 — 여기선 resume만
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
 }
-function ensureAudio(){if(!audioCtx)initAudio();else if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}
+function ensureAudio(){
+  // AudioContext는 startEngine()에서만 생성 — 여기서는 이미 있을 때만 resume 시도
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+}
 document.addEventListener('touchstart',ensureAudio,{passive:true,capture:true});
 document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true});
