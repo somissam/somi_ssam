@@ -1003,6 +1003,11 @@ function startEngine(){
   }
   const _doStart=()=>{
     _dbg('_doStart called, ctx.state='+audioCtx.state+' currentTime='+audioCtx.currentTime.toFixed(3));
+    // Safari: resume() 후에도 currentTime=0이면 아직 실제로 안 깨어난 것 — 짧게 대기 후 재시도
+    if(audioCtx.currentTime===0){
+      _dbg('currentTime=0! waiting for ctx to tick...');
+      setTimeout(_doStart, 50); return;
+    }
     isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
     beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
     const glissWrap=document.getElementById('glissando-slider-wrap');
