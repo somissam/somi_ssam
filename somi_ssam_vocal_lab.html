@@ -1170,17 +1170,17 @@ function logPractice(){
     [MODE_ADVANCED_1]:'심화'
   }[TMODE]||'기본';
   try{
-    let logs=JSON.parse(localStorage.getItem('somi_logs')||'{}');
-    if(!logs[_currentProfileId]) logs[_currentProfileId]=[];
+    if(!_practiceLogs) _practiceLogs=JSON.parse(localStorage.getItem('somi_logs')||'{}');
+    if(!_practiceLogs[_currentProfileId]) _practiceLogs[_currentProfileId]=[];
     const now=new Date();
-    logs[_currentProfileId].push({
+    _practiceLogs[_currentProfileId].push({
       date:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'),
       time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),
       chapter:'vocal',
       exercise:pat.name+' ('+modeLabel+')',
       duration:Math.floor(elapsedSeconds),
     });
-    const j=JSON.stringify(logs);
+    const j=JSON.stringify(_practiceLogs);
     localStorage.setItem('somi_logs',j);
     if(window._fsSet) window._fsSet('somi_logs',j);
   }catch(e){}
@@ -2454,6 +2454,7 @@ function closePractice(){
 
 // ── 잠금 헬퍼 ──
 let _currentProfileId = null;
+let _practiceLogs = null; // Firebase 동기화 후 초기화됨
 function _isLocked(patternId){
   if(!_currentProfileId) return false;
   try{
@@ -2583,11 +2584,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   // ── 5. Firebase 백그라운드 동기화 (렌더 막지 않음)
-  // 북마크로 바로 진입했을 때도 선생님 잠금 최신 반영
+  // 북마크로 바로 진입했을 때도 선생님 잠금 최신 반영 + 연습기록 저장 활성화
   (async ()=>{
     try{
       const {initializeApp,getApps} = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
-      const {getFirestore,doc,getDoc}  = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+      const {getFirestore,doc,getDoc,setDoc} = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
 
       const FB_CONFIG = {
         apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",
@@ -2601,27 +2602,23 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const fbApp = getApps().find(a=>a.name===APP_NAME) || initializeApp(FB_CONFIG, APP_NAME);
       const fsDb  = getFirestore(fbApp);
 
-      // 잠금 + 레벨 데이터 가져오기
-      const [lockSnap, levelSnap] = await Promise.all([
-        getDoc(doc(fsDb, "somi_data", "somi_pattern_locks")),
-        getDoc(doc(fsDb, "somi_data", "somi_pattern_levels")),
-      ]);
-      let needsUpdate = false;
-      if(lockSnap.exists()){
-        const fresh = lockSnap.data().value;
-        if(fresh !== localStorage.getItem('somi_pattern_locks')){
-          localStorage.setItem('somi_pattern_locks', fresh);
-          needsUpdate = true;
-        }
-      }
-      if(levelSnap.exists()){
-        const fresh = levelSnap.data().value;
-        if(fresh !== localStorage.getItem('somi_pattern_levels')){
-          localStorage.setItem('somi_pattern_levels', fresh);
-          needsUpdate = true;
-        }
-      }
-      if(needsUpdate) renderPatternCards();
+      // window._fsSet 등록 — logPractice에서 Firebase에 연습기록 저장할 때 사용
+      window._fsSet = async(k,j)=>{ try{ await setDoc(doc(fsDb,'somi_data',k),{value:j}); }catch(e){} };
+
+      // 잠금 + 레벨 + 연습기록 데이터 한꺼번에 동기화
+      const KEYS = ['somi_logs','somi_pattern_locks','somi_pattern_levels','somi_level_settings'];
+      await Promise.all(KEYS.map(async k=>{
+        try{
+          const snap = await getDoc(doc(fsDb,'somi_data',k));
+          if(snap.exists()) localStorage.setItem(k, snap.data().value);
+        }catch(e){}
+      }));
+
+      // 동기화 후 연습기록 변수 최신화
+      _practiceLogs = JSON.parse(localStorage.getItem('somi_logs')||'{}');
+
+      // 잠금/레벨 변경 시 카드 재렌더
+      renderPatternCards();
     }catch(e){
       // 네트워크 오류 등 → 무시하고 localStorage 기준으로 계속 사용
       console.warn('vocal_lab Firebase 동기화 실패 (무시됨):', e.message);

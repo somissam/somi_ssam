@@ -528,7 +528,7 @@ function showTeacherTab(tab){
   });
   document.getElementById('teacher-detail').style.display='none';
   if(tab==='student') renderTeacher();
-  if(tab==='pattern'){pmPendingInit();renderPatternManager();renderLevelClassifier();renderLevelManager();}
+  if(tab==='pattern'){pmPendingInit();window.lcPending={};renderPatternManager();renderLevelClassifier();renderLevelManager();}
   if(tab==='settings') renderSettingsTab();
 }
 function showTeacherMain(){showTeacherTab('student');}
@@ -651,7 +651,7 @@ function getStampSVG(){
 /* ════════════════════════════════════════════════
    【 섹션 G 】 패턴 잠금 관리
 ════════════════════════════════════════════════ */
-let pmFilter = { row1:null, mode:'all_group', lvIds:[], pids:[], selectedLevel:null };
+let pmFilter = { row1:null, mode:'all_group', lvIds:[], pids:[], selectedLevels:[], lvAllMode:false };
 let lcFilter = { pids:[] };
 
 // 활성화 관리 임시 상태 (저장 버튼 누르기 전까지만 유효)
@@ -723,11 +723,9 @@ function renderPatternManager() {
   container.innerHTML='';
   if(!pmPending) pmPendingInit();
 
-  // ── 학생 필터 행 + 저장 버튼 ──
-  const topRow=document.createElement('div');
-  topRow.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;';
-
-  const studentRow=document.createElement('div'); studentRow.className='filter-row'; studentRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin:0;flex:1;';
+  // ── 학생 필터 행 ──
+  const studentRow=document.createElement('div');
+  studentRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;';
   const allSelected=pmFilter.pids.length===profiles.length && profiles.length>0;
   const allBtn=document.createElement('button'); allBtn.className='filter-btn'+(allSelected?' active':'');
   allBtn.textContent='전체'; allBtn.setAttribute('data-pid','__all__');
@@ -747,23 +745,55 @@ function renderPatternManager() {
     };
     studentRow.appendChild(b);
   });
-  topRow.appendChild(studentRow);
+  container.appendChild(studentRow);
 
-  // ── 저장버튼 컨테이너 (기본: 단일 저장버튼 / 변경시: 취소+저장 분할) ──
+  // ── 레벨 필터 행 + 저장 버튼 ──
+  const lvRow=document.createElement('div');
+  lvRow.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
+
+  // 레벨 전체 버튼: 꺼짐(전체보기) ↔ 켜짐(레벨 전체 선택) 토글
+  const lvAllActive = pmFilter.lvAllMode===true;
+  const lvAllBtn=document.createElement('button');
+  lvAllBtn.style.cssText=`font-size:0.72rem;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:${lvAllActive?'var(--surface2)':'transparent'};color:${lvAllActive?'var(--text)':'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${lvAllActive?'700':'400'};`;
+  lvAllBtn.textContent='전체';
+  lvAllBtn.onclick=()=>{
+    pmFilter.lvAllMode = !pmFilter.lvAllMode;
+    if(pmFilter.lvAllMode) pmFilter.selectedLevels = levelSettings.map(l=>l.id);
+    else pmFilter.selectedLevels = [];
+    renderPatternManager();
+  };
+  lvRow.appendChild(lvAllBtn);
+
+  levelSettings.forEach(lv=>{
+    const c=getLvColorById(lv.id);
+    const isActive=(pmFilter.selectedLevels||[]).includes(lv.id);
+    const b=document.createElement('button');
+    b.style.cssText=`font-size:0.72rem;padding:3px 8px;border-radius:8px;border:1px solid ${c};background:${isActive?c:'transparent'};color:${isActive?'#fff':c};cursor:pointer;font-family:inherit;font-weight:700;transition:all 0.15s;`;
+    b.textContent=lv.label;
+    b.onclick=()=>{
+      if(!pmFilter.selectedLevels) pmFilter.selectedLevels=[];
+      if(isActive){ pmFilter.selectedLevels=pmFilter.selectedLevels.filter(x=>x!==lv.id); pmFilter.lvAllMode=false; }
+      else pmFilter.selectedLevels.push(lv.id);
+      renderPatternManager();
+    };
+    lvRow.appendChild(b);
+  });
+
+  // ── 저장버튼 컨테이너 (기본: 단일 / 변경시: 취소+저장 분할) ──
   const saveBtnWrap=document.createElement('div');
   saveBtnWrap.id='pm-save-wrap';
-  saveBtnWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:120px;';
+  saveBtnWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:120px;margin-left:auto;';
 
   const cancelBtn=document.createElement('button');
   cancelBtn.id='pm-cancel-btn';
-  cancelBtn.style.cssText='display:none;flex:1;padding:7px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;';
+  cancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;';
   cancelBtn.textContent='취소';
   cancelBtn.onclick=()=>{ pmPendingInit(); renderPatternTable(); updatePmSaveBtnState(); };
 
   const saveBtn=document.createElement('button');
   saveBtn.id='pm-save-btn';
   saveBtn.disabled=true;
-  saveBtn.style.cssText='flex:1;padding:7px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;transition:all 0.2s;';
+  saveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;';
   saveBtn.textContent='저장';
   saveBtn.onclick=()=>{
     if(!pmDirty) return;
@@ -775,44 +805,12 @@ function renderPatternManager() {
     saveBtn.textContent='✓ 저장됨';
     saveBtn.style.background='var(--accent3)';
     saveBtn.style.color='#1a1000';
-    setTimeout(()=>{ saveBtn.textContent='저장'; saveBtn.style.background='var(--surface2)'; saveBtn.style.color='var(--text2)'; },1500);
+    setTimeout(()=>{ saveBtn.textContent='저장'; saveBtn.style.background='var(--surface2)'; saveBtn.style.color='var(--text2)'; saveBtn.style.opacity='0.5'; },1500);
   };
-
   saveBtnWrap.appendChild(cancelBtn);
   saveBtnWrap.appendChild(saveBtn);
-  topRow.appendChild(saveBtnWrap);
-  container.appendChild(topRow);
-
-  // ── 레벨 필터 행 ──
-  const lvRowWrap=document.createElement('div');
-  lvRowWrap.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
-
-  const lvAllBtn=document.createElement('button');
-  const noSel=!pmFilter.selectedLevels||pmFilter.selectedLevels.length===0;
-  lvAllBtn.style.cssText=`font-size:0.72rem;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:${noSel?'var(--surface2)':'transparent'};color:${noSel?'var(--text)':'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${noSel?'700':'400'};`;
-  lvAllBtn.textContent='전체';
-  lvAllBtn.onclick=()=>{
-    const nowNone=!pmFilter.selectedLevels||pmFilter.selectedLevels.length===0;
-    // 전체(선택없음) 상태에서 클릭 → 아무것도 안 함(이미 전체), 레벨 선택 상태면 전체 해제
-    if(!nowNone){ pmFilter.selectedLevels=[]; renderPatternManager(); }
-    // 이미 전체면 토글 없음(전체=기본값)
-  };
-  lvRowWrap.appendChild(lvAllBtn);
-  levelSettings.forEach(lv=>{
-    const c=getLvColorById(lv.id);
-    const isActive=(pmFilter.selectedLevels||[]).includes(lv.id);
-    const b=document.createElement('button');
-    b.style.cssText=`font-size:0.72rem;padding:3px 8px;border-radius:8px;border:1px solid ${c};background:${isActive?c:'transparent'};color:${isActive?'#fff':c};cursor:pointer;font-family:inherit;font-weight:700;transition:all 0.15s;`;
-    b.textContent=lv.label;
-    b.onclick=()=>{
-      if(!pmFilter.selectedLevels) pmFilter.selectedLevels=[];
-      if(isActive) pmFilter.selectedLevels=pmFilter.selectedLevels.filter(x=>x!==lv.id);
-      else pmFilter.selectedLevels.push(lv.id);
-      renderPatternManager();
-    };
-    lvRowWrap.appendChild(b);
-  });
-  container.appendChild(lvRowWrap);
+  lvRow.appendChild(saveBtnWrap);
+  container.appendChild(lvRow);
 
   const tableWrap=document.createElement('div'); tableWrap.id='pattern-table-wrap'; container.appendChild(tableWrap);
   updatePmFilterUI(); renderPatternTable();
@@ -821,7 +819,7 @@ function renderPatternManager() {
 function updatePmFilterUI() {
   document.querySelectorAll('[data-pid]').forEach(b=>{
     const pid=b.getAttribute('data-pid');
-    if(pid==='__all__') b.classList.toggle('active', pmFilter.pids.length===profiles.length);
+    if(pid==='__all__') b.classList.toggle('active', pmFilter.pids.length===profiles.length && profiles.length>0);
     else b.classList.toggle('active', pmFilter.pids.includes(pid));
   });
 }
@@ -869,8 +867,10 @@ function getPatternLevel(patternId){
 function renderPatternTable() {
   const wrap=document.getElementById('pattern-table-wrap'); if(!wrap) return;
   wrap.innerHTML='';
-  if(!pmFilter.pids.length){ wrap.innerHTML='<p style="color:var(--text2);font-size:0.82rem;text-align:center;padding:10px">학생을 선택해주세요</p>'; return; }
   if(!pmPending) pmPendingInit();
+
+  // 학생 미선택 시: 목록은 표시하되 토글은 비활성 + 안내 배너
+  const noPid = pmFilter.pids.length===0;
 
   const isDark=!document.body.classList.contains('theme-ivory');
   const chapterColors=[
@@ -880,6 +880,13 @@ function renderPatternTable() {
   ];
   const chapterBorders=['var(--accent)','var(--accent2)','var(--accent3)'];
 
+  if(noPid){
+    const banner=document.createElement('div');
+    banner.style.cssText='padding:6px 10px;margin-bottom:6px;border-radius:8px;background:rgba(247,194,106,0.1);border:1px solid rgba(247,194,106,0.3);color:var(--counting);font-size:0.75rem;';
+    banner.textContent='학생을 선택하면 활성화 상태를 수정할 수 있어요';
+    wrap.appendChild(banner);
+  }
+
   const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.8rem;';
   const thead=tbl.createTHead(); const hRow=thead.insertRow();
   const th1=document.createElement('th'); th1.style.cssText='text-align:left;padding:7px 10px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;'; th1.textContent='연습 패턴';
@@ -888,26 +895,29 @@ function renderPatternTable() {
 
   const tbody=tbl.createTBody();
 
-  // 전체 토글 행
-  const allActive=patternData.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
-  const topRow2=tbody.insertRow(); topRow2.style.cssText='background:var(--surface);';
-  const topTd1=topRow2.insertCell(); topTd1.style.cssText='padding:8px 10px;font-weight:900;font-size:0.82rem;border-bottom:3px solid var(--border);'; topTd1.textContent='전체';
-  const topTd2=topRow2.insertCell(); topTd2.style.cssText='padding:8px 10px;text-align:right;border-bottom:3px solid var(--border);';
-  topTd2.appendChild(makeToggle(allActive, checked=>{
-    patternData.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)));
-    renderPatternTable();
-  }));
+  // 전체 토글 행 (학생 미선택 시 비활성)
+  const allActive=!noPid && patternData.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
+  const topRowEl=tbody.insertRow(); topRowEl.style.cssText='background:var(--surface);';
+  const topTd1=topRowEl.insertCell(); topTd1.style.cssText='padding:8px 10px;font-weight:900;font-size:0.82rem;border-bottom:3px solid var(--border);'; topTd1.textContent='전체';
+  const topTd2=topRowEl.insertCell(); topTd2.style.cssText='padding:8px 10px;text-align:right;border-bottom:3px solid var(--border);';
+  if(!noPid){
+    topTd2.appendChild(makeToggle(allActive, checked=>{
+      patternData.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)));
+      renderPatternTable();
+    }));
+  } else {
+    topTd2.appendChild(makeToggle(false, ()=>{}));
+    topTd2.querySelector('input').disabled=true; topTd2.querySelector('.toggle-slider').style.opacity='0.3';
+  }
 
   const chapters=[{id:'breath',label:'호흡'},{id:'vocal',label:'발성'},{id:'rhythm',label:'리듬'}];
   const selLvs = pmFilter.selectedLevels||[];
 
   if(selLvs.length > 0) {
-    // ── 레벨 선택 시: 선택된 레벨끼리 Lv순 묶음, 각 묶음 안에서 챕터 순 ──
-    // 선택된 레벨 순서대로 (levelSettings 순)
+    // ── 레벨 선택: 레벨 헤더 → 챕터 소헤더 → 패턴 ──
     const orderedLvs = levelSettings.filter(lv=>selLvs.includes(lv.id));
     orderedLvs.forEach((lv,li)=>{
       const c=getLvColorById(lv.id);
-      // 레벨 헤더 행
       const lvHdrRow=document.createElement('tr');
       lvHdrRow.style.cssText=`background:${c}22;`;
       const lvHdrTd=document.createElement('td'); lvHdrTd.colSpan=2;
@@ -916,11 +926,9 @@ function renderPatternTable() {
       lvHdrRow.appendChild(lvHdrTd);
       tbody.appendChild(lvHdrRow);
 
-      // 이 레벨에 속한 패턴들을 챕터 순으로
       chapters.forEach((ch,chi)=>{
         const chPatterns=patternData.filter(p=>p.chapter===ch.id && getPatternLevel(p.id)===lv.id);
         if(!chPatterns.length) return;
-        // 챕터 소헤더
         const chHdrRow=document.createElement('tr');
         chHdrRow.style.cssText=`background:${chapterColors[chi]};`;
         const chHdrTd=document.createElement('td'); chHdrTd.colSpan=2;
@@ -941,28 +949,35 @@ function renderPatternTable() {
           nameWrap.appendChild(Object.assign(document.createElement('span'),{textContent:p.name}));
           td1.appendChild(nameWrap);
           const td2=document.createElement('td'); td2.style.cssText='padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;';
-          td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
-            pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
-          }));
+          if(!noPid){
+            td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
+              pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
+            }));
+          } else {
+            const tog=makeToggle(false,()=>{}); tog.querySelector('input').disabled=true; tog.querySelector('.toggle-slider').style.opacity='0.3'; td2.appendChild(tog);
+          }
           tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
         });
       });
     });
 
   } else {
-    // ── 전체 보기: 챕터별 그룹 (기존 구조) ──
+    // ── 기본 보기: 챕터별 ──
     chapters.forEach((ch,chi)=>{
-      let chPatterns=patternData.filter(p=>p.chapter===ch.id);
+      const chPatterns=patternData.filter(p=>p.chapter===ch.id);
       if(!chPatterns.length) return;
 
-      // 챕터 헤더 (배경색 구분 - 레벨분류와 동일 스타일)
       const grpRow=document.createElement('tr'); grpRow.style.cssText=`background:${chapterColors[chi]};border-left:3px solid ${chapterBorders[chi]};`;
       const g1=document.createElement('td'); g1.style.cssText=`padding:7px 10px;font-weight:700;font-size:0.75rem;border-bottom:2px solid var(--border);color:${chapterBorders[chi]};text-transform:uppercase;letter-spacing:1px;`; g1.textContent=ch.label;
       const g2=document.createElement('td'); g2.style.cssText='padding:7px 10px;text-align:right;border-bottom:2px solid var(--border);';
-      const grpActive=chPatterns.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
-      g2.appendChild(makeToggle(grpActive, checked=>{
-        chPatterns.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked))); renderPatternTable();
-      }));
+      if(!noPid){
+        const grpActive=chPatterns.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
+        g2.appendChild(makeToggle(grpActive, checked=>{
+          chPatterns.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked))); renderPatternTable();
+        }));
+      } else {
+        const tog=makeToggle(false,()=>{}); tog.querySelector('input').disabled=true; tog.querySelector('.toggle-slider').style.opacity='0.3'; g2.appendChild(tog);
+      }
       grpRow.appendChild(g1); grpRow.appendChild(g2); tbody.appendChild(grpRow);
 
       let prevGroup=null, groupToggle=false;
@@ -987,9 +1002,13 @@ function renderPatternTable() {
         }
         td1.appendChild(nameWrap);
         const td2=document.createElement('td'); td2.style.cssText='padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;';
-        td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
-          pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
-        }));
+        if(!noPid){
+          td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
+            pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
+          }));
+        } else {
+          const tog=makeToggle(false,()=>{}); tog.querySelector('input').disabled=true; tog.querySelector('.toggle-slider').style.opacity='0.3'; td2.appendChild(tog);
+        }
         tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
       });
     });
@@ -1015,28 +1034,53 @@ function renderLevelClassifier() {
   container.innerHTML='';
   if(!lcFilter.pids.length) lcFilter.pids=profiles.map(p=>p.id);
 
+  if(!window.lcPending) window.lcPending = {};
+
+  function updateLcSaveBtnState(){
+    const sb=document.getElementById('lc-save-btn');
+    const cb=document.getElementById('lc-cancel-btn');
+    const wrap=document.getElementById('lc-save-wrap');
+    if(!sb) return;
+    const changed=Object.keys(window.lcPending).length>0;
+    sb.disabled=!changed;
+    sb.style.opacity=changed?'1':'0.5';
+    sb.style.cursor=changed?'pointer':'not-allowed';
+    sb.style.background=changed?'var(--counting)':'var(--surface2)';
+    sb.style.color=changed?'#1a1000':'var(--text2)';
+    if(cb) cb.style.display=changed?'flex':'none';
+    if(wrap) wrap.style.borderColor=changed?'var(--counting)':'var(--border)';
+  }
+
   const MODE_GROUPS = [
-    { label:'기본',   keys:['basic'],                    single:true  },
-    { label:'연습',   keys:['free'],                     single:true  },
+    { label:'기본',   keys:['basic'],                      single:true },
+    { label:'연습',   keys:['free'],                       single:true },
     { label:'목풀기', keys:['warmup1','warmup2','warmup3'], single:true },
-    { label:'심화',   keys:['adv','adv2'],                single:true  },
+    { label:'심화',   keys:['adv','adv2'],                 single:true },
   ];
-  const KEY_LABEL={'basic':'기본','free':'연습','adv':'심화1','adv2':'심화2','warmup1':'목풀기1','warmup2':'목풀기2','warmup3':'목풀기3'};
 
   const usedGroups = MODE_GROUPS.filter(g=>
     g.keys.some(mk=> patternData.some(p=>getPatternModes(p).some(m=>m.key===mk)))
   );
 
   const getLvKey=(pid,mk)=>pid+'__'+mk;
-  const getLv=(pid,mk)=>patternLevelOverrides[getLvKey(pid,mk)]||patternLevelOverrides[pid]||(patternData.find(p=>p.id===pid)||{}).level;
-  const setLv=(pid,mk,lvId)=>{ if(lvId) patternLevelOverrides[getLvKey(pid,mk)]=lvId; else delete patternLevelOverrides[getLvKey(pid,mk)]; savePatternLevels(); };
+  const getLv=(pid,mk)=>{
+    const pk=getLvKey(pid,mk);
+    if(window.lcPending[pk]!==undefined) return window.lcPending[pk];
+    return patternLevelOverrides[pk]||patternLevelOverrides[pid]||(patternData.find(p=>p.id===pid)||{}).level;
+  };
+  // setLv: pending에만 쌓고 renderLevelClassifier 재호출 안 함 → 드롭다운 즉시저장 없음
+  const setLv=(pid,mk,lvId)=>{
+    const pk=getLvKey(pid,mk);
+    if(lvId) window.lcPending[pk]=lvId;
+    else delete window.lcPending[pk];
+    updateLcSaveBtnState();
+  };
 
   const TIER_COLORS=['var(--tier-lv1)','var(--tier-lv2)','#00C9B1','#00B4FF','#AA44FF','#FF8C00','#FF4444','#FF69B4'];
   const getLvColor=(lvId)=>{
-    if(!lvId) return 'var(--text2)';
-    if(lvId==='ing') return 'var(--text2)';
+    if(!lvId||lvId==='ing') return 'var(--text2)';
     const m=lvId.match(/^lv(\d+)$/i);
-    if(m){const idx=parseInt(m[1])-1;return TIER_COLORS[idx%TIER_COLORS.length];}
+    if(m){ const idx=parseInt(m[1])-1; return TIER_COLORS[idx%TIER_COLORS.length]; }
     const idx=levelSettings.findIndex(l=>l.id===lvId);
     return idx>=0?TIER_COLORS[idx%TIER_COLORS.length]:'var(--text2)';
   };
@@ -1046,73 +1090,130 @@ function renderLevelClassifier() {
   let isDragging = false, dragValue = null;
   const allCheckboxes = [];
 
+  // ── 상단 줄: Lv 지정 버튼들 + 저장/취소 버튼 (같은 줄) ──
   const topBar=document.createElement('div');
-  topBar.style.cssText='display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-bottom:8px;';
+  topBar.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;';
+
+  const lvBtnsWrap=document.createElement('div'); lvBtnsWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;flex:1;';
   levelSettings.forEach(lv=>{
     const c=getLvColor(lv.id);
     const b=document.createElement('button');
     b.style.cssText=`font-size:0.75rem;font-weight:700;padding:4px 10px;border-radius:10px;border:1px solid ${c};background:${c};color:#fff;cursor:pointer;font-family:inherit;transition:opacity 0.15s;`;
     b.textContent=lv.label+' 지정';
-    b.onmouseover=()=>b.style.opacity='0.8';
-    b.onmouseout=()=>b.style.opacity='1';
+    b.onmouseover=()=>b.style.opacity='0.8'; b.onmouseout=()=>b.style.opacity='1';
     b.onclick=()=>{
       selected.forEach(k=>{ const parts=k.split('__'); if(parts.length===2) setLv(parts[0],parts[1],lv.id); });
-      selected.clear(); renderLevelClassifier();
+      // 선택된 것들 드롭다운 버튼 텍스트 즉시 업데이트
+      selected.clear();
+      allCheckboxes.forEach(c=>{ c.checked=false; });
+      updateBulkCount();
+      updateLcSaveBtnState();
+      // 드롭다운 버튼 텍스트만 새로고침 (전체 재렌더 없이)
+      refreshDropdownLabels();
     };
-    topBar.appendChild(b);
+    lvBtnsWrap.appendChild(b);
   });
+  topBar.appendChild(lvBtnsWrap);
+
+  // 저장/취소 버튼
+  const lcSaveWrap=document.createElement('div');
+  lcSaveWrap.id='lc-save-wrap';
+  lcSaveWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:120px;';
+  const lcCancelBtn=document.createElement('button');
+  lcCancelBtn.id='lc-cancel-btn';
+  lcCancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;';
+  lcCancelBtn.textContent='취소';
+  lcCancelBtn.onclick=()=>{ window.lcPending={}; renderLevelClassifier(); };
+  const lcSaveBtn=document.createElement('button');
+  lcSaveBtn.id='lc-save-btn';
+  lcSaveBtn.disabled=true;
+  lcSaveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;';
+  lcSaveBtn.textContent='저장';
+  lcSaveBtn.onclick=()=>{
+    if(!Object.keys(window.lcPending).length) return;
+    Object.assign(patternLevelOverrides, window.lcPending);
+    window.lcPending={};
+    savePatternLevels();
+    lcSaveBtn.textContent='✓ 저장됨'; lcSaveBtn.style.background='var(--accent3)'; lcSaveBtn.style.color='#1a1000'; lcSaveBtn.style.opacity='1';
+    setTimeout(()=>renderLevelClassifier(),1000);
+  };
+  lcSaveWrap.appendChild(lcCancelBtn); lcSaveWrap.appendChild(lcSaveBtn);
+  topBar.appendChild(lcSaveWrap);
   container.appendChild(topBar);
 
-  const bulkBar=document.createElement('div');
-  bulkBar.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;';
-  const bulkLabel=document.createElement('span');
-  bulkLabel.style.cssText='font-size:0.8rem;color:var(--text2);min-width:52px;';
-  bulkLabel.id='bulk-count-label'; bulkLabel.textContent='0개 선택';
-  bulkBar.appendChild(bulkLabel);
-  const rightBtns=document.createElement('div'); rightBtns.style.cssText='display:flex;gap:6px;margin-left:auto;';
-  const clearBtn=document.createElement('button');
-  clearBtn.style.cssText='font-size:0.75rem;padding:4px 10px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;';
-  clearBtn.textContent='선택 해제';
-  clearBtn.onclick=()=>{ selected.clear(); allCheckboxes.forEach(c=>c.checked=false); updateBulkBar(); };
-  rightBtns.appendChild(clearBtn);
-  bulkBar.appendChild(rightBtns);
-  container.appendChild(bulkBar);
-
-  function updateBulkBar(){
-    document.getElementById('bulk-count-label').textContent=selected.size+'개 선택';
-    const allKeys=allCheckboxes.map(c=>c._rowKeys).flat();
-    allChk.checked = allKeys.length>0 && allKeys.every(k=>selected.has(k));
-    allChk.indeterminate = !allChk.checked && selected.size>0;
-  }
-
+  // ── 테이블 ──
   const tbl=document.createElement('table');
   tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.8rem;user-select:none;';
   const thead=tbl.createTHead();
   const hRow=thead.insertRow();
-  const thChk=document.createElement('th'); thChk.style.cssText='width:28px;padding:8px 4px;border-bottom:2px solid var(--border);text-align:center;';
-  // 전체선택 체크박스
+
+  // 전체선택 체크박스 + 선택 카운트 (같은 th 안에)
+  const thChk=document.createElement('th');
+  thChk.style.cssText='width:28px;padding:8px 4px;border-bottom:2px solid var(--border);text-align:center;';
   const allChk=document.createElement('input'); allChk.type='checkbox'; allChk.title='전체 선택/해제';
   allChk.style.cssText='cursor:pointer;accent-color:var(--accent);width:14px;height:14px;';
   allChk.onclick=()=>{
     const allKeys=allCheckboxes.map(c=>c._rowKeys).flat();
     if(allChk.checked){ allKeys.forEach(k=>selected.add(k)); allCheckboxes.forEach(c=>c.checked=true); }
     else { selected.clear(); allCheckboxes.forEach(c=>c.checked=false); }
-    updateBulkBar();
+    updateBulkCount();
   };
   thChk.appendChild(allChk); hRow.appendChild(thChk);
-  const thName=document.createElement('th'); thName.style.cssText='text-align:left;padding:8px 10px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;'; thName.textContent='패턴'; hRow.appendChild(thName);
+
+  // 패턴 th 안에 선택 카운트 인라인
+  const thName=document.createElement('th');
+  thName.style.cssText='text-align:left;padding:8px 10px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;';
+  const thNameInner=document.createElement('span');
+  thNameInner.style.cssText='display:flex;align-items:center;gap:8px;';
+  const thNameTxt=document.createElement('span'); thNameTxt.textContent='패턴';
+  const countBadge=document.createElement('span');
+  countBadge.id='lc-count-badge';
+  countBadge.style.cssText='display:none;font-size:0.7rem;font-weight:700;padding:1px 7px;border-radius:20px;background:var(--accent);color:#fff;';
+  countBadge.textContent='0개 선택';
+  thNameInner.appendChild(thNameTxt); thNameInner.appendChild(countBadge);
+  thName.appendChild(thNameInner); hRow.appendChild(thName);
+
   usedGroups.forEach((g,gi)=>{
     const th=document.createElement('th');
     th.style.cssText=`padding:8px 6px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.72rem;text-align:center;width:68px;${gi>0?'border-left:1px solid var(--border);':''}`;
     th.textContent=g.label; hRow.appendChild(th);
   });
 
+  function updateBulkCount(){
+    const badge=document.getElementById('lc-count-badge');
+    const allKeys=allCheckboxes.map(c=>c._rowKeys).flat();
+    allChk.checked = allKeys.length>0 && allKeys.every(k=>selected.has(k));
+    allChk.indeterminate = !allChk.checked && selected.size>0;
+    if(badge){
+      badge.style.display = selected.size>0 ? 'inline-block' : 'none';
+      badge.textContent = selected.size+'개 선택';
+    }
+  }
+
+  // 드롭다운 버튼 텍스트만 갱신 (전체 재렌더 없이 pending 반영)
+  function refreshDropdownLabels(){
+    tbl.querySelectorAll('[data-lv-btn]').forEach(btn=>{
+      const pid=btn.dataset.pid, mk=btn.dataset.mk;
+      const curLvId=getLv(pid,mk);
+      const curLv=levelSettings.find(l=>l.id===curLvId);
+      const c=curLvId?getLvColor(curLvId):'var(--text2)';
+      btn.textContent=(curLv?curLv.label:'—')+' ▾';
+      btn.style.borderColor=curLvId?c:'var(--border)';
+      btn.style.color=c;
+      btn.style.background=curLvId?'rgba(255,255,255,0.06)':'var(--surface2)';
+    });
+  }
+
   const tbody=tbl.createTBody();
   const chapters=[{id:'breath',label:'호흡'},{id:'vocal',label:'발성'},{id:'rhythm',label:'리듬'}];
+  const isDark=!document.body.classList.contains('theme-ivory');
   const chapterColors=[
-    'rgba(124,106,247,0.10)','rgba(247,106,200,0.10)','rgba(106,247,200,0.10)'
+    isDark?'rgba(124,106,247,0.10)':'rgba(124,106,247,0.15)',
+    isDark?'rgba(247,106,200,0.10)':'rgba(247,106,200,0.15)',
+    isDark?'rgba(106,247,200,0.10)':'rgba(106,247,200,0.15)'
   ];
   const chapterBorders=['var(--accent)','var(--accent2)','var(--accent3)'];
+
   chapters.forEach((ch,chi)=>{
     const chPatterns=patternData.filter(p=>p.chapter===ch.id);
     if(!chPatterns.length) return;
@@ -1120,6 +1221,7 @@ function renderLevelClassifier() {
     const chTd=document.createElement('td'); chTd.colSpan=2+usedGroups.length;
     chTd.style.cssText=`padding:8px 12px;font-weight:700;font-size:0.75rem;color:${chapterBorders[chi]};letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);border-top:${chi>0?'4px solid var(--bg)':'none'};`;
     chTd.textContent=ch.label; chRow.appendChild(chTd);
+
     chPatterns.forEach(p=>{
       const modeList=getPatternModes(p);
       const tr=tbody.insertRow();
@@ -1141,7 +1243,7 @@ function renderLevelClassifier() {
           rowKeys.forEach(k=>{ if(chk.checked)selected.add(k);else selected.delete(k); });
           lastCheckedIdx=myIdx;
         }
-        updateBulkBar();
+        updateBulkCount();
       });
       chk.addEventListener('mousedown',(e)=>{
         if(e.button!==0||e.shiftKey) return;
@@ -1153,11 +1255,12 @@ function renderLevelClassifier() {
         if(chk.checked!==dragValue){
           chk.checked=dragValue;
           rowKeys.forEach(k=>{ if(dragValue)selected.add(k);else selected.delete(k); });
-          updateBulkBar();
+          updateBulkCount();
         }
       });
       chkTd.appendChild(chk);
       const tdName=tr.insertCell(); tdName.style.cssText='padding:8px 10px;border-bottom:1px solid var(--border);font-size:0.8rem;'; tdName.textContent=p.name;
+
       usedGroups.forEach((g,gi)=>{
         const td=tr.insertCell();
         td.style.cssText=`padding:5px 6px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;${gi>0?'border-left:1px solid var(--border);':''}`;
@@ -1169,29 +1272,48 @@ function renderLevelClassifier() {
         const c=curLvId?getLvColor(curLvId):'var(--text2)';
         const wrap=document.createElement('div'); wrap.style.cssText='position:relative;display:inline-block;';
         const btn=document.createElement('button');
+        btn.dataset.lvBtn='1'; btn.dataset.pid=p.id; btn.dataset.mk=mk;
         btn.style.cssText=`font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:10px;border:1px solid ${curLvId?c:'var(--border)'};background:${curLvId?'rgba(255,255,255,0.06)':'var(--surface2)'};color:${c};cursor:pointer;font-family:inherit;white-space:nowrap;min-width:48px;`;
-        btn.textContent=curLv?curLv.label+' ▾':'— ▾';
+        btn.textContent=(curLv?curLv.label:'—')+' ▾';
         const menu=document.createElement('div');
         menu.style.cssText='display:none;position:absolute;top:110%;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;z-index:80;min-width:76px;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+        // 4번: 버튼 클릭 시 열고/닫기 토글
+        btn.onclick=(e)=>{
+          e.stopPropagation();
+          const isOpen=menu.classList.contains('lv-menu-open');
+          document.querySelectorAll('.lv-menu-open').forEach(m=>{m.style.display='none';m.classList.remove('lv-menu-open');});
+          if(!isOpen){ menu.style.display='block'; menu.classList.add('lv-menu-open'); }
+        };
         const clearOpt=document.createElement('button');
         clearOpt.style.cssText='display:block;width:100%;text-align:center;padding:5px 8px;border:none;border-radius:6px;background:transparent;color:var(--text2);font-size:0.75rem;cursor:pointer;font-family:inherit;';
         clearOpt.textContent='—';
-        clearOpt.onclick=(e)=>{ e.stopPropagation(); matchedModes.forEach(k=>setLv(p.id,k,null)); menu.style.display='none'; menu.classList.remove('lv-menu-open'); renderLevelClassifier(); };
+        clearOpt.onclick=(e)=>{
+          e.stopPropagation();
+          matchedModes.forEach(k=>setLv(p.id,k,null));
+          menu.style.display='none'; menu.classList.remove('lv-menu-open');
+          refreshDropdownLabels();
+        };
         menu.appendChild(clearOpt);
         levelSettings.forEach(lv=>{
           const opt=document.createElement('button'); const isSel=lv.id===curLvId; const lc=getLvColor(lv.id);
-          opt.style.cssText=`display:block;width:100%;text-align:center;padding:5px 8px;border:none;border-radius:6px;background:${isSel?'rgba(124,106,247,0.15)':'transparent'};color:${isSel?lc:'var(--text)'};font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:${isSel?'700':'400'};`;
+          opt.style.cssText=`display:block;width:100%;text-align:center;padding:5px 8px;border:none;border-radius:6px;background:${isSel?lc+'22':'transparent'};color:${isSel?lc:'var(--text)'};font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:${isSel?'700':'400'};`;
           opt.textContent=(isSel?'✓ ':'')+lv.label;
-          opt.onclick=(e)=>{ e.stopPropagation(); matchedModes.forEach(k=>setLv(p.id,k,lv.id)); menu.style.display='none'; menu.classList.remove('lv-menu-open'); renderLevelClassifier(); };
+          opt.onclick=(e)=>{
+            e.stopPropagation();
+            matchedModes.forEach(k=>setLv(p.id,k,lv.id));
+            menu.style.display='none'; menu.classList.remove('lv-menu-open');
+            refreshDropdownLabels();
+          };
           menu.appendChild(opt);
         });
-        btn.onclick=(e)=>{ e.stopPropagation(); document.querySelectorAll('.lv-menu-open').forEach(m=>{m.style.display='none';m.classList.remove('lv-menu-open');}); menu.style.display='block'; menu.classList.add('lv-menu-open'); };
         wrap.appendChild(btn); wrap.appendChild(menu); td.appendChild(wrap);
       });
     });
   });
+
   container.appendChild(tbl);
   document.addEventListener('click',()=>{ document.querySelectorAll('.lv-menu-open').forEach(m=>{m.style.display='none';m.classList.remove('lv-menu-open');}); },{once:true});
+  updateLcSaveBtnState();
 }
 
 /* ════════════════════════════════════════════════
