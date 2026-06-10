@@ -284,17 +284,141 @@ function applyTheme() {
 let audioCtx=null, masterGain=null, metronomeGain=null;
 let metronomeVol = 1.0;
 
-function initAudio() {
-  if (!audioCtx) {
-    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
-    audioCtx = new AC();
-    masterGain = audioCtx.createGain(); masterGain.gain.value = 1.95; masterGain.connect(audioCtx.destination);
-    metronomeGain = audioCtx.createGain(); metronomeGain.gain.value = metronomeVol; metronomeGain.connect(masterGain);
-  }
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+console.log('[AUDIO-FIX v4] SR기억+정찰병자동교체 빌드 로드됨 (breath) — 2026-06-10');
+// ── iPad Safari 오디오 언락 v4 (breath): 세션 활성화 + SR기억 + 정찰병 자동 교체 ──
+// WebKit 버그: 컨텍스트 샘플레이트와 하드웨어 출력이 불일치하면 state와 무관하게 클럭(currentTime)이 0에 동결됨
+const _SILENT_WAV='data:audio/wav;base64,UklGRoQJAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YWAJAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA=';
+let _silentEl=null,_clockWatchdog=null,_ctxRebuilds=0,_needGestureRebuild=false,_awaitClock=false;
+let _probes=[]; // 샘플레이트 정찰병 컨텍스트 [{ctx,sr}]
+const _SR_KEY='somi_audio_sr'; // 이 기기에서 클럭이 도는 것으로 확인된 샘플레이트 (모듈 공유)
+function _storedSR(){try{const v=parseInt(localStorage.getItem(_SR_KEY)||'0',10);return(v===44100||v===48000)?v:0;}catch(e){return 0;}}
+function _rememberSR(sr){try{localStorage.setItem(_SR_KEY,String(sr));}catch(e){}}
+function _srForAttempt(n){
+  const st=_storedSR();const seq=[st||0,44100,48000].filter((v,i,a)=>a.indexOf(v)===i);
+  return seq[n%seq.length];
 }
-document.addEventListener('touchstart', ()=>{ if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); }, {passive:true});
-document.addEventListener('click',      ()=>{ if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); }, {passive:true});
+function _setIOSSession(){
+  try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback';}catch(e){}
+}
+function _playSilentElement(){
+  try{
+    if(!_silentEl){_silentEl=document.createElement('audio');_silentEl.setAttribute('playsinline','');_silentEl.loop=true;_silentEl.src=_SILENT_WAV;}
+    const p=_silentEl.play();if(p&&p.catch)p.catch(()=>{});
+  }catch(e){}
+}
+function _stopSilentElement(){try{if(_silentEl){_silentEl.pause();_silentEl.currentTime=0;}}catch(e){}}
+function _audioDiag(tag){
+  try{
+    const sess=(navigator.audioSession&&navigator.audioSession.state)||'API없음';
+    console.log('[AUDIO-진단 '+tag+'] state='+(audioCtx?audioCtx.state:'없음')
+      +' sr='+(audioCtx?audioCtx.sampleRate:'-')
+      +' t='+(audioCtx?audioCtx.currentTime.toFixed(4):'-')
+      +' session='+sess+' rebuilds='+_ctxRebuilds);
+  }catch(e){}
+}
+function _wireGains(){
+  masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+  metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
+}
+function _buildCtx(){
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
+  _setIOSSession();
+  const sr=_srForAttempt(_ctxRebuilds);
+  try{audioCtx=sr?new AC({sampleRate:sr}):new AC();}
+  catch(e){audioCtx=new AC();}
+  _wireGains();
+  _audioDiag('생성');
+  return true;
+}
+function _unlockAudio(){
+  if(!audioCtx)return;
+  try{
+    if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});
+    const buf=audioCtx.createBuffer(1,1,22050),src=audioCtx.createBufferSource();
+    src.buffer=buf;src.connect(audioCtx.destination);src.start(0);
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    g.gain.value=0.0001;o.connect(g);g.connect(audioCtx.destination);
+    o.start(0);o.stop(audioCtx.currentTime+0.05);
+  }catch(e){}
+  _playSilentElement();
+}
+function _makeProbes(){
+  if(_probes.length||!audioCtx)return;
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  [44100,48000].forEach(sr=>{
+    if(audioCtx&&audioCtx.sampleRate===sr)return;
+    try{
+      const c=new AC({sampleRate:sr});
+      if(c.state!=='running')c.resume().catch(()=>{});
+      const b=c.createBuffer(1,1,22050),bs=c.createBufferSource();
+      bs.buffer=b;bs.connect(c.destination);bs.start(0);
+      _probes.push({ctx:c,sr:sr});
+    }catch(e){}
+  });
+  if(_probes.length)console.log('[AUDIO] 정찰병 컨텍스트 생성: '+_probes.map(p=>p.sr).join(', '));
+}
+function _closeProbes(){
+  _probes.forEach(p=>{try{p.ctx.close().catch(()=>{});}catch(e){}});
+  _probes=[];
+}
+function _adoptProbe(p){
+  console.log('[AUDIO] 🔄 정찰병 채택: sr='+p.sr+' t='+p.ctx.currentTime.toFixed(4));
+  try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
+  audioCtx=p.ctx;
+  _wireGains();
+  _probes=_probes.filter(x=>x!==p);
+  _closeProbes();
+  _rememberSR(p.sr);
+  _awaitClock=true; // 스케줄러가 새 클럭에 자동 재앵커
+}
+function _teardownCtx(){
+  try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
+  audioCtx=null;masterGain=null;metronomeGain=null;
+}
+function _gestureRebuild(){
+  // ★ 반드시 유저 제스처 콜스택 안에서만 호출
+  _needGestureRebuild=false;
+  _ctxRebuilds++;
+  _teardownCtx();
+  if(_buildCtx()){_unlockAudio();_awaitClock=true;console.log('[AUDIO] 제스처 내 컨텍스트 재생성 #'+_ctxRebuilds+' (sr시도='+(_srForAttempt(_ctxRebuilds)||'기본')+')');}
+}
+function _startClockWatchdog(){
+  if(_clockWatchdog)clearInterval(_clockWatchdog);
+  let tries=0;
+  _clockWatchdog=setInterval(()=>{
+    if(!audioCtx){clearInterval(_clockWatchdog);_clockWatchdog=null;return;}
+    if(audioCtx.currentTime>0){
+      clearInterval(_clockWatchdog);_clockWatchdog=null;_needGestureRebuild=false;_ctxRebuilds=0;
+      _stopSilentElement();_rememberSR(audioCtx.sampleRate);_closeProbes();
+      console.log('[AUDIO] ✅ 클럭 정상 기동 t='+audioCtx.currentTime.toFixed(4)+' sr='+audioCtx.sampleRate);
+      return;}
+    tries++;
+    if(tries>=2&&_probes.length){
+      const live=_probes.find(p=>{try{return p.ctx.currentTime>0;}catch(e){return false;}});
+      if(live){_adoptProbe(live);return;}
+    }
+    if(tries===3){try{audioCtx.suspend().then(()=>audioCtx.resume()).catch(()=>{});}catch(e){}_audioDiag('정지·소생시도');}
+    else if(tries>=10){
+      clearInterval(_clockWatchdog);_clockWatchdog=null;_needGestureRebuild=true;
+      _audioDiag('기동실패');
+      console.warn('[AUDIO] 클럭 기동 실패 — 다음 터치에서 샘플레이트 바꿔 재생성');
+    }
+  },100);
+}
+function initAudio(){
+  if(!audioCtx){if(!_buildCtx())return;}
+  _unlockAudio();
+}
+function ensureAudio(){
+  if(_needGestureRebuild){_gestureRebuild();}
+  else if(!audioCtx)initAudio();
+  else _unlockAudio();
+  if(audioCtx&&audioCtx.currentTime<=0){_makeProbes();_startClockWatchdog();}
+}
+// ★ touchstart는 iOS 오디오 언락 제스처 불인정 — 컨텍스트 '생성' 금지, 기존 ctx 언락만
+document.addEventListener('touchstart',()=>{if(audioCtx)_unlockAudio();},{passive:true,capture:true});
+document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
+document.addEventListener('click',ensureAudio,{passive:true});
 
 function playClick(type, time) {
   if (!audioCtx) return;
@@ -328,9 +452,12 @@ function currentPat() { return BREATH_PATTERNS.find(p => p.id === EX); }
 
 /* ── E-1. 메인 루프 ── */
 function startEngine() {
+  // ═══ iPad Safari: 제스처 콜스택 안에서 동기식으로 생성+언락+정찰병까지 일사천리 ═══
+  if (_needGestureRebuild) _gestureRebuild();
   if (!audioCtx) initAudio();
   if (!audioCtx) return;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  _unlockAudio();
+  if (audioCtx.currentTime <= 0) { _makeProbes(); _awaitClock = true; _startClockWatchdog(); }
 
   const pat = currentPat(); if (!pat) return;
   beatInterval = 60 / pat.bpm;
@@ -363,7 +490,14 @@ function startEngine() {
 
 function schedulerTick() {
   if (!audioCtx) return;
-  while (nextBeatTime < audioCtx.currentTime + 0.15) {
+  const now = audioCtx.currentTime;
+  // Safari 안전장치: 클럭이 0이면 대기, 움직이기 시작한 순간 재앵커
+  if (_awaitClock) {
+    if (now <= 0) return;
+    nextBeatTime = now + 0.05;
+    _awaitClock = false;
+  }
+  while (nextBeatTime < now + 0.15) {
     scheduleOneBeat(nextBeatTime);
     nextBeatTime += beatInterval;
   }
