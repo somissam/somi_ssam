@@ -896,9 +896,9 @@ function initAudio(){
     masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
     metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
     pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);}
-  if(audioCtx.state==='suspended')audioCtx.resume();
+  if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
 }
-function ensureAudio(){if(!audioCtx)initAudio();else if(audioCtx.state==='suspended')audioCtx.resume();}
+function ensureAudio(){if(!audioCtx)initAudio();else if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}
 document.addEventListener('touchstart',ensureAudio,{passive:true,capture:true});
 document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true,capture:true});
@@ -999,7 +999,7 @@ function startEngine(){
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
   };
   if(audioCtx.state==='suspended'){
-    audioCtx.resume(); _doStart();
+    audioCtx.resume().then(_doStart).catch(_doStart);
   } else {
     _doStart();
   }
