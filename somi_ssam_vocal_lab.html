@@ -963,12 +963,16 @@ function _getScheduleNow(){
   return 0;
 }
 function _toAudioTime(wallBasedTime){
-  // wall clock 기반 시간 → audioCtx.currentTime 기반 시간으로 변환
-  // audioCtx.currentTime이 실제로 움직이면 그걸 쓰고,
-  // 0에 묶여있으면 audioStartTime 기준 오프셋으로 변환
-  const offset=wallBasedTime-((Date.now()-wallStartTime)/1000);
-  const audioNow=audioCtx?audioCtx.currentTime:0;
-  return Math.max(audioNow, audioNow+offset);
+  // Safari: audioCtx.currentTime이 0에 묶여있으면 즉시 재생(0)으로 처리
+  if(!audioCtx)return 0;
+  if(audioCtx.currentTime>0){
+    // 정상 동작: wall clock 오프셋을 audioCtx 시간으로 변환
+    const elapsed=(Date.now()-wallStartTime)/1000;
+    const offset=wallBasedTime-elapsed;
+    return Math.max(audioCtx.currentTime, audioCtx.currentTime+offset);
+  }
+  // currentTime=0: 스케줄링 불가 — 즉시 재생
+  return 0;
 }
 function schedulerTick(){
   if(!audioCtx||!_fn_scheduleOneBeat)return;
