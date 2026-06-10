@@ -19,7 +19,7 @@ button{font-family:inherit;cursor:pointer;}
 .brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
 .home-link{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;min-width:120px;justify-content:center;white-space:nowrap;}
 .home-link:hover{border-color:var(--accent);color:var(--text);}
-.student-tabs{display:flex;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:57px;z-index:99;overflow-x:auto;scrollbar-width:none;}
+.student-tabs{display:flex;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;overflow-x:auto;scrollbar-width:none;}
 .student-tabs::-webkit-scrollbar{display:none;}
 .stab{flex:1;min-width:80px;padding:12px 8px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:0.88rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;white-space:nowrap;}
 .stab:hover{color:var(--text);}
@@ -85,7 +85,10 @@ button{font-family:inherit;cursor:pointer;}
 <body>
 <div id="app">
   <div class="app-header">
-    <button class="home-link" id="teacher-mode-btn" style="display:none;" onclick="goToTeacherMode()">👩‍🏫 소미쌤</button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="home-link" id="teacher-mode-btn" style="display:none;" onclick="goToTeacherMode()">👩‍🏫 소미쌤</button>
+      <button class="home-link" id="vocal-gender-toggle" style="display:none;" onclick="toggleVocalGender()" title="보컬랩 성별 미리보기 전환"></button>
+    </div>
     <div style="width:120px;" id="header-spacer"></div>
     <div class="brand-wrap">
       <div class="brand-title">소미쌤</div>
@@ -194,10 +197,43 @@ function studentLogout(){
   window.location.href='index.html';
 }
 
+/* ── 보컬랩 성별 미리보기 토글 (소미쌤 기기 전용) ── */
+let _vocalPreviewGender = localStorage.getItem('somi_vocal_preview_gender') || null;
+
+function _updateVocalGenderToggleBtn(){
+  const btn = document.getElementById('vocal-gender-toggle');
+  if(!btn) return;
+  // null이면 프로필 성별 그대로 → 표시는 현재 적용 중인 성별 기준
+  const isTeacherDevice = !!localStorage.getItem(TEACHER_AUTO_KEY);
+  if(!isTeacherDevice){ btn.style.display='none'; return; }
+  btn.style.display='inline-flex';
+  const effectiveGender = _vocalPreviewGender || (currentProfile ? currentProfile.gender||'female' : 'female');
+  if(effectiveGender === 'male'){
+    btn.textContent = '👨 남성';
+    btn.style.borderColor = 'var(--accent3)';
+    btn.style.color = 'var(--accent3)';
+  } else {
+    btn.textContent = '👩 여성';
+    btn.style.borderColor = 'var(--accent2)';
+    btn.style.color = 'var(--accent2)';
+  }
+}
+
+function toggleVocalGender(){
+  const effectiveGender = _vocalPreviewGender || (currentProfile ? currentProfile.gender||'female' : 'female');
+  _vocalPreviewGender = (effectiveGender === 'male') ? 'female' : 'male';
+  localStorage.setItem('somi_vocal_preview_gender', _vocalPreviewGender);
+  _updateVocalGenderToggleBtn();
+}
+
 function enterStudentApp(){
   document.getElementById('app').style.display='flex';
   document.getElementById('tab-name-label').textContent=currentProfile.name;
   currentStamp=currentProfile.stamp||'apple';
+  // 도장 SVG 재주입 — 아이패드 타이밍 문제 방지 (빈 경우 무조건 채움)
+  document.querySelectorAll('.stamp-opt[data-stamp]').forEach(el=>{
+    el.innerHTML=getStampSVG(el.getAttribute('data-stamp'));
+  });
   document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
   // 소미쌤 버튼: somi_teacher_auto_login 키가 있는 기기에서만 표시
   const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
@@ -205,6 +241,13 @@ function enterStudentApp(){
   const spacer=document.getElementById('header-spacer');
   if(isTeacherDevice){teacherBtn.style.display='inline-flex';if(spacer)spacer.style.display='none';}
   else{teacherBtn.style.display='none';if(spacer)spacer.style.display='block';}
+  // 소미쌤 기기에서만 vocal gender 토글 표시 및 초기화
+  _updateVocalGenderToggleBtn();
+  // 헤더 높이 동적 계산 → 탭 sticky top 정확히 맞춤 (버튼 2줄 등 높이 변화 대응)
+  requestAnimationFrame(()=>{
+    const hdr=document.querySelector('.app-header');
+    if(hdr)document.documentElement.style.setProperty('--header-h', hdr.offsetHeight+'px');
+  });
   showTab('home',document.getElementById('tab-home'));
 }
 
@@ -219,7 +262,16 @@ function showTab(tab,btn){
 }
 function goToChapter(tab){
   if(currentProfile)localStorage.setItem('somi_current_profile_id',currentProfile.id);
-  window.location.href=tab==='breath'?'somi_ssam_breath.html':tab==='vocal'?'somi_ssam_vocal_lab.html':'somi_ssam_rhythm_groove.html';
+  if(tab==='breath'){window.location.href='somi_ssam_breath.html';}
+  else if(tab==='vocal'){
+    // 소미쌤 기기: 토글 우선 / 일반 학생: 본인 성별
+    const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
+    const gender = (isTeacherDevice && _vocalPreviewGender)
+      ? _vocalPreviewGender
+      : (currentProfile ? currentProfile.gender||'female' : 'female');
+    window.location.href = (gender==='male') ? 'somi_ssam_vocal_lab_male.html' : 'somi_ssam_vocal_lab.html';
+  }
+  else if(tab==='rhythm'){window.location.href='somi_ssam_rhythm_groove.html';}
 }
 function renderStudentHome(){const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();renderClassInfo();updateSummary();renderCalendar();}
 function renderClassInfo(){
