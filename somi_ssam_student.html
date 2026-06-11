@@ -31,10 +31,14 @@ button{font-family:inherit;cursor:pointer;}
 /* ── 오늘의 요약 ── */
 .today-summary{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:24px;}
 .today-summary h3{font-size:0.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
-.summary-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:center;}
+.summary-stats{display:flex;flex-direction:row;align-items:center;gap:20px;}
 /* ── 도넛 그래프 영역 ── */
-.sum-donut-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
-.sum-donut-wrap .lbl{font-size:0.7rem;color:var(--text2);margin-top:2px;}
+.sum-donut-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:90px;height:90px;}
+/* ── 오른쪽 통계 영역 ── */
+.sum-right{display:flex;flex-direction:column;gap:10px;flex:1;justify-content:center;}
+.sum-row{display:flex;flex-direction:row;align-items:baseline;justify-content:space-between;gap:12px;}
+.sum-row-lbl{font-size:0.75rem;color:var(--text2);white-space:nowrap;flex-shrink:0;}
+.sum-row-val{font-size:1.9rem;font-weight:800;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:-1px;line-height:1.1;text-align:right;}
 .sum-stat{text-align:center;}
 .sum-stat .val{font-size:1.6rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);}
 .sum-stat .lbl{font-size:0.7rem;color:var(--text2);margin-top:4px;}
@@ -82,11 +86,9 @@ button{font-family:inherit;cursor:pointer;}
 @media (max-width:600px){
   .home-content{padding:14px;}
   .today-summary{padding:16px;margin-bottom:16px;}
-  /* 4번: 간격 좁히고 도넛 작게 */
-  .summary-stats{gap:6px;grid-template-columns:auto 1fr 1fr;}
-  /* 4,5번: 총시간/연속일수 폰트 크게 */
-  .sum-stat .val{font-size:2.0rem;font-weight:800;}
-  /* 6번: 챕터 태그 왼쪽 1/3 제한 */
+  .summary-stats{gap:14px;}
+  .sum-row-val{font-size:1.6rem;}
+  .sum-row-lbl{font-size:0.7rem;}
   .sum-chapters{max-width:33%;gap:5px;margin-top:12px;}
   .calendar-wrap{padding:14px;}
   .stamp-picker{padding:12px;}
@@ -146,13 +148,19 @@ button{font-family:inherit;cursor:pointer;}
     <div class="today-summary">
       <h3>오늘의 연습 성과</h3>
       <div class="summary-stats">
-        <!-- 도넛 그래프 (연습 비율) -->
         <div class="sum-donut-wrap">
-          <svg id="sum-donut" width="64" height="64" viewBox="0 0 64 64"></svg>
-          <div class="lbl">오늘 비율</div>
+          <canvas id="sum-donut" width="90" height="90"></canvas>
         </div>
-        <div class="sum-stat"><div class="val" id="sum-time">0</div><div class="lbl">총 시간</div></div>
-        <div class="sum-stat"><div class="val" id="sum-streak">0</div><div class="lbl">연속 일수</div></div>
+        <div class="sum-right">
+          <div class="sum-row">
+            <div class="sum-row-lbl">총 시간</div>
+            <div class="sum-row-val" id="sum-time">0</div>
+          </div>
+          <div class="sum-row">
+            <div class="sum-row-lbl">연속 일수</div>
+            <div class="sum-row-val" id="sum-streak">0</div>
+          </div>
+        </div>
       </div>
       <div class="sum-chapters" id="sum-chapters"></div>
     </div>
@@ -398,74 +406,38 @@ function renderClassInfo(){
 function toDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
 /* ════════════════════════════════════
-   도넛 그래프 렌더 (4번 요구사항)
+   파이 차트 렌더
 ════════════════════════════════════ */
 function renderDonut(logs){
-  const svg=document.getElementById('sum-donut');
-  if(!svg) return;
-  svg.innerHTML='';
-  const R=28,cx=32,cy=32,stroke=8;
-  const total=logs.length;
-  // 챕터별 집계
+  const canvas=document.getElementById('sum-donut');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const cx=45,cy=45,R=38;
+  ctx.clearRect(0,0,90,90);
   const counts={breath:0,vocal:0,rhythm:0};
   logs.forEach(l=>{if(counts[l.chapter]!==undefined)counts[l.chapter]++;});
-  const colors={breath:'var(--accent)',vocal:'var(--accent2)',rhythm:'var(--accent3)'};
+  const total=logs.length;
+  const colors={breath:'#7c6af7',vocal:'#f76ac8',rhythm:'#6af7c8'};
   const order=['breath','vocal','rhythm'];
-
   if(total===0){
-    // 빈 원
-    const circle=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    circle.setAttribute('cx',cx);circle.setAttribute('cy',cy);circle.setAttribute('r',R);
-    circle.setAttribute('fill','none');circle.setAttribute('stroke','var(--border)');
-    circle.setAttribute('stroke-width',stroke);
-    svg.appendChild(circle);
-    // 중앙 텍스트
-    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x',cx);t.setAttribute('y',cy+5);t.setAttribute('text-anchor','middle');
-    t.setAttribute('font-size','11');t.setAttribute('fill','var(--text2)');t.setAttribute('font-family','DM Mono,monospace');
-    t.textContent='0';
-    svg.appendChild(t);
+    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fillStyle='#3a3a4a';ctx.fill();
     return;
   }
-
-  const circumference=2*Math.PI*R;
-  let offset=0;
-  // 배경 원
-  const bg=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  bg.setAttribute('cx',cx);bg.setAttribute('cy',cy);bg.setAttribute('r',R);
-  bg.setAttribute('fill','none');bg.setAttribute('stroke','var(--border)');
-  bg.setAttribute('stroke-width',stroke);
-  svg.appendChild(bg);
-
+  let start=-Math.PI/2;
   order.forEach(ch=>{
     const cnt=counts[ch];
     if(cnt===0) return;
-    const frac=cnt/total;
-    const dash=frac*circumference;
-    const arc=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    arc.setAttribute('cx',cx);arc.setAttribute('cy',cy);arc.setAttribute('r',R);
-    arc.setAttribute('fill','none');arc.setAttribute('stroke',colors[ch]);
-    arc.setAttribute('stroke-width',stroke);
-    arc.setAttribute('stroke-dasharray',dash+' '+(circumference-dash));
-    arc.setAttribute('stroke-dashoffset',-offset);
-    arc.setAttribute('transform',`rotate(-90 ${cx} ${cy})`);
-    svg.appendChild(arc);
-    offset+=dash;
+    const angle=(cnt/total)*2*Math.PI;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,start,start+angle);ctx.closePath();
+    ctx.fillStyle=colors[ch];ctx.fill();
+    start+=angle;
   });
-
-  // 중앙 숫자 (총 횟수)
-  const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-  t.setAttribute('x',cx);t.setAttribute('y',cy+5);t.setAttribute('text-anchor','middle');
-  t.setAttribute('font-size','13');t.setAttribute('font-weight','700');
-  t.setAttribute('fill','var(--text)');t.setAttribute('font-family','DM Mono,monospace');
-  t.textContent=total;
-  svg.appendChild(t);
 }
 
 function updateSummary(){
   practiceLogs=loadData('somi_logs',{});
   const today=toDateStr(new Date()),logs=(practiceLogs[currentProfile.id]||[]).filter(l=>l.date===today);
-  // 도넛 그래프
+  // 파이 차트
   renderDonut(logs);
   // 총 시간 한글
   const sec=logs.reduce((a,l)=>a+(l.duration||0),0);
@@ -473,7 +445,7 @@ function updateSummary(){
   // 연속 일수
   let streak=0,d=new Date();
   for(let i=0;i<365;i++){if((practiceLogs[currentProfile.id]||[]).some(l=>l.date===toDateStr(d))){streak++;d.setDate(d.getDate()-1);}else break;}
-  document.getElementById('sum-streak').textContent=streak;
+  document.getElementById('sum-streak').textContent=streak+'일';
   // 챕터 태그
   const ch=[...new Set(logs.map(l=>l.chapter))];
   document.getElementById('sum-chapters').innerHTML=ch.map(c=>`<span class="sum-chapter-tag ${c}">${c==='breath'?'호흡':c==='vocal'?'발성':'리듬'}</span>`).join('');
