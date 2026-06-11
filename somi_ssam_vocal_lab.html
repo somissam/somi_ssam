@@ -959,11 +959,11 @@ function _buildCtx(){
   const sr=_srForAttempt(_ctxRebuilds);
   try{audioCtx=sr?new AC({sampleRate:sr}):new AC();}
   catch(e){audioCtx=new AC();}
-  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?1.4:0.9;
+  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?2.0:0.9;
   compressor=audioCtx.createDynamicsCompressor();
   compressor.threshold.value=-20;compressor.knee.value=6;compressor.ratio.value=12;
   compressor.attack.value=0.002;compressor.release.value=0.12;
-  makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?2.4:2.0;
+  makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?3.0:2.0;
   masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
@@ -1011,11 +1011,11 @@ function _adoptProbe(p){
   console.log('[AUDIO] 🔄 정찰병 채택: sr='+p.sr+' t='+p.ctx.currentTime.toFixed(4));
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
   audioCtx=p.ctx;
-  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?1.4:0.9;
+  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?2.0:0.9;
   compressor=audioCtx.createDynamicsCompressor();
   compressor.threshold.value=-20;compressor.knee.value=6;compressor.ratio.value=12;
   compressor.attack.value=0.002;compressor.release.value=0.12;
-  makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?2.4:2.0;
+  makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?3.0:2.0;
   masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
