@@ -595,7 +595,7 @@ function renderTeacher() {
     const ci = getClassInfo(p.id);
     const voClass = ci.voClass || null;
     const clsCss = getClassCSS(voClass);
-    const extras = ci.extras || [];
+    const extras = (ci.extras || []).map(e => e === '리듬베이직' ? '리베' : e).filter((e,i,a) => a.indexOf(e) === i);
 
     const tl=(practiceLogs[p.id]||[]).filter(l=>l.date===today), ts=tl.reduce((a,l)=>a+(l.duration||0),0);
     const div=document.createElement('div');
@@ -729,7 +729,7 @@ function renderDetailContent(p) {
   const ci = getClassInfo(p.id);
   const voClass = ci.voClass || null;
   const clsCss = getClassCSS(voClass) || 'no-class';
-  const extras = ci.extras || [];
+  const extras = (ci.extras || []).map(e => e === '리듬베이직' ? '리베' : e).filter((e,i,a) => a.indexOf(e) === i);
   const classLabel = voClass ? CLASS_MAP[voClass]?.label || voClass : null;
   const classColor = getClassColor(voClass);
   const badgeHtml = classLabel
@@ -1959,8 +1959,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     patternLevelOverrides=loadData('somi_pattern_levels',{});
     levelSettings=loadData('somi_level_settings',null)||DEFAULT_LEVEL_SETTINGS.map(l=>({...l}));
 
-    // ── [5번] 리듬베이직 → 리베 마이그레이션 ──
-    let migrated=false;
+  } catch(e) {
+    console.warn('Firebase 연결 실패, localStorage로 계속:', e);
+  }
+
+  // ── 리듬베이직 → 리베 마이그레이션 (Firebase 성공/실패 무관하게 항상 실행) ──
+  { let migrated=false;
     profiles.forEach(p=>{
       if(!p.extras) return;
       const idx=p.extras.indexOf('리듬베이직');
@@ -1971,8 +1975,6 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     });
     if(migrated){ saveProfiles(); }
-  } catch(e) {
-    console.warn('Firebase 연결 실패, localStorage로 계속:', e);
   }
 
   if(isTeacherMode) showTeacherTab('student');
