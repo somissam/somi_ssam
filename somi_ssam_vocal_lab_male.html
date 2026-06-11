@@ -913,7 +913,7 @@ function getFullOffsets(){
    【 섹션 D 】 오디오 엔진
 ════════════════════════════════════════════════ */
 console.log('[AUDIO-FIX v4] SR기억+정찰병자동교체 빌드 로드됨 (male) — 2026-06-10');
-let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null;
+let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null,compressor=null,makeupGain=null;
 let metronomeVol=1.0,pianoVol=1.0;
 // ── iPad Safari 오디오 언락 v3: 세션 활성화 + 샘플레이트 순환 + 진단 로그 ──
 // 증상: 제스처 안에서 만든 컨텍스트조차 currentTime이 0에 고착 → 세션/하드웨어 라우팅 레벨 문제
@@ -959,7 +959,12 @@ function _buildCtx(){
   const sr=_srForAttempt(_ctxRebuilds);
   try{audioCtx=sr?new AC({sampleRate:sr}):new AC();}
   catch(e){audioCtx=new AC();}
-  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?3.0:2.5;masterGain.connect(audioCtx.destination);
+  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?1.4:0.9;
+  compressor=audioCtx.createDynamicsCompressor();
+  compressor.threshold.value=-20;compressor.knee.value=6;compressor.ratio.value=12;
+  compressor.attack.value=0.002;compressor.release.value=0.12;
+  makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?2.4:2.0;
+  masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _audioDiag('생성');
@@ -1006,7 +1011,12 @@ function _adoptProbe(p){
   console.log('[AUDIO] 🔄 정찰병 채택: sr='+p.sr+' t='+p.ctx.currentTime.toFixed(4));
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
   audioCtx=p.ctx;
-  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?3.0:2.5;masterGain.connect(audioCtx.destination);
+  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?1.4:0.9;
+  compressor=audioCtx.createDynamicsCompressor();
+  compressor.threshold.value=-20;compressor.knee.value=6;compressor.ratio.value=12;
+  compressor.attack.value=0.002;compressor.release.value=0.12;
+  makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?2.4:2.0;
+  masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _probes=_probes.filter(x=>x!==p);
@@ -1016,7 +1026,7 @@ function _adoptProbe(p){
 }
 function _teardownCtx(){
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
-  audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;
+  audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;compressor=null;makeupGain=null;
 }
 function _gestureRebuild(){
   // ★ 반드시 유저 제스처 콜스택 안에서만 호출 — 제스처 밖 재생성은 resume 거부로 무의미
@@ -1120,8 +1130,70 @@ function updateLoopCounter(){
 }
 window.addEventListener('resize',_applyLandscape,{passive:true});
 window.addEventListener('orientationchange',()=>setTimeout(_applyLandscape,150),{passive:true});
-function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?2000:1400;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.35:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
-function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;(_isPhoneMobile()?[{n:1,vol:0.25},{n:2,vol:0.38},{n:3,vol:0.22},{n:4,vol:0.10},{n:5,vol:0.03},{n:6,vol:0.01}]:[{n:1,vol:0.45},{n:2,vol:0.25},{n:3,vol:0.14},{n:4,vol:0.08},{n:5,vol:0.04},{n:6,vol:0.015}]).forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(_isPhoneMobile()?0.02:0.06,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
+function playClickAt(type,time){if(!audioCtx)return;try{
+  const out=metronomeGain||masterGain;
+  const isAccent=type==='accent';
+  // 메인 톤 — 1100Hz 중역 (2차 음원 분석: 1125Hz, attack 1.5ms)
+  const freq=isAccent?1120:1050;
+  const peakGain=isAccent?0.52:0.40;
+  const decay=isAccent?0.044:0.038;
+  const o1=audioCtx.createOscillator(),g1=audioCtx.createGain();
+  o1.type='sine';o1.frequency.value=freq;o1.connect(g1);g1.connect(out);
+  g1.gain.setValueAtTime(0,time);
+  g1.gain.linearRampToValueAtTime(peakGain,time+0.0015);
+  g1.gain.exponentialRampToValueAtTime(0.001,time+decay);
+  o1.start(time);o1.stop(time+decay+0.01);
+  // 밴드패스 노이즈 — 나무 스틱 질감 (고역 비율 낮춤)
+  const bufLen=Math.floor(audioCtx.sampleRate*0.030);
+  const noiseBuf=audioCtx.createBuffer(1,bufLen,audioCtx.sampleRate);
+  const nd=noiseBuf.getChannelData(0);
+  for(let i=0;i<bufLen;i++)nd[i]=(Math.random()*2-1);
+  const ns=audioCtx.createBufferSource(),ng=audioCtx.createGain();
+  const bp=audioCtx.createBiquadFilter();
+  bp.type='bandpass';bp.frequency.value=1200;bp.Q.value=1.0;
+  ns.buffer=noiseBuf;ns.connect(bp);bp.connect(ng);ng.connect(out);
+  ng.gain.setValueAtTime(isAccent?0.19:0.14,time);
+  ng.gain.exponentialRampToValueAtTime(0.001,time+0.025);
+  ns.start(time);ns.stop(time+0.032);
+}catch(e){}}
+function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{
+  const out=pianoGain||masterGain;
+  const isPhone=_isPhoneMobile();
+  const baseScale=isPhone?0.28:0.24;
+  [{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{
+    const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+    osc.type='sine';osc.frequency.value=h.n*freq;
+    osc.connect(g);g.connect(out);
+    const v=baseScale*h.vol, dr=1+(h.n-1)*0.35;
+    g.gain.setValueAtTime(v,startTime);
+    g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);
+    g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);
+    g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);
+    g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);
+    osc.start(startTime);osc.stop(startTime+duration+0.05);
+  });
+  const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();
+  sub.type='sine';sub.frequency.value=freq;
+  sub.connect(sg);sg.connect(out);
+  sg.gain.setValueAtTime(isPhone?0.07:0.06,startTime);
+  sg.gain.exponentialRampToValueAtTime(isPhone?0.022:0.018,startTime+0.25);
+  sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);
+  sub.start(startTime);sub.stop(startTime+duration+0.05);
+  // 해머 노이즈 — gain 낮춤
+  if(!isPhone){
+    const atkLen=Math.floor(audioCtx.sampleRate*0.018);
+    const atkBuf=audioCtx.createBuffer(1,atkLen,audioCtx.sampleRate);
+    const ad=atkBuf.getChannelData(0);
+    for(let i=0;i<atkLen;i++)ad[i]=(Math.random()*2-1);
+    const aN=audioCtx.createBufferSource(),aG=audioCtx.createGain();
+    const bpf=audioCtx.createBiquadFilter();
+    bpf.type='bandpass';bpf.frequency.value=1200;bpf.Q.value=1.5;
+    aN.buffer=atkBuf;aN.connect(bpf);bpf.connect(aG);aG.connect(out);
+    aG.gain.setValueAtTime(0.02,startTime);
+    aG.gain.exponentialRampToValueAtTime(0.0001,startTime+0.015);
+    aN.start(startTime);aN.stop(startTime+0.02);
+  }
+}catch(e){}}
 function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
 
 // 스타카토: 전체 박자의 50%만 재생
@@ -1134,20 +1206,38 @@ function playPianoNoteVibrato(freq,startTime,duration){
   if(!audioCtx)return;
   try{
     const out=pianoGain||masterGain;
-    (_isPhoneMobile()?[{n:1,vol:0.28},{n:2,vol:0.40},{n:3,vol:0.22},{n:4,vol:0.08}]:[{n:1,vol:0.50},{n:2,vol:0.28},{n:3,vol:0.14},{n:4,vol:0.07}]).forEach(h=>{
+    const isPhone=_isPhoneMobile();
+    // 원본과 동일 — 완전 정수배, beating 없음
+    const baseScale=isPhone?0.28:0.20;
+    [{n:1,vol:0.55},{n:2,vol:0.25},{n:3,vol:0.14},{n:4,vol:0.07}].forEach(h=>{
       const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
       osc.type='sine';osc.frequency.value=h.n*freq;
       osc.connect(g);g.connect(out);
-      const v=0.30*h.vol;
-      g.gain.setValueAtTime(0,startTime);
-      g.gain.linearRampToValueAtTime(v,startTime+0.015);
-      g.gain.setValueAtTime(v,startTime+duration-0.05);
-      g.gain.linearRampToValueAtTime(0.0001,startTime+duration);
+      const v=baseScale*h.vol;
+      // 배음별 자연 감쇠 — 고배음일수록 빨리 사라짐
+      const dr=1+(h.n-1)*0.5;
+      g.gain.setValueAtTime(v,startTime);
+      g.gain.exponentialRampToValueAtTime(v*0.65,startTime+0.08/dr);
+      g.gain.exponentialRampToValueAtTime(v*0.35,startTime+0.35/dr);
+      g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);
       osc.start(startTime);osc.stop(startTime+duration+0.05);
     });
+    // 해머 노이즈 — 1200Hz, 고역 비율 줄임
+    if(!isPhone){
+      const atkLen=Math.floor(audioCtx.sampleRate*0.018);
+      const atkBuf=audioCtx.createBuffer(1,atkLen,audioCtx.sampleRate);
+      const ad=atkBuf.getChannelData(0);
+      for(let i=0;i<atkLen;i++)ad[i]=(Math.random()*2-1);
+      const aN=audioCtx.createBufferSource(),aG=audioCtx.createGain();
+      const bpf=audioCtx.createBiquadFilter();
+      bpf.type='bandpass';bpf.frequency.value=1200;bpf.Q.value=1.5;
+      aN.buffer=atkBuf;aN.connect(bpf);bpf.connect(aG);aG.connect(out);
+      aG.gain.setValueAtTime(0.04,startTime);
+      aG.gain.exponentialRampToValueAtTime(0.0001,startTime+0.015);
+      aN.start(startTime);aN.stop(startTime+0.02);
+    }
   }catch(e){}
 }
-
 // 글리산도용 슬라이더 전역 상태
 let _glissState={active:false};
 
