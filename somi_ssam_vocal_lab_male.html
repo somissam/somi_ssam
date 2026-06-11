@@ -959,7 +959,7 @@ function _buildCtx(){
   const sr=_srForAttempt(_ctxRebuilds);
   try{audioCtx=sr?new AC({sampleRate:sr}):new AC();}
   catch(e){audioCtx=new AC();}
-  masterGain=audioCtx.createGain();masterGain.gain.value=3.0;masterGain.connect(audioCtx.destination);
+  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?3.0:2.5;masterGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _audioDiag('생성');
@@ -1006,7 +1006,7 @@ function _adoptProbe(p){
   console.log('[AUDIO] 🔄 정찰병 채택: sr='+p.sr+' t='+p.ctx.currentTime.toFixed(4));
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
   audioCtx=p.ctx;
-  masterGain=audioCtx.createGain();masterGain.gain.value=3.0;masterGain.connect(audioCtx.destination);
+  masterGain=audioCtx.createGain();masterGain.gain.value=_isPhoneMobile()?3.0:2.5;masterGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _probes=_probes.filter(x=>x!==p);
@@ -1074,8 +1074,18 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 /* ── 가로 모드 감지 & 루프 카운터 이동 ── */
+function _isPhoneMobile(){
+  // 폰 판단: 화면 짧은 쪽이 480px 이하 (아이폰, 갤럭시 등 — 태블릿은 600px+)
+  const minDim=Math.min(window.screen.width,window.screen.height);
+  return minDim<=480;
+}
 function _isLandscapeMobile(){
   return window.matchMedia('(orientation:landscape) and (max-height:500px) and (max-width:900px)').matches;
+}
+function _isPhoneMobile(){
+  // 폰 판별: 짧은 쪽이 480px 이하 (아이폰/갤럭시 계열)
+  const short=Math.min(window.screen.width,window.screen.height);
+  return short<=480;
 }
 function _applyLandscape(){
   const body=document.getElementById('prac-body');
@@ -1110,8 +1120,8 @@ function updateLoopCounter(){
 }
 window.addEventListener('resize',_applyLandscape,{passive:true});
 window.addEventListener('orientationchange',()=>setTimeout(_applyLandscape,150),{passive:true});
-function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
-function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
+function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?2000:1400;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.35:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
+function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;(_isPhoneMobile()?[{n:1,vol:0.25},{n:2,vol:0.38},{n:3,vol:0.22},{n:4,vol:0.10},{n:5,vol:0.03},{n:6,vol:0.01}]:[{n:1,vol:0.45},{n:2,vol:0.25},{n:3,vol:0.14},{n:4,vol:0.08},{n:5,vol:0.04},{n:6,vol:0.015}]).forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(_isPhoneMobile()?0.02:0.06,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
 function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
 
 // 스타카토: 전체 박자의 50%만 재생
@@ -1124,7 +1134,7 @@ function playPianoNoteVibrato(freq,startTime,duration){
   if(!audioCtx)return;
   try{
     const out=pianoGain||masterGain;
-    [{n:1,vol:0.55},{n:2,vol:0.25},{n:3,vol:0.14},{n:4,vol:0.07}].forEach(h=>{
+    (_isPhoneMobile()?[{n:1,vol:0.28},{n:2,vol:0.40},{n:3,vol:0.22},{n:4,vol:0.08}]:[{n:1,vol:0.50},{n:2,vol:0.28},{n:3,vol:0.14},{n:4,vol:0.07}]).forEach(h=>{
       const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
       osc.type='sine';osc.frequency.value=h.n*freq;
       osc.connect(g);g.connect(out);
