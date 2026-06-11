@@ -82,8 +82,12 @@ button{font-family:inherit;cursor:pointer;}
 @media (max-width:600px){
   .home-content{padding:14px;}
   .today-summary{padding:16px;margin-bottom:16px;}
-  .summary-stats{gap:8px;}
-  .sum-stat .val{font-size:1.3rem;}
+  /* 4번: 간격 좁히고 도넛 작게 */
+  .summary-stats{gap:6px;grid-template-columns:auto 1fr 1fr;}
+  /* 4,5번: 총시간/연속일수 폰트 크게 */
+  .sum-stat .val{font-size:2.0rem;font-weight:800;}
+  /* 6번: 챕터 태그 왼쪽 1/3 제한 */
+  .sum-chapters{max-width:33%;gap:5px;margin-top:12px;}
   .calendar-wrap{padding:14px;}
   .stamp-picker{padding:12px;}
   .stamp-opt{width:40px;height:40px;}
@@ -373,7 +377,18 @@ function renderClassInfo(){
   let box=document.getElementById('class-info-box');
   if(!box){box=document.createElement('div');box.id='class-info-box';document.getElementById('stab-home').insertBefore(box,document.getElementById('stab-home').firstChild);}
   box.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 24px;margin-bottom:16px;';
-  box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;"><div style="display:flex;align-items:center;gap:12px;flex:1;flex-wrap:wrap;"><span style="font-size:2rem;font-weight:800;">${currentProfile.name}</span><span style="font-size:2rem;font-weight:800;color:var(--accent);">${voClass}</span><div style="display:flex;flex-direction:column;gap:4px;">${['리베','시창'].map(ex=>{const on=extras.includes(ex);return`<span style="padding:2px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1.5px solid ${on?'var(--accent3)':'var(--border)'};color:${on?'var(--accent3)':'var(--text2)'};background:${on?'rgba(106,247,200,0.1)':'var(--surface2)'};${on?'':'opacity:0.45;'}">${ex}</span>`;}).join('')}</div></div>${days?`<div style="text-align:center;"><div style="font-size:0.72rem;font-weight:700;color:var(--accent2);">소미쌤과</div><div style="font-size:2rem;font-weight:800;color:var(--accent2);">+${days}일✨</div></div>`:''}</div>`;
+  const badgeRow=['리베','시창'].map(ex=>{const on=extras.includes(ex);return`<span style="padding:2px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1.5px solid ${on?'var(--accent3)':'var(--border)'};color:${on?'var(--accent3)':'var(--text2)'};background:${on?'rgba(106,247,200,0.1)':'var(--surface2)'};${on?'':'opacity:0.45;'}">${ex}</span>`;}).join('');
+  box.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:2rem;font-weight:800;">${currentProfile.name}</span>
+          <span style="font-size:2rem;font-weight:800;color:var(--accent);">${voClass}</span>
+        </div>
+        <div style="display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;">${badgeRow}</div>
+      </div>
+      ${days?`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;"><div style="font-size:0.72rem;font-weight:700;color:var(--accent2);">소미쌤과</div><div style="font-size:2rem;font-weight:800;color:var(--accent2);white-space:nowrap;">+${days}일✨</div></div>`:''}
+    </div>`;
 }
 function toDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
