@@ -181,6 +181,30 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
   .ctrl-btn.play{width:64px;height:64px;}
   .vbn{font-size:2.5rem;min-width:38px;}
 }
+/* ── 가로 모드 (모바일/태블릿 landscape) ── */
+@media (orientation:landscape) and (max-height:500px) and (max-width:900px) {
+  #practice-screen{overflow:hidden;}
+  .prac-body.landscape{flex-direction:row;align-items:stretch;justify-content:center;padding:8px 16px;gap:16px;max-width:100%;height:calc(100vh - 52px);overflow:hidden;}
+  .prac-body.landscape .vocal-beat-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+  .prac-body.landscape .controls{flex-shrink:0;}
+  .prac-body.landscape .vocal-label-box{flex:1;max-width:none;height:100%;align-items:center;justify-content:center;padding:16px 20px;}
+  .prac-body.landscape .vlabel-key-panel{justify-content:space-evenly;height:100%;min-height:80px;width:72px;}
+  .prac-body.landscape .vlabel-key-panel .vkp-midi{font-size:1.6rem;}
+  .prac-body.landscape .vlabel-key-panel .vkp-dir{font-size:0.7rem;}
+  .prac-body.landscape .vlabel-key-panel .vkp-loop{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--accent3);font-weight:700;text-align:center;white-space:nowrap;}
+  .prac-body.landscape .mode-tabs,
+  .prac-body.landscape .timer-wrap,
+  .prac-body.landscape .vol-wrap,
+  .prac-body.landscape .basic-key-wrap,
+  .prac-body.landscape .key-grid-wrap,
+  .prac-body.landscape .seq-grid-wrap,
+  .prac-body.landscape .tempo-wrap,
+  .prac-body.landscape .vowel-selector,
+  .prac-body.landscape .adv-panel,
+  .prac-body.landscape .glissando-wrap,
+  .prac-body.landscape .vibrato-wrap{display:none!important;}
+  .prac-body.landscape .vbn{font-size:2rem;min-width:28px;}
+}
 </style>
 </head>
 <body>
@@ -935,7 +959,7 @@ function _buildCtx(){
   const sr=_srForAttempt(_ctxRebuilds);
   try{audioCtx=sr?new AC({sampleRate:sr}):new AC();}
   catch(e){audioCtx=new AC();}
-  masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+  masterGain=audioCtx.createGain();masterGain.gain.value=3.0;masterGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _audioDiag('생성');
@@ -982,7 +1006,7 @@ function _adoptProbe(p){
   console.log('[AUDIO] 🔄 정찰병 채택: sr='+p.sr+' t='+p.ctx.currentTime.toFixed(4));
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
   audioCtx=p.ctx;
-  masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+  masterGain=audioCtx.createGain();masterGain.gain.value=3.0;masterGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _probes=_probes.filter(x=>x!==p);
@@ -1042,6 +1066,54 @@ function ensureAudio(){
 document.addEventListener('touchstart',()=>{if(audioCtx)_unlockAudio();},{passive:true,capture:true});
 document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true});
+// 화면 꺼짐/백그라운드 복귀 시 AudioContext 자동 resume
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&audioCtx){
+    if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+    _playSilentElement();
+  }
+});
+/* ── 가로 모드 감지 & 루프 카운터 이동 ── */
+function _isLandscapeMobile(){
+  return window.matchMedia('(orientation:landscape) and (max-height:500px) and (max-width:900px)').matches;
+}
+function _applyLandscape(){
+  const body=document.getElementById('prac-body');
+  if(!body)return;
+  const isLS=_isLandscapeMobile();
+  if(isLS){
+    body.classList.add('landscape');
+    // 루프 카운터를 vlabel-key-panel 안으로 이동
+    const kPan=document.querySelector('.vlabel-key-panel');
+    const lc=document.getElementById('loop-counter');
+    if(kPan&&lc&&!kPan.querySelector('.vkp-loop')){
+      const wrap=document.createElement('div');
+      wrap.className='vkp-loop';
+      wrap.id='vkp-loop-inline';
+      wrap.textContent=lc.textContent;
+      kPan.appendChild(wrap);
+    } else if(kPan&&lc){
+      const ex=kPan.querySelector('.vkp-loop');
+      if(ex)ex.textContent=lc.textContent;
+    }
+  } else {
+    body.classList.remove('landscape');
+    // 인라인 루프 카운터 제거 (세로모드에선 timer-wrap 내 원본 사용)
+    const ex=document.getElementById('vkp-loop-inline');
+    if(ex)ex.remove();
+  }
+}
+// updateLoopCounter 원본 저장 후 오버라이드
+const _origUpdateLoopCounter=updateLoopCounter;
+function updateLoopCounter(){
+  _origUpdateLoopCounter();
+  // 가로모드 인라인 카운터도 동기화
+  const lc=document.getElementById('loop-counter');
+  const inline=document.getElementById('vkp-loop-inline');
+  if(inline&&lc)inline.textContent=lc.textContent;
+}
+window.addEventListener('resize',_applyLandscape,{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(_applyLandscape,150),{passive:true});
 function playClickAt(type,time){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(metronomeGain||masterGain);o.frequency.value=type==='accent'?1200:900;o.type='sine';g.gain.setValueAtTime(type==='accent'?0.4:0.28,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.1);o.start(time);o.stop(time+0.1);}catch(e){}}
 function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{const out=pianoGain||masterGain;[{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{const osc=audioCtx.createOscillator(),g=audioCtx.createGain();osc.type='sine';osc.frequency.value=h.n*freq;osc.connect(g);g.connect(out);const v=0.30*h.vol,dr=1+(h.n-1)*0.35;g.gain.setValueAtTime(0,startTime);g.gain.linearRampToValueAtTime(v,startTime+0.008);g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);g.gain.exponentialRampToValueAtTime(v*0.40,startTime+0.18/dr);g.gain.exponentialRampToValueAtTime(v*0.15,startTime+0.50/dr);g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);osc.start(startTime);osc.stop(startTime+duration+0.05);});const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();sub.type='sine';sub.frequency.value=freq;sub.connect(sg);sg.connect(out);sg.gain.setValueAtTime(0,startTime);sg.gain.linearRampToValueAtTime(0.08,startTime+0.01);sg.gain.exponentialRampToValueAtTime(0.025,startTime+0.25);sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);sub.start(startTime);sub.stop(startTime+duration+0.05);}catch(e){}}
 function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
@@ -2440,6 +2512,7 @@ function startExercise(id){
   _initPracGenderBtn(id);
   document.getElementById('pattern-select').style.display='none';
   document.getElementById('practice-screen').style.display='flex';
+  setTimeout(_applyLandscape,50); // 렌더 후 가로모드 적용
 }
 
 function closePractice(){
