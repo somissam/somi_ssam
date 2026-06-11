@@ -183,17 +183,127 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 }
 /* ── 가로 모드 (모바일/태블릿 landscape) ── */
 @media (orientation:landscape) and (max-height:500px) and (max-width:900px) {
-  #practice-screen{overflow:hidden;}
-  .prac-body.landscape{flex-direction:row;align-items:stretch;justify-content:center;padding:8px 16px;gap:16px;max-width:100%;height:calc(100vh - 52px);overflow:hidden;}
-  .prac-body.landscape .vocal-beat-wrap{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
-  .prac-body.landscape .controls{flex-shrink:0;}
-  .prac-body.landscape .vocal-label-box{flex:1;max-width:none;height:100%;align-items:center;justify-content:center;padding:16px 20px;}
-  .prac-body.landscape .vlabel-key-panel{justify-content:space-evenly;height:100%;min-height:80px;width:80px;overflow:visible;}
-  .prac-body.landscape .vlabel-key-panel .vkp-midi{font-size:2.2rem;overflow:visible;}
-  .prac-body.landscape .vlabel-key-panel .vkp-dir{font-size:0.7rem;}
-  .prac-body.landscape .vlabel-key-panel .vkp-loop{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--accent3);font-weight:700;text-align:center;white-space:nowrap;}
+  /* practice-screen이 화면 꽉 채움 */
+  #practice-screen{
+    overflow:hidden;
+    display:flex!important;
+    flex-direction:column;
+  }
+  /* 헤더 숨김 */
+  #practice-screen .prac-header{display:none!important;}
+
+  /* prac-body: 세로 스택, 화면 꽉 채움 */
+  .prac-body.landscape{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-evenly;
+    padding:10px 20px;
+    width:100%;
+    height:100vh;
+    max-width:100%;
+    box-sizing:border-box;
+    gap:0;
+    overflow:hidden;
+  }
+
+  /* 박자 행: 카운팅 + 패턴 가로 한 줄 */
+  .prac-body.landscape .vocal-beat-wrap{
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:center;
+    gap:32px;
+    width:100%;
+    flex-shrink:0;
+  }
+  .prac-body.landscape .vocal-beat-section{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+  }
+  .prac-body.landscape .vocal-beat-label{
+    font-size:0.65rem;
+    color:var(--text2);
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+  .prac-body.landscape .vocal-beat-row{
+    display:flex;
+    gap:10px;
+  }
+  .prac-body.landscape .vbn{font-size:1.8rem;min-width:24px;text-align:center;}
+
+  /* 라벨박스: 가로 꽉 채움 */
+  .prac-body.landscape .vocal-label-box{
+    display:flex!important;
+    flex-direction:row;
+    align-items:center;
+    width:100%;
+    max-width:100%;
+    padding:10px 16px;
+    box-sizing:border-box;
+    flex-shrink:0;
+    gap:16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+  }
+  .prac-body.landscape .vlabel-key-panel{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    flex-shrink:0;
+    width:auto;
+    min-width:60px;
+    overflow:visible;
+  }
+  .prac-body.landscape .vlabel-key-panel .vkp-midi{
+    font-size:1.8rem;
+    overflow:visible;
+  }
+  .prac-body.landscape .vlabel-key-panel .vkp-dir{font-size:0.65rem;}
+  .prac-body.landscape .vlabel-labels-area{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start!important;
+    gap:4px;
+  }
+  .prac-body.landscape .vlabel-item{font-size:0.9rem;}
+  .prac-body.landscape #vowel-title-display{font-size:1.4rem!important;}
+
+  /* 타이머: 루프카운터 + 초시계 한 줄 */
+  .prac-body.landscape .timer-wrap{
+    display:flex!important;
+    width:100%;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .prac-body.landscape .timer-row{
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    gap:20px;
+  }
+  .prac-body.landscape .timer-counter{font-size:1rem;}
+  .prac-body.landscape #timer-main{font-size:1.6rem!important;letter-spacing:1px;}
+
+  /* 컨트롤 버튼 */
+  .prac-body.landscape .controls{
+    display:flex!important;
+    flex-direction:row;
+    gap:14px;
+    align-items:center;
+    flex-shrink:0;
+  }
+
+  /* 숨길 요소들 */
   .prac-body.landscape .mode-tabs,
-  .prac-body.landscape .timer-wrap,
   .prac-body.landscape .vol-wrap,
   .prac-body.landscape .basic-key-wrap,
   .prac-body.landscape .key-grid-wrap,
@@ -203,7 +313,6 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
   .prac-body.landscape .adv-panel,
   .prac-body.landscape .glissando-wrap,
   .prac-body.landscape .vibrato-wrap{display:none!important;}
-  .prac-body.landscape .vbn{font-size:2rem;min-width:28px;}
 }
 </style>
 </head>
