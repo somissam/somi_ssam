@@ -378,16 +378,21 @@ function renderClassInfo(){
   if(!box){box=document.createElement('div');box.id='class-info-box';document.getElementById('stab-home').insertBefore(box,document.getElementById('stab-home').firstChild);}
   box.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 24px;margin-bottom:16px;';
   const badgeRow=['리베','시창'].map(ex=>{const on=extras.includes(ex);return`<span style="padding:2px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1.5px solid ${on?'var(--accent3)':'var(--border)'};color:${on?'var(--accent3)':'var(--text2)'};background:${on?'rgba(106,247,200,0.1)':'var(--surface2)'};${on?'':'opacity:0.45;'}">${ex}</span>`;}).join('');
+  const daysHtml=days?`
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0;flex-shrink:0;">
+      <div style="font-size:0.72rem;font-weight:700;color:var(--accent2);white-space:nowrap;">소미쌤과 ✨</div>
+      <div style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:var(--accent2);white-space:nowrap;">+${days}일</div>
+    </div>`:'';
   box.innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <span style="font-size:2rem;font-weight:800;">${currentProfile.name}</span>
-          <span style="font-size:2rem;font-weight:800;color:var(--accent);">${voClass}</span>
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;">${currentProfile.name}</span>
+          <span style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:var(--accent);">${voClass}</span>
         </div>
         <div style="display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;">${badgeRow}</div>
       </div>
-      ${days?`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;"><div style="font-size:0.72rem;font-weight:700;color:var(--accent2);">소미쌤과</div><div style="font-size:2rem;font-weight:800;color:var(--accent2);white-space:nowrap;">+${days}일✨</div></div>`:''}
+      ${daysHtml}
     </div>`;
 }
 function toDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
