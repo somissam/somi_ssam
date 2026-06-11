@@ -1197,7 +1197,7 @@ function playClickAt(type,time){if(!audioCtx)return;try{
     aN.start(startTime);aN.stop(startTime+0.02);
   }
 }catch(e){}}
-function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,0.5);}
+function previewNote(midi){ensureAudio();if(!audioCtx)return;playPianoNote(midiToFreq(midi),audioCtx.currentTime+0.01,1.2);}
 
 // 스타카토: 전체 박자의 50%만 재생
 function playPianoNoteStaccato(freq,startTime,fullDuration){
