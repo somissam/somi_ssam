@@ -859,7 +859,7 @@ function buildPracticeUI() {
   vr.appendChild(sl); vw.appendChild(vr);
   const ugR = document.createElement('div'); ugR.className = 'vol-row';
   ugR.innerHTML = '<span>마스터</span>';
-  const ugS = document.createElement('input'); ugS.type = 'range'; ugS.min = '0'; ugS.max = '200'; ugS.value = String(Math.round(userVol*100));
+  const ugS = document.createElement('input'); ugS.type = 'range'; ugS.min = '0'; ugS.max = '200'; ugS.value = String(Math.round(userVol*100)); ugS.style.cssText='flex:1;accent-color:var(--accent3);cursor:pointer;';
   ugS.oninput = () => { userVol = parseInt(ugS.value)/100; if(userGain) userGain.gain.value = userVol; };
   ugR.appendChild(ugS); vw.appendChild(ugR); body.appendChild(vw);
 }
