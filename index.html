@@ -191,14 +191,15 @@ async function checkLogin(){
     if(saveFlag){
       const ua=navigator.userAgent;
       const isIpadOS=/Macintosh/.test(ua)&&navigator.maxTouchPoints>1;
-      let deviceName='알 수 없는 기기';
-      if(/iPhone/.test(ua)) deviceName='iPhone · Safari';
-      else if(/iPad/.test(ua)||isIpadOS) deviceName='iPad · Safari';
-      else if(/Android.*Chrome/.test(ua)) deviceName='Android · Chrome';
-      else if(/Macintosh/.test(ua)&&!/Chrome/.test(ua)) deviceName='MacBook · Safari';
-      else if(/Macintosh/.test(ua)&&/Chrome/.test(ua)) deviceName='MacBook · Chrome';
-      else if(/Windows.*Chrome/.test(ua)) deviceName='Windows · Chrome';
-      else if(/Windows/.test(ua)) deviceName='Windows · 브라우저';
+      let deviceName='📱 알 수 없는 기기';
+      if(/iPhone/.test(ua)) deviceName='📱 iPhone · Safari';
+      else if(/iPad/.test(ua)||isIpadOS) deviceName='🖥️ iPad · Safari';
+      else if(/Android.*Chrome/.test(ua)) deviceName='🤖 Android · Chrome';
+      else if(/Android/.test(ua)) deviceName='🤖 Android · 브라우저';
+      else if(/Macintosh/.test(ua)&&/Chrome/.test(ua)) deviceName='💻 MacBook · Chrome';
+      else if(/Macintosh/.test(ua)) deviceName='💻 MacBook · Safari';
+      else if(/Windows.*Chrome/.test(ua)) deviceName='🖥️ Windows · Chrome';
+      else if(/Windows/.test(ua)) deviceName='🖥️ Windows · 브라우저';
       const token=Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
       saveData(TEACHER_AUTO_KEY,{token,deviceName,registeredAt:new Date().toISOString()});
       await registerTeacherDevice(token,deviceName);
@@ -224,6 +225,26 @@ async function checkLogin(){
   if(saveFlag) saveData(STUDENT_AUTO_KEY,{name:found.name,id:found.id});
   else localStorage.removeItem(STUDENT_AUTO_KEY);
   localStorage.setItem('somi_current_profile_id',found.id);
+
+  // ── 학생 세션 등록 (기기 감지 + Firebase 저장 → 기존 기기 자동 로그아웃) ──
+  const sToken=Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
+  const sua=navigator.userAgent;
+  const sIpadOS=/Macintosh/.test(sua)&&navigator.maxTouchPoints>1;
+  let sDeviceName='📱 알 수 없는 기기';
+  if(/iPhone/.test(sua)) sDeviceName='📱 iPhone · Safari';
+  else if(/iPad/.test(sua)||sIpadOS) sDeviceName='🖥️ iPad · Safari';
+  else if(/Android.*Chrome/.test(sua)) sDeviceName='🤖 Android · Chrome';
+  else if(/Android/.test(sua)) sDeviceName='🤖 Android · 브라우저';
+  else if(/Macintosh/.test(sua)&&/Chrome/.test(sua)) sDeviceName='💻 MacBook · Chrome';
+  else if(/Macintosh/.test(sua)) sDeviceName='💻 MacBook · Safari';
+  else if(/Windows.*Chrome/.test(sua)) sDeviceName='🖥️ Windows · Chrome';
+  else if(/Windows/.test(sua)) sDeviceName='🖥️ Windows · 브라우저';
+  const sessionEntry={token:sToken,deviceName:sDeviceName,loginAt:new Date().toISOString()};
+  // localStorage에 내 토큰 저장
+  saveData('somi_student_session_'+found.id, sessionEntry);
+  // Firebase에 저장 — 덮어쓰기로 기존 기기 자동 로그아웃
+  if(_fsSet){ try{ await _fsSet('somi_student_session_'+found.id, JSON.stringify(sessionEntry)); }catch(e){} }
+
   window.location.href='somi_ssam_student.html';
 }
 

@@ -472,10 +472,12 @@ function timerFrame() {
   const now=audioCtx?audioCtx.currentTime:0;
   while(beatQueue.length&&beatQueue[0].time<=now+0.02) { applyVisual(beatQueue.shift().vis); }
   if(stopScheduled&&audioCtx&&audioCtx.currentTime>=stopAudioTime-0.05) {
-    stopScheduled=false; stopEngine();
+    stopScheduled=false;
+    logPractice(); // 자동완료 시 항상 로그 저장
+    stopEngine();
     elapsedSeconds=0; isPaused=false; pausedElapsed=0;
     if(stopSuccess) showSuccess('목표 달성! 🎉');
-    else { logPractice(); showSuccess('기본 모드 완료!'); }
+    else showSuccess('기본 모드 완료!');
     return;
   }
   if(isPlaying&&mainStartWallTime>0) {
@@ -674,6 +676,15 @@ document.addEventListener('DOMContentLoaded', function() {
   if(!RHYTHM_PATTERNS.length) {
     try{ localStorage.setItem('somi_rhythm_patterns', JSON.stringify([])); }catch(e){}
   }
+  // 페이지 이탈/백그라운드 전환 시 연습 로그 자동 저장
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'){
+      if(isPlaying||elapsedSeconds>2) logPractice();
+    }
+  });
+  window.addEventListener('pagehide',()=>{
+    if(isPlaying||elapsedSeconds>2) logPractice();
+  });
 });
 </script>
 </body>

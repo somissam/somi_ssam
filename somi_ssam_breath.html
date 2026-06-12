@@ -600,10 +600,11 @@ function timerFrame(ts) {
   // 종료 처리
   if (stopScheduled && audioCtx && audioCtx.currentTime >= stopAudioTime - 0.1) {
     stopScheduled = false;
+    logPractice(); // 자동완료 시 항상 로그 저장 (목표달성/일반완료 모두)
     stopEngine();
     elapsedSeconds = 0; isPaused = false; pausedElapsed = 0;
     if (stopSuccess) showSuccess('목표 시간 달성! 🎉');
-    else { logPractice(); showSuccess('기본 모드 완료!'); }
+    else showSuccess('기본 모드 완료!');
     return;
   }
   // 경과 시간 업데이트
@@ -1147,6 +1148,16 @@ document.addEventListener('DOMContentLoaded', async function() {
   currentProfileId = localStorage.getItem('somi_current_profile_id') || null;
 
   renderPatternCards();
+
+  // 페이지 이탈/백그라운드 전환 시 연습 로그 자동 저장
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'){
+      if(isPlaying||elapsedSeconds>2) logPractice();
+    }
+  });
+  window.addEventListener('pagehide',()=>{
+    if(isPlaying||elapsedSeconds>2) logPractice();
+  });
 });
 </script>
 </body>

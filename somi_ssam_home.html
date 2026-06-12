@@ -147,10 +147,8 @@ button{font-family:inherit;cursor:pointer;}
 
 .toggle{position:relative;display:inline-flex;width:44px;height:26px;flex-shrink:0;}
 .toggle input{opacity:0;width:0;height:0;position:absolute;}
-.toggle-slider{position:absolute;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:13px;transition:all 0.2s;cursor:pointer;}
-.toggle-slider:before{content:'';position:absolute;width:20px;height:20px;left:2px;top:2px;background:var(--text2);border-radius:50%;transition:transform 0.2s,background 0.2s;}
-.toggle input:checked+.toggle-slider{background:var(--accent);border-color:var(--accent);}
-.toggle input:checked+.toggle-slider:before{transform:translateX(18px);background:white;}
+.pm-checkbox{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;border-radius:4px;}
+.pm-checkbox:disabled{opacity:0.3;cursor:default;}
 
 .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
 .filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:0.76rem;transition:all 0.15s;cursor:pointer;}
@@ -496,14 +494,15 @@ function setTheme(t) {
 function detectDeviceName() {
   const ua = navigator.userAgent;
   const isIpadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
-  if(/iPhone/.test(ua)) return 'iPhone · Safari';
-  if(/iPad/.test(ua) || isIpadOS) return 'iPad · Safari';
-  if(/Android.*Chrome/.test(ua)) return 'Android · Chrome';
-  if(/Macintosh/.test(ua) && !/Chrome/.test(ua)) return 'MacBook · Safari';
-  if(/Macintosh/.test(ua) && /Chrome/.test(ua)) return 'MacBook · Chrome';
-  if(/Windows.*Chrome/.test(ua)) return 'Windows · Chrome';
-  if(/Windows/.test(ua)) return 'Windows · 브라우저';
-  return '알 수 없는 기기';
+  if(/iPhone/.test(ua)) return '📱 iPhone · Safari';
+  if(/iPad/.test(ua) || isIpadOS) return '🖥️ iPad · Safari';
+  if(/Android.*Chrome/.test(ua)) return '🤖 Android · Chrome';
+  if(/Android/.test(ua)) return '🤖 Android · 브라우저';
+  if(/Macintosh/.test(ua) && /Chrome/.test(ua)) return '💻 MacBook · Chrome';
+  if(/Macintosh/.test(ua)) return '💻 MacBook · Safari';
+  if(/Windows.*Chrome/.test(ua)) return '🖥️ Windows · Chrome';
+  if(/Windows/.test(ua)) return '🖥️ Windows · 브라우저';
+  return '📱 알 수 없는 기기';
 }
 
 function registerThisDevice() {
@@ -535,7 +534,7 @@ function renderDeviceManager() {
     card.innerHTML=`
       <div class="device-info">
         <div class="device-name">
-          📱 ${d.deviceName||'기기'}
+          ${d.deviceName||'📱 기기'}
           ${isCurrent?'<span class="device-badge">현재 기기</span>':''}
         </div>
         <div class="device-date">${dateStr} 등록</div>
@@ -625,7 +624,13 @@ function renderTeacher() {
       <div class="s-avatar ${p.gender==='female'?'f':'m'}">${p.name[0]}</div>
       <div class="s-info">
         <h4>${p.name} ${badgeHtml}${extraBadges}</h4>
-        <p>${birthFmt || (p.gender==='female'?'여성':'남성')} · ${getLastAccess(p.id)}${ddayTxt}</p>
+        <p>${birthFmt || (p.gender==='female'?'여성':'남성')} · ${(()=>{const a=getLastAccess(p.id);return a==='접속 없음'?a:`<span style="color:#ff4444">${a}</span>`;})()}${ddayTxt}</p>
+        ${(()=>{
+          const sess=loadData('somi_student_session_'+p.id,null);
+          if(!sess||!sess.deviceName) return '';
+          const loginTime=sess.loginAt?new Date(sess.loginAt).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+          return `<p style="font-size:0.72rem;color:var(--text2);margin-top:2px;">${sess.deviceName} <span style="opacity:0.6">· ${loginTime}</span></p>`;
+        })()}
       </div>
       <div class="s-stats">
         <div class="s-stat">
@@ -1009,7 +1014,7 @@ function renderPatternManager() {
     updatePmFilterUI(); renderPatternTable();
   };
   studentRow.appendChild(allBtn);
-  profiles.forEach(p=>{
+  [...profiles].sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach(p=>{
     const b=document.createElement('button'); b.className='filter-btn'+(pmFilter.pids.includes(p.id)?' active':'');
     b.textContent=p.name; b.setAttribute('data-pid',p.id);
     b.onclick=()=>{
@@ -1176,7 +1181,7 @@ function renderPatternTable() {
     }));
   } else {
     topTd2.appendChild(makeToggle(false, ()=>{}));
-    topTd2.querySelector('input').disabled=true; topTd2.querySelector('.toggle-slider').style.opacity='0.3';
+    topTd2.querySelector('input').disabled=true;
   }
 
   const chapters=[{id:'breath',label:'호흡'},{id:'vocal',label:'발성'},{id:'rhythm',label:'리듬'}];
@@ -1222,7 +1227,7 @@ function renderPatternTable() {
               pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
             }));
           } else {
-            const tog=makeToggle(false,()=>{}); tog.querySelector('input').disabled=true; tog.querySelector('.toggle-slider').style.opacity='0.3'; td2.appendChild(tog);
+            const tog=makeToggle(false,()=>{}); tog.disabled=true; td2.appendChild(tog);
           }
           tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
         });
@@ -1243,7 +1248,7 @@ function renderPatternTable() {
           chPatterns.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked))); renderPatternTable();
         }));
       } else {
-        const tog=makeToggle(false,()=>{}); tog.querySelector('input').disabled=true; tog.querySelector('.toggle-slider').style.opacity='0.3'; g2.appendChild(tog);
+        const tog=makeToggle(false,()=>{}); tog.disabled=true; g2.appendChild(tog);
       }
       grpRow.appendChild(g1); grpRow.appendChild(g2); tbody.appendChild(grpRow);
 
@@ -1274,7 +1279,7 @@ function renderPatternTable() {
             pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
           }));
         } else {
-          const tog=makeToggle(false,()=>{}); tog.querySelector('input').disabled=true; tog.querySelector('.toggle-slider').style.opacity='0.3'; td2.appendChild(tog);
+          const tog=makeToggle(false,()=>{}); tog.disabled=true; td2.appendChild(tog);
         }
         tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
       });
@@ -1284,13 +1289,25 @@ function renderPatternTable() {
   wrap.appendChild(tbl);
 }
 
+let _lastCheckedPm = null;
 function makeToggle(checked, onChange) {
-  const label=document.createElement('label'); label.className='toggle';
   const inp=document.createElement('input'); inp.type='checkbox'; inp.checked=checked;
+  inp.className='pm-checkbox';
+  inp.onclick=(e)=>{
+    const allBoxes=[...document.querySelectorAll('.pm-checkbox:not(:disabled)')];
+    if(e.shiftKey && _lastCheckedPm && allBoxes.includes(_lastCheckedPm)){
+      const i1=allBoxes.indexOf(_lastCheckedPm);
+      const i2=allBoxes.indexOf(inp);
+      const [from,to]=[Math.min(i1,i2),Math.max(i1,i2)];
+      const val=inp.checked;
+      allBoxes.slice(from,to+1).forEach(cb=>{
+        if(cb.checked!==val){ cb.checked=val; cb.dispatchEvent(new Event('change')); }
+      });
+    }
+    _lastCheckedPm=inp;
+  };
   inp.onchange=()=>onChange(inp.checked);
-  const slider=document.createElement('span'); slider.className='toggle-slider';
-  label.appendChild(inp); label.appendChild(slider);
-  return label;
+  return inp;
 }
 
 /* ════════════════════════════════════════════════
@@ -1948,6 +1965,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       try{ const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value); }catch(e){}
     }));
     profiles=loadData('somi_profiles',[]);
+    // 학생 세션 데이터 개별 로드
+    await Promise.all(profiles.map(async p=>{
+      try{ const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+p.id)); if(snap.exists()) localStorage.setItem('somi_student_session_'+p.id,snap.data().value); }catch(e){}
+    }));
     practiceLogs=loadData('somi_logs',{});
     teacherPw=loadData('somi_teacher_pw','1');
     teacherStamps=loadData('somi_teacher_stamps',{});

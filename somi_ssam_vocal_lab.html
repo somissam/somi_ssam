@@ -1054,10 +1054,16 @@ document.addEventListener('touchend',ensureAudio,{passive:true,capture:true});
 document.addEventListener('click',ensureAudio,{passive:true});
 // 화면 꺼짐/백그라운드 복귀 시 AudioContext 자동 resume
 document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    if(isPlaying||elapsedSeconds>2) logPractice();
+  }
   if(document.visibilityState==='visible'&&audioCtx){
     if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
     _playSilentElement();
   }
+});
+window.addEventListener('pagehide',()=>{
+  if(isPlaying||elapsedSeconds>2) logPractice();
 });
 /* ── 가로 모드 감지 & 루프 카운터 이동 ── */
 function _isPhoneMobile(){
@@ -1223,6 +1229,7 @@ function timerFrame(){
   if(stopScheduled&&now>=stopAudioTime-0.01){
     stopScheduled=false;
     while(beatQueue.length){if(_fn_applyVisual)_fn_applyVisual(beatQueue.shift().vis);else beatQueue.shift();}
+    logPractice(); // 패턴 자동완료 시 연습 로그 저장
     stopEngine();
     if(_fn_onComplete)_fn_onComplete();
     const tm=document.getElementById('timer-main');if(tm)tm.className='timer-main';

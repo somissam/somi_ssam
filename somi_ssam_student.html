@@ -580,6 +580,10 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
     await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_access_log'].map(async k=>{try{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}catch(e){}}));
+    // 내 세션 키도 Firebase에서 로드 (다른 기기 로그인 감지용)
+    if(currentProfile){
+      try{const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+currentProfile.id));if(snap.exists())localStorage.setItem('somi_student_session_'+currentProfile.id,snap.data().value);}catch(e){}
+    }
     profiles=loadData('somi_profiles',[]);
     practiceLogs=loadData('somi_logs',{});
     teacherStamps=loadData('somi_teacher_stamps',{});
@@ -596,6 +600,25 @@ document.addEventListener('DOMContentLoaded',async function(){
       document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
       renderStudentHome();
       updateSettingsDot();
+    }
+    // ── 세션 유효성 체크 — 다른 기기에서 로그인 시 자동 로그아웃 ──
+    if(currentProfile){
+      try{
+        const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+currentProfile.id));
+        if(snap.exists()){
+          const serverSession=JSON.parse(snap.data().value);
+          const mySession=loadData('somi_student_session_'+currentProfile.id,null);
+          if(mySession&&serverSession.token!==mySession.token){
+            // 다른 기기에서 로그인됨 → 자동 로그아웃
+            localStorage.removeItem(STUDENT_AUTO_KEY);
+            localStorage.removeItem('somi_current_profile_id');
+            localStorage.removeItem('somi_student_session_'+currentProfile.id);
+            alert('다른 기기에서 로그인되어 자동으로 로그아웃되었습니다 😊');
+            window.location.href='index.html';
+            return;
+          }
+        }
+      }catch(e){}
     }
     // 접속기록 저장 — Firebase 로드 완료 후 (당일 중복 시 시간만 업데이트)
     if(currentProfile){
