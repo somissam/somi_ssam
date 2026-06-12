@@ -28,7 +28,8 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;visibility:hidden;}
+html{overflow-x:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;visibility:hidden;}
 button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 
@@ -1112,7 +1113,7 @@ function renderPatternManager() {
   saveRow.appendChild(lvRow);
   container.appendChild(saveRow);
 
-  const tableWrap=document.createElement('div'); tableWrap.id='pattern-table-wrap'; tableWrap.style.cssText='overflow-x:auto;'; container.appendChild(tableWrap);
+  const tableWrap=document.createElement('div'); tableWrap.id='pattern-table-wrap'; tableWrap.style.cssText='overflow-x:auto;position:relative;width:100%;'; container.appendChild(tableWrap);
   updatePmFilterUI(); renderPatternTable();
 }
 
@@ -1452,7 +1453,7 @@ function renderLevelClassifier() {
   lcSaveRow.appendChild(topBar);
   container.appendChild(lcSaveRow);
 
-  const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap'; tblWrap.style.cssText='overflow-x:auto;';
+  const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap'; tblWrap.style.cssText='overflow-x:auto;position:relative;width:100%;';
 
   function refreshDropdownLabels(){
     tblWrap.querySelectorAll('[data-lv-pid][data-lv-mk]').forEach(btn=>{
