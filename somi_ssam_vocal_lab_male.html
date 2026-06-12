@@ -2535,7 +2535,7 @@ function buildAdvancedPanel(body){
 ════════════════════════════════════════════════ */
 
 /* ── 연습화면 내 남/여 토글 ── */
-const _IS_TEACHER_DEVICE=!!localStorage.getItem('somi_teacher_auto_login');
+const _IS_TEACHER_DEVICE=localStorage.getItem('somi_role')==='teacher';
 // 이 파일은 남성 버전 — 토글 누르면 여성으로 이동
 function _initPracGenderBtn(patId){
   const btn=document.getElementById('prac-gender-btn');

@@ -193,7 +193,7 @@ async function checkLogin(){
       const isIpadOS=/Macintosh/.test(ua)&&navigator.maxTouchPoints>1;
       let deviceName='📱 알 수 없는 기기';
       if(/iPhone/.test(ua)) deviceName='📱 iPhone · Safari';
-      else if(/iPad/.test(ua)||isIpadOS) deviceName='🖥️ iPad · Safari';
+      else if(/iPad/.test(ua)||isIpadOS) deviceName='📱 iPad · Safari';
       else if(/Android.*Chrome/.test(ua)) deviceName='🤖 Android · Chrome';
       else if(/Android/.test(ua)) deviceName='🤖 Android · 브라우저';
       else if(/Macintosh/.test(ua)&&/Chrome/.test(ua)) deviceName='💻 MacBook · Chrome';
@@ -231,7 +231,7 @@ async function checkLogin(){
   const sIpadOS=/Macintosh/.test(sua)&&navigator.maxTouchPoints>1;
   let sDeviceName='📱 알 수 없는 기기';
   if(/iPhone/.test(sua)) sDeviceName='📱 iPhone · Safari';
-  else if(/iPad/.test(sua)||sIpadOS) sDeviceName='🖥️ iPad · Safari';
+  else if(/iPad/.test(sua)||sIpadOS) sDeviceName='📱 iPad · Safari';
   else if(/Android.*Chrome/.test(sua)) sDeviceName='🤖 Android · Chrome';
   else if(/Android/.test(sua)) sDeviceName='🤖 Android · 브라우저';
   else if(/Macintosh/.test(sua)&&/Chrome/.test(sua)) sDeviceName='💻 MacBook · Chrome';

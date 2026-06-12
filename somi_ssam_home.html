@@ -170,6 +170,16 @@ button{font-family:inherit;cursor:pointer;}
 .detail-stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
 .detail-stat-val{font-size:1.4rem;font-weight:700;font-family:'DM Mono',monospace;}
 .detail-stat-lbl{font-size:0.68rem;color:var(--text2);margin-top:4px;}
+
+@media (max-width: 480px) {
+  .teacher-content { padding: 12px; }
+  .settings-box { padding: 14px 12px; }
+  .app-header { padding: 10px 14px; }
+  .home-link { min-width: unset; padding: 8px 14px; font-size: 0.82rem; }
+  .teacher-tabs { padding: 0 12px !important; }
+  #pattern-table-wrap, #lc-table-wrap { overflow-x: auto; }
+  table { min-width: 280px; }
+}
 </style>
 <script src="stamps.js"></script>
 </head>
@@ -496,7 +506,7 @@ function detectDeviceName() {
   const ua = navigator.userAgent;
   const isIpadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
   if(/iPhone/.test(ua)) return '📱 iPhone · Safari';
-  if(/iPad/.test(ua) || isIpadOS) return '🖥️ iPad · Safari';
+  if(/iPad/.test(ua) || isIpadOS) return '📱 iPad · Safari';
   if(/Android.*Chrome/.test(ua)) return '🤖 Android · Chrome';
   if(/Android/.test(ua)) return '🤖 Android · 브라우저';
   if(/Macintosh/.test(ua) && /Chrome/.test(ua)) return '💻 MacBook · Chrome';
@@ -1059,7 +1069,7 @@ function renderPatternManager() {
 
   const saveBtnWrap=document.createElement('div');
   saveBtnWrap.id='pm-save-wrap';
-  saveBtnWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:120px;margin-left:auto;';
+  saveBtnWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:100px;margin-right:10px;';
 
   const cancelBtn=document.createElement('button');
   cancelBtn.id='pm-cancel-btn';
@@ -1086,10 +1096,10 @@ function renderPatternManager() {
   };
   saveBtnWrap.appendChild(cancelBtn);
   saveBtnWrap.appendChild(saveBtn);
-  lvRow.appendChild(saveBtnWrap);
+  lvRow.insertBefore(saveBtnWrap, lvRow.firstChild);
   container.appendChild(lvRow);
 
-  const tableWrap=document.createElement('div'); tableWrap.id='pattern-table-wrap'; container.appendChild(tableWrap);
+  const tableWrap=document.createElement('div'); tableWrap.id='pattern-table-wrap'; tableWrap.style.cssText='overflow-x:auto;'; container.appendChild(tableWrap);
   updatePmFilterUI(); renderPatternTable();
 }
 
@@ -1149,11 +1159,7 @@ function renderPatternTable() {
   const noPid = pmFilter.pids.length===0;
 
   const isDark=!document.body.classList.contains('theme-ivory');
-  const chapterColors=[
-    isDark?'rgba(124,106,247,0.06)':'rgba(124,106,247,0.12)',
-    isDark?'rgba(247,106,200,0.06)':'rgba(247,106,200,0.12)',
-    isDark?'rgba(106,247,200,0.06)':'rgba(106,247,200,0.12)'
-  ];
+  const chapterColors=['var(--surface2)','var(--surface2)','var(--surface2)'];
   const chapterBorders=['var(--accent)','var(--accent2)','var(--accent3)'];
 
   if(noPid){
@@ -1165,16 +1171,16 @@ function renderPatternTable() {
 
   const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.8rem;';
   const thead=tbl.createTHead(); const hRow=thead.insertRow();
-  const th1=document.createElement('th'); th1.style.cssText='text-align:left;padding:7px 10px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;'; th1.textContent='연습 패턴';
-  const th2=document.createElement('th'); th2.style.cssText='text-align:right;padding:7px 10px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.72rem;width:56px;'; th2.textContent='활성';
+  const th1=document.createElement('th'); th1.style.cssText='padding:7px 6px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.72rem;width:36px;text-align:left;'; th1.textContent='활성';
+  const th2=document.createElement('th'); th2.style.cssText='text-align:left;padding:7px 10px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;'; th2.textContent='연습 패턴';
   hRow.appendChild(th1); hRow.appendChild(th2);
 
   const tbody=tbl.createTBody();
 
   const allActive=!noPid && patternData.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
   const topRowEl=tbody.insertRow(); topRowEl.style.cssText='background:var(--surface);';
+  const topTd2=topRowEl.insertCell(); topTd2.style.cssText='padding:8px 6px;text-align:left;border-bottom:3px solid var(--border);';
   const topTd1=topRowEl.insertCell(); topTd1.style.cssText='padding:8px 10px;font-weight:900;font-size:0.82rem;border-bottom:3px solid var(--border);'; topTd1.textContent='전체';
-  const topTd2=topRowEl.insertCell(); topTd2.style.cssText='padding:8px 10px;text-align:right;border-bottom:3px solid var(--border);';
   if(!noPid){
     topTd2.appendChild(makeToggle(allActive, checked=>{
       patternData.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)));
@@ -1206,7 +1212,7 @@ function renderPatternTable() {
         const chHdrRow=document.createElement('tr');
         chHdrRow.style.cssText=`background:${chapterColors[chi]};`;
         const chHdrTd=document.createElement('td'); chHdrTd.colSpan=2;
-        chHdrTd.style.cssText=`padding:6px 10px 6px 20px;font-weight:700;font-size:0.75rem;color:${chapterBorders[chi]};border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;`;
+        chHdrTd.style.cssText=`padding:6px 6px;font-weight:700;font-size:0.72rem;color:var(--text);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;`;
         chHdrTd.textContent=ch.label;
         chHdrRow.appendChild(chHdrTd);
         tbody.appendChild(chHdrRow);
@@ -1222,7 +1228,7 @@ function renderPatternTable() {
           const nameWrap=document.createElement('span'); nameWrap.style.cssText='display:flex;align-items:center;gap:6px;';
           nameWrap.appendChild(Object.assign(document.createElement('span'),{textContent:p.name}));
           td1.appendChild(nameWrap);
-          const td2=document.createElement('td'); td2.style.cssText='padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;';
+          const td2=document.createElement('td'); td2.style.cssText='padding:6px 6px;border-bottom:1px solid var(--border);';
           if(!noPid){
             td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
               pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
@@ -1230,7 +1236,7 @@ function renderPatternTable() {
           } else {
             const tog=makeToggle(false,()=>{}); tog.disabled=true; td2.appendChild(tog);
           }
-          tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
+          tr.appendChild(td2); tr.appendChild(td1); tbody.appendChild(tr);
         });
       });
     });
@@ -1240,9 +1246,9 @@ function renderPatternTable() {
       const chPatterns=patternData.filter(p=>p.chapter===ch.id);
       if(!chPatterns.length) return;
 
-      const grpRow=document.createElement('tr'); grpRow.style.cssText=`background:${chapterColors[chi]};border-left:3px solid ${chapterBorders[chi]};`;
-      const g1=document.createElement('td'); g1.style.cssText=`padding:7px 10px;font-weight:700;font-size:0.75rem;border-bottom:2px solid var(--border);color:${chapterBorders[chi]};text-transform:uppercase;letter-spacing:1px;`; g1.textContent=ch.label;
-      const g2=document.createElement('td'); g2.style.cssText='padding:7px 10px;text-align:right;border-bottom:2px solid var(--border);';
+      const grpRow=document.createElement('tr'); grpRow.style.cssText=`background:${chapterColors[chi]};`;
+      const g2=document.createElement('td'); g2.style.cssText='padding:6px 6px;border-bottom:1px solid var(--border);';
+      const g1=document.createElement('td'); g1.style.cssText=`padding:6px 6px;font-weight:700;font-size:0.72rem;border-bottom:1px solid var(--border);color:var(--text);text-transform:uppercase;letter-spacing:1px;`; g1.textContent=ch.label;
       if(!noPid){
         const grpActive=chPatterns.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
         g2.appendChild(makeToggle(grpActive, checked=>{
@@ -1251,7 +1257,7 @@ function renderPatternTable() {
       } else {
         const tog=makeToggle(false,()=>{}); tog.disabled=true; g2.appendChild(tog);
       }
-      grpRow.appendChild(g1); grpRow.appendChild(g2); tbody.appendChild(grpRow);
+      grpRow.appendChild(g2); grpRow.appendChild(g1); tbody.appendChild(grpRow);
 
       let prevGroup=null, groupToggle=false;
       chPatterns.forEach(p=>{
@@ -1274,7 +1280,7 @@ function renderPatternTable() {
           nameWrap.appendChild(badge);
         }
         td1.appendChild(nameWrap);
-        const td2=document.createElement('td'); td2.style.cssText='padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;';
+        const td2=document.createElement('td'); td2.style.cssText='padding:6px 6px;border-bottom:1px solid var(--border);';
         if(!noPid){
           td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
             pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
@@ -1282,7 +1288,7 @@ function renderPatternTable() {
         } else {
           const tog=makeToggle(false,()=>{}); tog.disabled=true; td2.appendChild(tog);
         }
-        tr.appendChild(td1); tr.appendChild(td2); tbody.appendChild(tr);
+        tr.appendChild(td2); tr.appendChild(td1); tbody.appendChild(tr);
       });
     });
   }
@@ -1290,22 +1296,21 @@ function renderPatternTable() {
   wrap.appendChild(tbl);
 }
 
-let _lastCheckedPm = null;
+let _lastCheckedPmIdx = -1;  // 재렌더에도 살아남도록 요소 대신 인덱스로 기억
 function makeToggle(checked, onChange) {
   const inp=document.createElement('input'); inp.type='checkbox'; inp.checked=checked;
   inp.className='pm-checkbox';
   inp.onclick=(e)=>{
     const allBoxes=[...document.querySelectorAll('.pm-checkbox:not(:disabled)')];
-    if(e.shiftKey && _lastCheckedPm && allBoxes.includes(_lastCheckedPm)){
-      const i1=allBoxes.indexOf(_lastCheckedPm);
-      const i2=allBoxes.indexOf(inp);
-      const [from,to]=[Math.min(i1,i2),Math.max(i1,i2)];
+    const myIdx=allBoxes.indexOf(inp);
+    if(e.shiftKey && _lastCheckedPmIdx>=0 && _lastCheckedPmIdx<allBoxes.length && _lastCheckedPmIdx!==myIdx){
+      const [from,to]=[Math.min(_lastCheckedPmIdx,myIdx),Math.max(_lastCheckedPmIdx,myIdx)];
       const val=inp.checked;
       allBoxes.slice(from,to+1).forEach(cb=>{
-        if(cb.checked!==val){ cb.checked=val; cb.dispatchEvent(new Event('change')); }
+        if(cb!==inp && cb.checked!==val){ cb.checked=val; cb.dispatchEvent(new Event('change')); }
       });
     }
-    _lastCheckedPm=inp;
+    _lastCheckedPmIdx=myIdx;
   };
   inp.onchange=()=>onChange(inp.checked);
   return inp;
@@ -1407,7 +1412,7 @@ function renderLevelClassifier() {
   topBar.appendChild(lvBtnsWrap);
 
   const lcSaveWrap=document.createElement('div'); lcSaveWrap.id='lc-save-wrap';
-  lcSaveWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:120px;';
+  lcSaveWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:100px;';
   const lcCancelBtn=document.createElement('button'); lcCancelBtn.id='lc-cancel-btn';
   lcCancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;';
   lcCancelBtn.textContent='취소';
@@ -1427,10 +1432,10 @@ function renderLevelClassifier() {
     setTimeout(()=>renderLevelClassifier(),1200);
   };
   lcSaveWrap.appendChild(lcCancelBtn); lcSaveWrap.appendChild(lcSaveBtn);
-  topBar.appendChild(lcSaveWrap);
+  topBar.insertBefore(lcSaveWrap, topBar.firstChild);
   container.appendChild(topBar);
 
-  const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap';
+  const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap'; tblWrap.style.cssText='overflow-x:auto;';
 
   function refreshDropdownLabels(){
     tblWrap.querySelectorAll('[data-lv-pid][data-lv-mk]').forEach(btn=>{
@@ -1448,11 +1453,7 @@ function renderLevelClassifier() {
     tblWrap.innerHTML='';
     const chapters=[{id:'breath',label:'호흡'},{id:'vocal',label:'발성'},{id:'rhythm',label:'리듬'}];
     const isDark=!document.body.classList.contains('theme-ivory');
-    const chapterColors=[
-      isDark?'rgba(124,106,247,0.06)':'rgba(124,106,247,0.12)',
-      isDark?'rgba(247,106,200,0.06)':'rgba(247,106,200,0.12)',
-      isDark?'rgba(106,247,200,0.06)':'rgba(106,247,200,0.12)'
-    ];
+    const chapterColors=['var(--surface2)','var(--surface2)','var(--surface2)'];
     const chapterBorders=['var(--accent)','var(--accent2)','var(--accent3)'];
 
     const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.78rem;';
@@ -1478,7 +1479,7 @@ function renderLevelClassifier() {
       const chHdr=tbody.insertRow();
       chHdr.style.cssText=`background:${chapterColors[chi]};`;
       const chTd=document.createElement('td'); chTd.colSpan=2+usedGroups.length;
-      chTd.style.cssText=`padding:6px 6px;font-weight:700;font-size:0.72rem;color:${chapterBorders[chi]};border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;`;
+      chTd.style.cssText=`padding:6px 6px;font-weight:700;font-size:0.72rem;color:var(--text);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;`;
       chTd.textContent=ch.label; chHdr.appendChild(chTd);
 
       let prevGroup=null, groupToggle=false;

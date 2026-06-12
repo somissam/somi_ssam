@@ -251,8 +251,11 @@ function getDaysSinceLesson(pid){const s=lessonStarts[pid];if(!s)return null;ret
 
 function goToTeacherMode(){window.location.href='somi_ssam_home.html?mode=teacher';}
 function studentLogout(){
+  // 완전 로그아웃 — 학생 키 + 소미쌤 오토키 + 권한 플래그 전부 삭제
   localStorage.removeItem(STUDENT_AUTO_KEY);
   localStorage.removeItem('somi_current_profile_id');
+  localStorage.removeItem(TEACHER_AUTO_KEY);
+  localStorage.removeItem('somi_role');
   window.location.href='index.html';
 }
 
