@@ -123,6 +123,7 @@ button{font-family:inherit;cursor:pointer;}
 .info-missing-banner{padding:8px 12px;border-radius:10px;background:rgba(247,106,106,0.1);border:1px solid rgba(247,106,106,0.3);color:#f76a6a;font-size:0.78rem;margin-bottom:14px;display:none;}
 .info-missing-banner.show{display:block;}
 </style>
+<script src="stamps.js"></script>
 </head>
 <body>
 <div id="app">
@@ -175,16 +176,7 @@ button{font-family:inherit;cursor:pointer;}
     <!-- 도장 피커 -->
     <div class="stamp-picker" style="margin-top:16px" id="stamp-picker-wrap">
       <h4>이번 주 도장 선택</h4>
-      <div class="stamp-options">
-        <div class="stamp-opt active" data-stamp="apple"     onclick="selectStamp('apple',this)"></div>
-        <div class="stamp-opt"        data-stamp="sunflower" onclick="selectStamp('sunflower',this)"></div>
-        <div class="stamp-opt"        data-stamp="cloud"     onclick="selectStamp('cloud',this)"></div>
-        <div class="stamp-opt"        data-stamp="acorn"     onclick="selectStamp('acorn',this)"></div>
-      </div>
-      <!-- 도장 선택 로딩 오버레이 -->
-      <div class="stamp-loading-overlay" id="stamp-loading">
-        <div class="stamp-spinner"></div>
-      </div>
+      <div class="stamp-options" id="stamp-options-wrap"></div>
     </div>
   </div>
   <div id="stab-breath" style="display:none">
@@ -273,14 +265,8 @@ function formatDur(s){
   const h=Math.floor(s/3600);
   const m=Math.floor((s%3600)/60);
   const sec=s%60;
-  if(h>0){
-    if(m>0) return h+'시간 '+m+'분';
-    return h+'시간';
-  }
-  if(m>0){
-    if(sec>0) return m+'분 '+sec+'초';
-    return m+'분';
-  }
+  if(h>0){ if(m>0) return h+'시간'+m+'분'; return h+'시간'; }
+  if(m>0){ if(sec>0) return m+'분'+sec+'초'; return m+'분'; }
   return sec+'초';
 }
 
@@ -348,8 +334,16 @@ function enterStudentApp(){
 
 /* ── 도장 SVG 재주입 공통 함수 (3번 버그 핵심) ── */
 function _reinjectStampSVGs(){
-  document.querySelectorAll('.stamp-opt[data-stamp]').forEach(el=>{
-    el.innerHTML=getStampSVG(el.getAttribute('data-stamp'));
+  const wrap=document.getElementById('stamp-options-wrap');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  Object.keys(STAMPS).forEach(key=>{
+    const div=document.createElement('div');
+    div.className='stamp-opt'+(currentStamp===key?' active':'');
+    div.setAttribute('data-stamp',key);
+    div.innerHTML=getStampSVG(key);
+    div.onclick=function(){selectStamp(key,div);};
+    wrap.appendChild(div);
   });
 }
 
@@ -436,19 +430,31 @@ function renderDonut(logs){
 
 function updateSummary(){
   practiceLogs=loadData('somi_logs',{});
-  const today=toDateStr(new Date()),logs=(practiceLogs[currentProfile.id]||[]).filter(l=>l.date===today);
-  // 파이 차트
-  renderDonut(logs);
-  // 총 시간 한글
-  const sec=logs.reduce((a,l)=>a+(l.duration||0),0);
+  const allLogs=(practiceLogs[currentProfile.id]||[]);
+  const today=toDateStr(new Date()),todayLogs=allLogs.filter(l=>l.date===today);
+  // 파이 차트 — 오늘 기준
+  renderDonut(todayLogs);
+  // 총 시간 — 오늘 기준
+  const sec=todayLogs.reduce((a,l)=>a+(l.duration||0),0);
   document.getElementById('sum-time').textContent=sec>0?formatDur(sec):'0초';
   // 연속 일수
   let streak=0,d=new Date();
-  for(let i=0;i<365;i++){if((practiceLogs[currentProfile.id]||[]).some(l=>l.date===toDateStr(d))){streak++;d.setDate(d.getDate()-1);}else break;}
-  document.getElementById('sum-streak').textContent=streak+'일';
-  // 챕터 태그
-  const ch=[...new Set(logs.map(l=>l.chapter))];
-  document.getElementById('sum-chapters').innerHTML=ch.map(c=>`<span class="sum-chapter-tag ${c}">${c==='breath'?'호흡':c==='vocal'?'발성':'리듬'}</span>`).join('');
+  for(let i=0;i<365;i++){if(allLogs.some(l=>l.date===toDateStr(d))){streak++;d.setDate(d.getDate()-1);}else break;}
+  const streakEl=document.getElementById('sum-streak');
+  streakEl.textContent=streak+'일';
+  streakEl.style.color='var(--counting)';
+  // 챕터 비율 한줄 — 오늘 기준
+  const chCounts={breath:0,vocal:0,rhythm:0};
+  todayLogs.forEach(l=>{if(chCounts[l.chapter]!==undefined)chCounts[l.chapter]++;});
+  const todayTotal=todayLogs.length||1;
+  const bP=Math.round(chCounts.breath/todayTotal*100);
+  const vP=Math.round(chCounts.vocal/todayTotal*100);
+  const rP=100-bP-vP;
+  const parts=[];
+  if(chCounts.breath>0) parts.push(`<span class="sum-chapter-tag breath">호흡 ${bP}%</span>`);
+  if(chCounts.vocal>0)  parts.push(`<span class="sum-chapter-tag vocal">발성 ${vP}%</span>`);
+  if(chCounts.rhythm>0) parts.push(`<span class="sum-chapter-tag rhythm">리듬 ${rP}%</span>`);
+  document.getElementById('sum-chapters').innerHTML=parts.join('');
 }
 
 function renderCalendar(){
@@ -466,7 +472,7 @@ function renderCalendar(){
     const div=document.createElement('div');div.className='cal-day'+(ds===today?' today':'');
     if(dayLogs.length>0){
       const tk=currentProfile.id+'_'+ds;
-      if(teacherStamps[tk]){const tl=document.createElement('div');tl.className='teacher-stamp';tl.innerHTML=`<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(-15deg)"><path d="M12 2.5 C12.3 2.5 12.6 4.2 13.2 6.1 L14.5 10.2 L18.8 10.3 C20.1 10.3 20.8 10.8 20.3 11.5 L16.9 14.1 L18.3 18.2 C18.8 19.5 18.3 20.2 17.2 19.6 L12 16.8 L6.8 19.6 C5.7 20.2 5.2 19.5 5.7 18.2 L7.1 14.1 L3.7 11.5 C3.2 10.8 3.9 10.3 5.2 10.3 L9.5 10.2 L10.8 6.1 C11.4 4.2 11.7 2.5 12 2.5Z" stroke="#f7c26a" stroke-width="1.5" fill="rgba(247,194,106,0.2)"/></svg>`;div.appendChild(tl);}
+      if(teacherStamps[tk]){const tl=document.createElement('div');tl.className='teacher-stamp';tl.innerHTML=getTeacherStampSVG();div.appendChild(tl);}
       const sl=document.createElement('div');sl.className='student-stamp';sl.innerHTML=getStampSVG(currentStamp);div.appendChild(sl);
     }
     const dn=document.createElement('span');dn.className='date-num';if(dayLogs.length>0)dn.style.fontWeight='800';dn.textContent=d;div.appendChild(dn);
@@ -542,24 +548,15 @@ function saveStudentBirth(){
 function saveStudentPw(){const pw=document.getElementById('s-pw-input').value;if(!pw)return;currentProfile.password=pw;saveProfiles();alert('비밀번호가 변경됐어요!');document.getElementById('s-pw-input').value='';}
 function setTheme(t){currentTheme=t;saveData('somi_theme',t);document.body.classList.toggle('theme-ivory',t==='ivory');document.getElementById('theme-dark').classList.toggle('active',t==='dark');document.getElementById('theme-ivory').classList.toggle('active',t==='ivory');}
 
-/* ════════════════════════════════════
-   도장 SVG 정의
-════════════════════════════════════ */
-const STAMPS={
-  apple:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M20.3 9.1 C20.1 9 17.2 6.3 14.8 7.1 C14.7 7.1 13.2 4.3 15.9 3.3 C16 3.3 18.7 2.2 20.2 5.6" stroke="#e85555" stroke-width="1.7" stroke-linecap="round" fill="none"/><path d="M20.2 9.1 C14.1 8.5 9.2 13.2 8.7 22.1 C9.9 28.5 13.6 33.5 17.6 34.7 C18.6 35 21.3 35.1 22.4 34.6 C27.1 32.8 31.8 19.4 20.2 9.1Z" stroke="#e85555" stroke-width="1.9" stroke-linecap="round" fill="rgba(232,85,85,0.13)"/><path d="M20.2 9.1 C21.3 6.9 23.8 6.3 25.8 7.4" stroke="#4a8c3f" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>`},
-  sunflower:{svg:`<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="5" stroke="#7a4f1e" stroke-width="1.8" fill="rgba(122,79,30,0.15)"/><path d="M20 7v4M20 29v4M7 20h4M29 20h4" stroke="#f5c842" stroke-width="2.1" stroke-linecap="round"/><path d="M11.5 11.5l2.8 2.8M25.7 25.7l2.8 2.8M28.5 11.5l-2.8 2.8M14.3 25.7l-2.8 2.8" stroke="#f5c842" stroke-width="2" stroke-linecap="round"/></svg>`},
-  cloud:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M10.3 27.2 C6.1 27.4 3.8 24.3 3.9 21.1 C4 17.8 6.4 15.3 9.6 15.2 C9.8 9.2 15.6 8.3 23.1 13.1 C24.6 12.5 27.7 12.9 29.2 14.8 C32.8 16.3 34.3 21.1 31.6 25.2 C30.4 27.1 28 28.3 25.6 28.1M10.3 27.2 C14 27.8 20.3 28 25.6 28.1" stroke="#6ab4f7" stroke-width="1.9" stroke-linecap="round" fill="rgba(106,180,247,0.13)"/></svg>`},
-  acorn:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M12.8 12.1 C12.6 11.2 13.5 10.8 20.1 10.9 C26.7 11 27.4 11.4 27.2 12.3 C26.9 14.8 25.1 17.3 20.1 17.4 C15 17.5 13.1 14.9 12.8 12.1Z" stroke="#8b6914" stroke-width="1.8" fill="rgba(139,105,20,0.15)"/><path d="M15.3 17.8 C14.8 21.9 17.3 29.8 20.1 32.3 C22.9 29.8 25.4 21.8 24.9 17.8" stroke="#c8902a" stroke-width="1.9" fill="rgba(200,144,42,0.15)"/></svg>`}
-};
-function getStampSVG(key){return(STAMPS[key]||STAMPS.apple).svg;}
+
 
 /* ════════════════════════════════════
    DOMContentLoaded
 ════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',async function(){
   if(currentTheme==='ivory')document.body.classList.add('theme-ivory');
-  // 도장 SVG 초기 주입
-  document.querySelectorAll('.stamp-opt[data-stamp]').forEach(el=>{el.innerHTML=getStampSVG(el.getAttribute('data-stamp'));});
+  // 도장 피커 초기 생성
+  _reinjectStampSVGs();
   const savedId=localStorage.getItem('somi_current_profile_id');
   if(savedId){
     profiles=loadData('somi_profiles',[]);

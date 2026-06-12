@@ -173,6 +173,7 @@ button{font-family:inherit;cursor:pointer;}
 .detail-stat-val{font-size:1.4rem;font-weight:700;font-family:'DM Mono',monospace;}
 .detail-stat-lbl{font-size:0.68rem;color:var(--text2);margin-top:4px;}
 </style>
+<script src="stamps.js"></script>
 </head>
 <body>
 
@@ -706,13 +707,7 @@ function deleteProfile(idx) {
 let teacherDetailProfileId='', teacherCalYear, teacherCalMonth, selectedTeacherDate='';
 
 /* ── 도장 SVG (student.html과 동일) ── */
-const STAMPS_HOME={
-  apple:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M20.3 9.1 C20.1 9 17.2 6.3 14.8 7.1 C14.7 7.1 13.2 4.3 15.9 3.3 C16 3.3 18.7 2.2 20.2 5.6" stroke="#e85555" stroke-width="1.7" stroke-linecap="round" fill="none"/><path d="M20.2 9.1 C14.1 8.5 9.2 13.2 8.7 22.1 C9.9 28.5 13.6 33.5 17.6 34.7 C18.6 35 21.3 35.1 22.4 34.6 C27.1 32.8 31.8 19.4 20.2 9.1Z" stroke="#e85555" stroke-width="1.9" stroke-linecap="round" fill="rgba(232,85,85,0.13)"/><path d="M20.2 9.1 C21.3 6.9 23.8 6.3 25.8 7.4" stroke="#4a8c3f" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>`},
-  sunflower:{svg:`<svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="5" stroke="#7a4f1e" stroke-width="1.8" fill="rgba(122,79,30,0.15)"/><path d="M20 7v4M20 29v4M7 20h4M29 20h4" stroke="#f5c842" stroke-width="2.1" stroke-linecap="round"/><path d="M11.5 11.5l2.8 2.8M25.7 25.7l2.8 2.8M28.5 11.5l-2.8 2.8M14.3 25.7l-2.8 2.8" stroke="#f5c842" stroke-width="2" stroke-linecap="round"/></svg>`},
-  cloud:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M10.3 27.2 C6.1 27.4 3.8 24.3 3.9 21.1 C4 17.8 6.4 15.3 9.6 15.2 C9.8 9.2 15.6 8.3 23.1 13.1 C24.6 12.5 27.7 12.9 29.2 14.8 C32.8 16.3 34.3 21.1 31.6 25.2 C30.4 27.1 28 28.3 25.6 28.1M10.3 27.2 C14 27.8 20.3 28 25.6 28.1" stroke="#6ab4f7" stroke-width="1.9" stroke-linecap="round" fill="rgba(106,180,247,0.13)"/></svg>`},
-  acorn:{svg:`<svg viewBox="0 0 40 40" fill="none"><path d="M12.8 12.1 C12.6 11.2 13.5 10.8 20.1 10.9 C26.7 11 27.4 11.4 27.2 12.3 C26.9 14.8 25.1 17.3 20.1 17.4 C15 17.5 13.1 14.9 12.8 12.1Z" stroke="#8b6914" stroke-width="1.8" fill="rgba(139,105,20,0.15)"/><path d="M15.3 17.8 C14.8 21.9 17.3 29.8 20.1 32.3 C22.9 29.8 25.4 21.8 24.9 17.8" stroke="#c8902a" stroke-width="1.9" fill="rgba(200,144,42,0.15)"/></svg>`}
-};
-function getStampSVGHome(key){ return (STAMPS_HOME[key]||STAMPS_HOME.apple).svg; }
+
 
 function showStudentDetail(idx) {
   const p=profiles[idx]; teacherDetailProfileId=p.id;
@@ -773,28 +768,23 @@ function renderDetailContent(p) {
   })() : null;
 
   // SVG 도넛 (가운데 주력 비율 텍스트 포함)
-  function arcPath(cx,cy,r,startDeg,endDeg){
+  function pieSlice(cx,cy,r,startDeg,endDeg,color){
     if(Math.abs(endDeg-startDeg)<0.5) return '';
     const toR=d=>d*Math.PI/180;
     const x1=cx+r*Math.cos(toR(startDeg-90)),y1=cy+r*Math.sin(toR(startDeg-90));
     const x2=cx+r*Math.cos(toR(endDeg-90)),y2=cy+r*Math.sin(toR(endDeg-90));
     const lg=endDeg-startDeg>180?1:0;
-    return `M${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2}`;
+    return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${lg},1 ${x2},${y2} Z" fill="${color}"/>`;
   }
-  const segs=[{p:bPct,c:'var(--accent)',lbl:'호'},{p:vPct,c:'var(--accent2)',lbl:'발'},{p:rPct,c:'var(--accent3)',lbl:'리'}];
+  const segs=[{p:bPct,c:'#7c6af7'},{p:vPct,c:'#f76ac8'},{p:rPct,c:'#6af7c8'}];
   let cur=0;
-  const donutPaths=segs.map(s=>{
-    const start=cur*3.6, end=(cur+s.p)*3.6;
-    cur+=s.p;
-    const d2=arcPath(40,40,28,start,end);
-    return d2?`<path d="${d2}" fill="none" stroke="${s.c}" stroke-width="12" stroke-linecap="butt"/>`:''
+  const piePaths=segs.map(s=>{
+    if(s.p<=0) return '';
+    const start=cur*3.6, end=(cur+s.p)*3.6; cur+=s.p;
+    return pieSlice(40,40,32,start,end,s.c);
   }).join('');
-  // 가장 큰 비율 찾아서 가운데 표시
-  const maxSeg = segs.reduce((a,b)=>a.p>=b.p?a:b);
-  const centerText = maxSeg.p > 0
-    ? `<text x="40" y="37" text-anchor="middle" font-size="13" font-weight="800" fill="${maxSeg.c}" font-family="DM Mono,monospace">${maxSeg.p}%</text><text x="40" y="50" text-anchor="middle" font-size="9" fill="${maxSeg.c}" font-family="Noto Sans KR,sans-serif">${maxSeg.lbl}</text>`
-    : `<text x="40" y="44" text-anchor="middle" font-size="11" fill="var(--text2)">—</text>`;
-  const donutSVG=`<svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="none" stroke="var(--border)" stroke-width="12"/>${donutPaths}${centerText}</svg>`;
+  const bgCircle=totalChSec<=1?`<circle cx="40" cy="40" r="32" fill="#3a3a4a"/>`:'';
+  const donutSVG=`<svg width="80" height="80" viewBox="0 0 80 80">${bgCircle}${piePaths}</svg>`;
 
   html += `
     <div class="detail-stats-grid">
@@ -823,7 +813,9 @@ function renderDetailContent(p) {
   const byDay={}; logs.forEach(l=>{ if(!byDay[l.date])byDay[l.date]=[]; byDay[l.date].push(l); });
   const dayKeys=Object.keys(byDay).sort().reverse();
   dayKeys.forEach(day=>{
+    const dayTotal=byDay[day].reduce((a,l)=>a+(l.duration||0),0);
     html+=`<div style="margin-bottom:16px"><div style="font-size:0.82rem;color:var(--text2);margin-bottom:8px;font-weight:600">${day}</div><table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>`;
+    html+=`<tr style="background:var(--surface2)"><td colspan="3" style="font-size:0.78rem;color:var(--text2);font-weight:600">📋 당일 총 연습</td><td style="font-weight:700;color:var(--accent)">${formatDur(dayTotal)}</td></tr>`;
     byDay[day].forEach(l=>{
       const pc=l.chapter==='breath'?'b':l.chapter==='vocal'?'v':'r';
       const cn=l.chapter==='breath'?'호흡':l.chapter==='vocal'?'발성':'리듬';
@@ -869,7 +861,7 @@ function renderTeacherCalendar(pid) {
     if(has){
       const sl=document.createElement('div');
       sl.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none;opacity:0.5;';
-      sl.innerHTML=`<div style="width:85%;height:85%">${getStampSVGHome(studentStampKey)}</div>`;
+      sl.innerHTML=`<div style="width:85%;height:85%">${getStampSVG(studentStampKey)}</div>`;
       div.appendChild(sl);
     }
 
@@ -900,7 +892,7 @@ function sendTeacherStamp(){
   saveTeacherStamps(); alert('도장을 보냈어요! ⭐'); document.getElementById('teacher-comment').value=''; renderTeacherCalendar(teacherDetailProfileId);
 }
 function getStampSVG(){
-  return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(-15deg)"><path d="M12 2.5 C12.3 2.5 12.6 4.2 13.2 6.1 L14.5 10.2 L18.8 10.3 C20.1 10.3 20.8 10.8 20.3 11.5 L16.9 14.1 L18.3 18.2 C18.8 19.5 18.3 20.2 17.2 19.6 L12 16.8 L6.8 19.6 C5.7 20.2 5.2 19.5 5.7 18.2 L7.1 14.1 L3.7 11.5 C3.2 10.8 3.9 10.3 5.2 10.3 L9.5 10.2 L10.8 6.1 C11.4 4.2 11.7 2.5 12 2.5Z" stroke="#f7c26a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="rgba(247,194,106,0.2)"/></svg>`;
+  return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(-15deg)"><path d="M12 2.5 C12.3 2.5 12.6 4.2 13.2 6.1 L14.5 10.2 L18.8 10.3 C20.1 10.3 20.8 10.8 20.3 11.5 L16.9 14.1 L18.3 18.2 C18.8 19.5 18.3 20.2 17.2 19.6 L12 16.8 L6.8 19.6 C5.7 20.2 5.2 19.5 5.7 18.2 L7.1 14.1 L3.7 11.5 C3.2 10.8 3.9 10.3 5.2 10.3 L9.5 10.2 L10.8 6.1 C11.4 4.2 11.7 2.5 12 2.5Z" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,215,0,0.25)"/></svg>`;
 }
 
 /* ── 커스텀 도장 삭제 모달 ── */
@@ -1918,8 +1910,8 @@ function formatDur(s){
   const h=Math.floor(s/3600);
   const m=Math.floor((s%3600)/60);
   const sec=s%60;
-  if(h>0){ if(m>0) return h+'시간 '+m+'분'; return h+'시간'; }
-  if(m>0){ if(sec>0) return m+'분 '+sec+'초'; return m+'분'; }
+  if(h>0){ if(m>0) return h+'시간'+m+'분'; return h+'시간'; }
+  if(m>0){ if(sec>0) return m+'분'+sec+'초'; return m+'분'; }
   return sec+'초';
 }
 
