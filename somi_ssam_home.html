@@ -123,7 +123,7 @@ button{font-family:inherit;cursor:pointer;}
 .comment-input:focus{border-color:var(--accent2);}
 .send-stamp-btn{margin-top:10px;padding:10px 20px;border-radius:10px;border:none;background:var(--accent2);color:white;font-family:inherit;font-size:0.85rem;cursor:pointer;font-weight:600;}
 
-.teacher-tabs{display:flex;border-bottom:2px solid var(--border);gap:0;background:var(--bg);}
+.teacher-tabs{display:flex;border-bottom:2px solid var(--border);gap:0;background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;}
 .teacher-tab{flex:1;text-align:center;padding:12px 8px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:0.9rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;white-space:nowrap;}
 .teacher-tab:hover{color:var(--text);}
 .teacher-tab.active{color:var(--counting);border-bottom-color:var(--counting);font-weight:700;}
@@ -669,6 +669,9 @@ function renderTeacher() {
 }
 
 function showTeacherTab(tab){
+  // 헤더 높이 측정해서 탭 sticky top 위치 설정
+  const hdr=document.querySelector('.app-header');
+  if(hdr) document.documentElement.style.setProperty('--header-h', hdr.offsetHeight+'px');
   ['student','pattern','settings'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el) el.style.display=t===tab?'block':'none';
@@ -1185,7 +1188,7 @@ function renderPatternTable() {
 
   const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.8rem;';
   const thead=tbl.createTHead(); const hRow=thead.insertRow();
-  const th1=document.createElement('th'); th1.style.cssText='padding:7px 4px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.72rem;width:24px;text-align:left;'; th1.textContent='활성';
+  const th1=document.createElement('th'); th1.style.cssText='padding:7px 4px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.72rem;width:28px;text-align:center;white-space:nowrap;'; th1.textContent='활성';
   const th2=document.createElement('th'); th2.style.cssText='text-align:left;padding:7px 10px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;'; th2.textContent='연습 패턴';
   hRow.appendChild(th1); hRow.appendChild(th2);
 
@@ -2018,7 +2021,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     if(migrated){ saveProfiles(); }
   }
 
-  if(isTeacherMode) showTeacherTab('student');
+  if(isTeacherMode){
+    requestAnimationFrame(()=>{
+      const hdr=document.querySelector('.app-header');
+      if(hdr) document.documentElement.style.setProperty('--header-h', hdr.offsetHeight+'px');
+    });
+    showTeacherTab('student');
+  }
 
   // ── [1번] 새 프로필 생성 알림: 학생 앱에서 생성된 새 프로필 감지 ──
   // (기존 profileCount 저장 기준 비교)
