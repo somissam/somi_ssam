@@ -15,12 +15,14 @@
   --accent:#7c6af7; --accent2:#f76ac8; --accent3:#6af7c8; --counting:#f7c26a;
   --text:#e8e8f0; --text2:#8888aa;
   --col-wait:#f7c26a; --col-inhale:#7c6af7; --col-write:#f76ac8;
+  --tier-lv1:#C0C8D0; --tier-lv2:#E8C200;
 }
 .theme-ivory {
   --bg:#f5f0e8; --surface:#fffdf7; --surface2:#f0ebe0; --border:#d8cfc0;
   --accent:#6b5ce7; --accent2:#e05fa0; --accent3:#2db89a; --counting:#c8960a;
   --text:#2a2420; --text2:#7a6e60;
   --col-wait:#c8960a; --col-inhale:#6b5ce7; --col-write:#e05fa0;
+  --tier-lv1:#6A7280; --tier-lv2:#E8C200;
 }
 
 /* ══════════════════════════════════════
@@ -56,7 +58,7 @@ button{font-family:inherit;cursor:pointer;}
 .pattern-card p{color:var(--text2);font-size:0.78rem;line-height:1.5;}
 .pattern-meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;}
 .meta-tag{font-size:0.68rem;padding:3px 9px;border-radius:20px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
-.lv-badge{font-size:0.65rem;padding:2px 8px;border-radius:10px;background:rgba(124,106,247,0.15);color:var(--accent);border:1px solid var(--accent);font-weight:600;}
+.lv-badge{font-size:0.7rem;padding:2px 8px;border-radius:8px;font-weight:800;border:2px solid;background:transparent;}
 
 /* 잠금 카드 */
 .pattern-card.locked{opacity:0.45;cursor:default;}
@@ -1059,6 +1061,19 @@ function closeSuccess() {
    【 섹션 I 】 카드 렌더 · 진입점
 ════════════════════════════════════════════════ */
 function renderPatternCards() {
+  
+const _TIER_COLORS_BREATH=['var(--tier-lv1)','var(--tier-lv2)','#00C9B1','#00B4FF','#AA44FF','#FF8C00','#FF4444'];
+function _getBreathLevelColor(lvId){
+  if(!lvId||lvId==='ing') return null;
+  const m=lvId.match(/^lv(\d+)$/i);
+  if(m){const idx=parseInt(m[1])-1;return _TIER_COLORS_BREATH[idx%_TIER_COLORS_BREATH.length];}
+  try{
+    const settings=JSON.parse(localStorage.getItem('somi_level_settings')||'null');
+    if(settings){const idx=settings.findIndex(l=>l.id===lvId);if(idx>=0)return _TIER_COLORS_BREATH[idx%_TIER_COLORS_BREATH.length];}
+  }catch(e){}
+  return null;
+}
+
   const container = document.getElementById('pattern-cards'); container.innerHTML = '';
 
   BREATH_PATTERNS.forEach(pat => {
@@ -1073,7 +1088,7 @@ function renderPatternCards() {
       <h3>${pat.name}</h3>
       <p>${pat.desc}</p>
       <div class="pattern-meta">
-        ${lv ? `<span class="lv-badge">${lv.label}</span>` : ''}
+        ${lv ? (() => { const c=_getBreathLevelColor(lvId); const s=c?`color:${c};border-color:${c};background:transparent;`:''; return `<span class="lv-badge" style="${s}">${lv.label}</span>`; })() : ''}
         ${pat.tags.map(t=>`<span class="meta-tag">${t}</span>`).join('')}
         ${pat.modeLabels ? `<span class="meta-tag">${pat.modeLabels.join(' · ')}</span>` : ''}
       </div>

@@ -808,7 +808,7 @@ function renderDetailContent(p) {
     </div>`;
 
   html+=`<div class="teacher-cal" id="t-cal-wrap"><div class="cal-header"><button class="cal-nav" onclick="tCalMove(-1)">‹</button><h3 id="t-cal-title"></h3><button class="cal-nav" onclick="tCalMove(1)">›</button></div><div class="cal-grid" id="t-cal-grid"></div></div>`;
-  html+=`<div class="comment-box"><h4>📮 도장 + 코멘트 보내기 (<span id="selected-date-label">날짜를 선택해주세요</span>)</h4><textarea class="comment-input" id="teacher-comment" placeholder="코멘트를 입력해주세요 (선택사항)"></textarea><button class="send-stamp-btn" onclick="sendTeacherStamp()">⭐ 잘했어요 도장 보내기</button></div>`;
+  html+=`<div class="comment-box"><h4>📮 도장 + 코멘트 보내기 (<span id="selected-date-label">날짜를 선택해주세요</span>)</h4><div style="display:flex;gap:8px;margin-bottom:10px"><button id="stamp-type-star" onclick="selectTeacherStampType('star')" style="padding:6px 14px;border-radius:8px;border:2px solid #FFEE00;background:rgba(255,238,0,0.15);cursor:pointer;font-size:1.1rem">⭐</button><button id="stamp-type-heart" onclick="selectTeacherStampType('heart')" style="padding:6px 14px;border-radius:8px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-size:1.1rem">❤️</button></div><textarea class="comment-input" id="teacher-comment" placeholder="코멘트를 입력해주세요 (선택사항)"></textarea><button class="send-stamp-btn" onclick="sendTeacherStamp()">도장 보내기</button></div>`;
   html+=`<div style="margin-top:24px"><div style="font-size:1rem;font-weight:700;margin-bottom:14px">상세 연습 기록</div>`;
   const byDay={}; logs.forEach(l=>{ if(!byDay[l.date])byDay[l.date]=[]; byDay[l.date].push(l); });
   const dayKeys=Object.keys(byDay).sort().reverse();
@@ -854,7 +854,7 @@ function renderTeacherCalendar(pid) {
     if(teacherStamps[tk]){
       const ts2=document.createElement('div');
       ts2.style.cssText='position:absolute;top:-2px;left:-2px;width:28px;height:28px;z-index:3;pointer-events:none;';
-      ts2.innerHTML=getStampSVG();
+      ts2.innerHTML=getTeacherStampSVG(teacherStamps[tk].stamp, 28);
       div.appendChild(ts2);
     }
     // 학생 도장 (연습한 날)
@@ -885,14 +885,19 @@ function renderTeacherCalendar(pid) {
   }
 }
 function tCalMove(dir){ teacherCalMonth+=dir; if(teacherCalMonth>11){teacherCalMonth=0;teacherCalYear++;} if(teacherCalMonth<0){teacherCalMonth=11;teacherCalYear--;} renderTeacherCalendar(teacherDetailProfileId); }
+let selectedTeacherStampType='star';
+function selectTeacherStampType(type){
+  selectedTeacherStampType=type;
+  ['star','heart'].forEach(t=>{
+    const btn=document.getElementById('stamp-type-'+t);
+    if(btn) btn.style.borderColor=t===type?'#FFEE00':'var(--border)';
+  });
+}
 function sendTeacherStamp(){
   if(!selectedTeacherDate){ alert('날짜를 먼저 선택해주세요'); return; }
   const tk=teacherDetailProfileId+'_'+selectedTeacherDate;
-  teacherStamps[tk]={stamp:'star',comment:document.getElementById('teacher-comment').value,date:selectedTeacherDate};
-  saveTeacherStamps(); alert('도장을 보냈어요! ⭐'); document.getElementById('teacher-comment').value=''; renderTeacherCalendar(teacherDetailProfileId);
-}
-function getStampSVG(){
-  return `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(-15deg)"><path d="M12 2.5 C12.3 2.5 12.6 4.2 13.2 6.1 L14.5 10.2 L18.8 10.3 C20.1 10.3 20.8 10.8 20.3 11.5 L16.9 14.1 L18.3 18.2 C18.8 19.5 18.3 20.2 17.2 19.6 L12 16.8 L6.8 19.6 C5.7 20.2 5.2 19.5 5.7 18.2 L7.1 14.1 L3.7 11.5 C3.2 10.8 3.9 10.3 5.2 10.3 L9.5 10.2 L10.8 6.1 C11.4 4.2 11.7 2.5 12 2.5Z" stroke="#FFD700" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,215,0,0.25)"/></svg>`;
+  teacherStamps[tk]={stamp:selectedTeacherStampType,comment:document.getElementById('teacher-comment').value,date:selectedTeacherDate};
+  saveTeacherStamps(); alert('도장을 보냈어요!'); document.getElementById('teacher-comment').value=''; renderTeacherCalendar(teacherDetailProfileId);
 }
 
 /* ── 커스텀 도장 삭제 모달 ── */

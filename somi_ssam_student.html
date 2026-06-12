@@ -472,7 +472,7 @@ function renderCalendar(){
     const div=document.createElement('div');div.className='cal-day'+(ds===today?' today':'');
     if(dayLogs.length>0){
       const tk=currentProfile.id+'_'+ds;
-      if(teacherStamps[tk]){const tl=document.createElement('div');tl.className='teacher-stamp';tl.innerHTML=getTeacherStampSVG();div.appendChild(tl);}
+      if(teacherStamps[tk]){const tl=document.createElement('div');tl.className='teacher-stamp';tl.innerHTML=getTeacherStampSVG(teacherStamps[tk].stamp, 20);div.appendChild(tl);}
       const sl=document.createElement('div');sl.className='student-stamp';sl.innerHTML=getStampSVG(currentStamp);div.appendChild(sl);
     }
     const dn=document.createElement('span');dn.className='date-num';if(dayLogs.length>0)dn.style.fontWeight='800';dn.textContent=d;div.appendChild(dn);

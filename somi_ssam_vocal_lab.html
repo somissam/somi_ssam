@@ -46,7 +46,7 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 .meta-tag.tag-bpm{background:rgba(124,106,247,0.12);color:var(--accent);border-color:rgba(124,106,247,0.35);}
 .meta-tag.tag-note{background:rgba(106,247,200,0.10);color:var(--accent3);border-color:rgba(106,247,200,0.35);}
 .meta-tag.tag-mode{background:var(--surface2);color:var(--text2);border-color:var(--border);}
-.meta-tag.tag-level{background:rgba(247,194,106,0.12);color:var(--counting);border-color:rgba(247,194,106,0.35);}
+.meta-tag.tag-level{border-radius:8px;font-weight:800;font-size:0.7rem;border-width:2px;}
 .meta-tag.tag-vowel{background:rgba(247,106,200,0.12);color:var(--accent2);border-color:rgba(247,106,200,0.35);}
 #practice-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column;overflow-y:auto;}
 .prac-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
@@ -228,7 +228,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ha_8beat_1',
     name: "H-a • 8beat (123454321) (1)",
     cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
-    pracTitle: "H-a(흐아) · 8beat",
+    pracTitle: "H-a(흐아) · 8beat (1)",
     baseTempo: 60,
     pattern5:   [1,2,3,4,5,4,3,2,1],
     engLabels5: ['흐','아','흐','아','흐','아','흐','아','흐'],
@@ -245,7 +245,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ha_8beat_2',
     name: "H-a • 8beat (123454321) (2)",
     cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
-    pracTitle: "H-a(흐아) · 8beat",
+    pracTitle: "H-a(흐아) · 8beat (2)",
     baseTempo: 60,
     pattern5:   [1,2,3,4,5,4,3,2,1],
     engLabels5: ['흐','아','흐','아','흐','아','흐','아','흐'],
@@ -266,7 +266,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ha_4beat',
     name: "H-a • 4beat (13531)",
     cardDesc: "흐아 · 4분음표 · 도미솔미도",
-    pracTitle: "H-a(흐아) · 4beat",
+    pracTitle: "H-a(흐아) · 4beat (13531)",
     baseTempo: 60,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['흐','아','흐','아','흐'],
@@ -287,7 +287,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ha_16beat',
     name: "H-a • 16beat (12345432123454321)",
     cardDesc: "흐아 · 16분음표 · 도레미파솔파미레도 (2회 연주)",
-    pracTitle: "H-a(흐아) · 16beat",
+    pracTitle: "H-a(흐아) · 16beat (12345432123454321)",
     baseTempo: 60,
     pattern5:   [1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1],
     engLabels5: ['흐','아','흐','아','흐','아','흐','아','흐'],
@@ -308,7 +308,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_na_4beat_1',
     name: "Na • 4beat (13531) (1)",
     cardDesc: "나 · 4분음표 · 도미솔미도",
-    pracTitle: "Na(나) · 4beat",
+    pracTitle: "Na(나) · 4beat (1)",
     baseTempo: 70,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['','','','',''],
@@ -325,7 +325,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_na_4beat_2',
     name: "Na • 4beat (13531) (2)",
     cardDesc: "나 · 4분음표 · 도미솔미도",
-    pracTitle: "Na(나) · 4beat",
+    pracTitle: "Na(나) · 4beat (2)",
     baseTempo: 70,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['','','','',''],
@@ -346,7 +346,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ma_4beat_1',
     name: "Ma • 4beat (13531) (1)",
     cardDesc: "마 · 4분음표 · 도미솔미도",
-    pracTitle: "Ma(마) · 4beat",
+    pracTitle: "Ma(마) · 4beat (1)",
     baseTempo: 70,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['','','','',''],
@@ -363,7 +363,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ma_4beat_2',
     name: "Ma • 4beat (13531) (2)",
     cardDesc: "마 · 4분음표 · 도미솔미도",
-    pracTitle: "Ma(마) · 4beat",
+    pracTitle: "Ma(마) · 4beat (2)",
     baseTempo: 70,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['','','','',''],
@@ -384,8 +384,8 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ieaou_4beat',
     name: "ieaou • 4beat (11111)",
     cardDesc: "이에아오우 · 4분음표 · 도도도도도",
-    pracTitle: "ieaou(이에아오우) · 4beat",
-    baseTempo: 60,
+    pracTitle: "ieaou(이에아오우) · 4beat (11111)",
+    baseTempo: 70,
     pattern5:   [1,1,1,1,1],
     engLabels5: ['i','e','a','o','u'],
     korLabels5: ['이','에','아','오','우'],
@@ -404,8 +404,8 @@ const VOCAL_PATTERNS = [
     id: 'vocal_ieaoueueo_4beat',
     name: "ieaou+eueo • 4beat (1111111)",
     cardDesc: "이에아오우으어 · 4분음표 · 도도도도도도도",
-    pracTitle: "ieaou+eueo(이에아오우으어) · 4beat",
-    baseTempo: 60,
+    pracTitle: "ieaou+eueo(이에아오우으어) · 4beat (1111111)",
+    baseTempo: 70,
     pattern5:   [1,1,1,1,1],
     engLabels5: ['i','e','a','o','u'],
     korLabels5: ['이','에','아','오','우'],
@@ -424,7 +424,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_sung_4beat',
     name: "Sung • 4beat (13531)",
     cardDesc: "썽 · 4분음표 · 도미솔미도",
-    pracTitle: "Sung(썽) · 4beat",
+    pracTitle: "Sung(썽) · 4beat (13531)",
     baseTempo: 60,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['','','','',''],
@@ -445,7 +445,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_iaiaiai_4beat',
     name: "iaiaiai • 4beat (1358531)",
     cardDesc: "이아이아이아이 · 4분음표 · 도미솔도솔미도",
-    pracTitle: "iaiaiai(이아이아이아이) · 4beat",
+    pracTitle: "iaiaiai(이아이아이아이) · 4beat (1358531)",
     baseTempo: 70,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['i','a','i','a','i'],
@@ -516,7 +516,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_7th_major_4beat',
     name: "Major 7th • Sound Type • 4beat (135787531)",
     cardDesc: "메이저 7화음 · 발음 선택 · 4분음표 · 도미솔시도시솔미도",
-    pracTitle: "Major 7th(메이저 세븐) · 4beat",
+    pracTitle: "Major 7th(메이저 세븐) · 4beat (135787531)",
     baseTempo: 70,
     offsets: [0,4,7,11,12,11,7,4,0],
     pattern5:   [1,3,5,7,8,7,5,3,1],
@@ -721,7 +721,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_staccato_ah_8beat',
     name: "Staccato • Ah • 8beat (123454321)",
     cardDesc: "스타카토 · 아 · 8분음표 · 도레미파솔파미레도",
-    pracTitle: "Staccato Ah · 8beat",
+    pracTitle: "Staccato Ah · 8beat (123454321)",
     baseTempo: 60,
     pattern5:   [1,2,3,4,5,4,3,2,1],
     engLabels5: ['','','','','','','','',''],
@@ -747,7 +747,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_glissando_ha_4beat',
     name: "Glissando • H-a • 4beat (15151)",
     cardDesc: "글리산도 · 흐아 · 4분음표 · 도솔도솔도 (왕복 슬라이딩)",
-    pracTitle: "Glissando H-a · 4beat",
+    pracTitle: "Glissando H-a · 4beat (15151)",
     baseTempo: 60,
     pattern5:   [1,5,1,5,1],
     engLabels5: ['흐','아','흐','아','흐'],
@@ -2639,15 +2639,13 @@ function renderPatternCards(){
     card.className='pattern-card'+(isLocked?' locked':'');
     const desc=pat.cardDesc||'';
     const noteDivLabel=pat.noteDiv===4?'4분음표':pat.noteDiv===16?'16분음표':'8분음표';
+    const lvColor=_getLevelColor(pat.id);
+    const lvStyle=lvColor?`color:${lvColor};border-color:${lvColor};font-weight:800;background:transparent;`:'';
     let tags='<div class="pattern-meta">'
-      +'<span class="meta-tag tag-bpm">'+pat.baseTempo+' BPM</span>'
-      +'<span class="meta-tag tag-note">'+noteDivLabel+'</span>'
-      +'<span class="meta-tag tag-mode">'+pat.modeLabels.join(' · ')+'</span>';
-    if(level!=null){
-      const lvColor=_getLevelColor(pat.id);
-      const lvStyle=lvColor?`background:${lvColor}22;color:${lvColor};border-color:${lvColor}88;`:'';
-      tags+=`<span class="meta-tag tag-level" style="${lvStyle}">${level}</span>`;
-    }
+      +(level!=null?`<span class="meta-tag tag-level" style="${lvStyle}">${level}</span>`:'')
+      +'<span class="meta-tag">'+pat.baseTempo+' BPM</span>'
+      +'<span class="meta-tag">'+noteDivLabel+'</span>'
+      +'<span class="meta-tag">'+pat.modeLabels.join(' · ')+'</span>';
     if(pat.vowelOptions&&pat.vowelOptions.length>0) tags+='<span class="meta-tag tag-vowel">발음 선택</span>';
     if(pat.staccato) tags+='<span class="meta-tag" style="background:rgba(247,194,106,0.12);color:var(--counting);border-color:rgba(247,194,106,0.5);">✂ 스타카토</span>';
     if(pat.glissando) tags+='<span class="meta-tag" style="background:rgba(106,247,200,0.12);color:var(--accent3);border-color:rgba(106,247,200,0.5);">〰 글리산도</span>';
