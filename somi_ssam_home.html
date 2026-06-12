@@ -476,6 +476,7 @@ function goToSoMi() {
 function teacherLogout() {
   if (!confirm('로그아웃 할까요?\n자동 로그인이 해제되고 로그인 화면으로 이동합니다.')) return;
   localStorage.removeItem('somi_teacher_auto_login');
+  localStorage.removeItem('somi_role');
   window.location.href = 'index.html';
 }
 
@@ -1945,7 +1946,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const isTeacherMode=urlParams.get('mode')==='teacher';
 
   if(isTeacherMode){
-    sessionStorage.setItem('somi_role','teacher');
+    localStorage.setItem('somi_role','teacher');
     showScreen('app');
   } else {
     showScreen('pw-screen');

@@ -204,6 +204,7 @@ async function checkLogin(){
       saveData(TEACHER_AUTO_KEY,{token,deviceName,registeredAt:new Date().toISOString()});
       await registerTeacherDevice(token,deviceName);
     }
+    localStorage.setItem('somi_role','teacher');
     window.location.href='somi_ssam_home.html?mode=teacher';
     return;
   }
@@ -217,8 +218,9 @@ async function checkLogin(){
     document.getElementById('login-pw').focus();
     return;
   }
-  // 학생 로그인 시 선생님 자동 로그인 키 절대 저장 안 함
+  // 학생 로그인 시 선생님 자동 로그인 키 및 role 제거
   localStorage.removeItem(TEACHER_AUTO_KEY);
+  localStorage.removeItem('somi_role');
   if(saveFlag) saveData(STUDENT_AUTO_KEY,{name:found.name,id:found.id});
   else localStorage.removeItem(STUDENT_AUTO_KEY);
   localStorage.setItem('somi_current_profile_id',found.id);
@@ -372,12 +374,14 @@ document.addEventListener('DOMContentLoaded',async function(){
       const devices=loadData('somi_teacher_devices',[]);
       const isValid=devices.some(d=>d.token===tAuto.token);
       if(isValid){
+        localStorage.setItem('somi_role','teacher');
         window.location.href='somi_ssam_home.html?mode=teacher';
         return;
       } else {
         localStorage.removeItem(TEACHER_AUTO_KEY);
       }
     }catch(e){
+      localStorage.setItem('somi_role','teacher');
       window.location.href='somi_ssam_home.html?mode=teacher';
       return;
     }
@@ -388,6 +392,7 @@ document.addEventListener('DOMContentLoaded',async function(){
   if(sAuto?.id){
     const found=profiles.find(p=>p.id===sAuto.id);
     if(found){
+      localStorage.removeItem('somi_role');
       localStorage.setItem('somi_current_profile_id',found.id);
       window.location.href='somi_ssam_student.html';
       return;
