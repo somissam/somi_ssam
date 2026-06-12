@@ -1047,7 +1047,7 @@ function renderPatternManager() {
   container.appendChild(studentRow);
 
   const lvRow=document.createElement('div');
-  lvRow.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;';
+  lvRow.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;';
 
   const lvAllActive = pmFilter.lvAllMode===true;
   const lvAllBtn=document.createElement('button');
@@ -1078,7 +1078,7 @@ function renderPatternManager() {
 
   const saveBtnWrap=document.createElement('div');
   saveBtnWrap.id='pm-save-wrap';
-  saveBtnWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:100px;margin-right:10px;';
+  saveBtnWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:100px;';
 
   const cancelBtn=document.createElement('button');
   cancelBtn.id='pm-cancel-btn';
@@ -1105,8 +1105,12 @@ function renderPatternManager() {
   };
   saveBtnWrap.appendChild(cancelBtn);
   saveBtnWrap.appendChild(saveBtn);
-  lvRow.insertBefore(saveBtnWrap, lvRow.firstChild);
-  container.appendChild(lvRow);
+
+  const saveRow=document.createElement('div');
+  saveRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;';
+  saveRow.appendChild(saveBtnWrap);
+  saveRow.appendChild(lvRow);
+  container.appendChild(saveRow);
 
   const tableWrap=document.createElement('div'); tableWrap.id='pattern-table-wrap'; tableWrap.style.cssText='overflow-x:auto;'; container.appendChild(tableWrap);
   updatePmFilterUI(); renderPatternTable();
@@ -1389,7 +1393,7 @@ function renderLevelClassifier() {
   const allCheckboxes = [];
 
   const topBar=document.createElement('div');
-  topBar.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;';
+  topBar.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;';
 
   const lvBtnsWrap=document.createElement('div'); lvBtnsWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;flex:1;';
   levelSettings.forEach(lv=>{
@@ -1441,8 +1445,12 @@ function renderLevelClassifier() {
     setTimeout(()=>renderLevelClassifier(),1200);
   };
   lcSaveWrap.appendChild(lcCancelBtn); lcSaveWrap.appendChild(lcSaveBtn);
-  topBar.insertBefore(lcSaveWrap, topBar.firstChild);
-  container.appendChild(topBar);
+
+  const lcSaveRow=document.createElement('div');
+  lcSaveRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;';
+  lcSaveRow.appendChild(lcSaveWrap);
+  lcSaveRow.appendChild(topBar);
+  container.appendChild(lcSaveRow);
 
   const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap'; tblWrap.style.cssText='overflow-x:auto;';
 
