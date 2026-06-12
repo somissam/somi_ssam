@@ -1945,6 +1945,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const isTeacherMode=urlParams.get('mode')==='teacher';
 
   if(isTeacherMode){
+    sessionStorage.setItem('somi_role','teacher');
     showScreen('app');
   } else {
     showScreen('pw-screen');

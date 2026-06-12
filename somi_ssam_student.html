@@ -276,7 +276,7 @@ let _vocalPreviewGender=localStorage.getItem('somi_vocal_preview_gender')||null;
 function _updateVocalGenderToggleBtn(){
   const btn=document.getElementById('vocal-gender-toggle');
   if(!btn) return;
-  const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
+  const isTeacherDevice=sessionStorage.getItem('somi_role')==='teacher';
   if(!isTeacherDevice){btn.style.display='none';return;}
   btn.style.display='inline-flex';
   const effectiveGender=_vocalPreviewGender||(currentProfile?currentProfile.gender||'female':'female');
@@ -319,7 +319,7 @@ function enterStudentApp(){
   _reinjectStampSVGs();
   document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
   // 소미쌤 버튼
-  const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
+  const isTeacherDevice=sessionStorage.getItem('somi_role')==='teacher';
   const teacherBtn=document.getElementById('teacher-mode-btn');
   const spacer=document.getElementById('header-spacer');
   if(isTeacherDevice){teacherBtn.style.display='inline-flex';if(spacer)spacer.style.display='none';}
@@ -360,7 +360,7 @@ function goToChapter(tab){
   if(currentProfile)localStorage.setItem('somi_current_profile_id',currentProfile.id);
   if(tab==='breath'){window.location.href='somi_ssam_breath.html';}
   else if(tab==='vocal'){
-    const isTeacherDevice=!!localStorage.getItem(TEACHER_AUTO_KEY);
+    const isTeacherDevice=sessionStorage.getItem('somi_role')==='teacher';
     const gender=(isTeacherDevice&&_vocalPreviewGender)?_vocalPreviewGender:(currentProfile?currentProfile.gender||'female':'female');
     window.location.href=(gender==='male')?'somi_ssam_vocal_lab_male.html':'somi_ssam_vocal_lab.html';
   }

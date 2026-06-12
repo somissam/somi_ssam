@@ -186,7 +186,7 @@ async function checkLogin(){
     return;
   }
 
-  // ── 선생님 로그인 ──
+  // ── 선생님 로그인 (이름 '소미쌤' + 비번 일치) ──
   if(inputName==='소미쌤'&&inputPw===teacherPw()){
     if(saveFlag){
       const ua=navigator.userAgent;
@@ -205,11 +205,6 @@ async function checkLogin(){
       await registerTeacherDevice(token,deviceName);
     }
     window.location.href='somi_ssam_home.html?mode=teacher';
-  } else {
-    errEl.textContent='비밀번호가 틀렸어요';
-    errEl.style.display='block';
-    document.getElementById('login-pw').value='';
-    document.getElementById('login-pw').focus();
     return;
   }
 
@@ -222,6 +217,8 @@ async function checkLogin(){
     document.getElementById('login-pw').focus();
     return;
   }
+  // 학생 로그인 시 선생님 자동 로그인 키 절대 저장 안 함
+  localStorage.removeItem(TEACHER_AUTO_KEY);
   if(saveFlag) saveData(STUDENT_AUTO_KEY,{name:found.name,id:found.id});
   else localStorage.removeItem(STUDENT_AUTO_KEY);
   localStorage.setItem('somi_current_profile_id',found.id);
@@ -240,9 +237,7 @@ async function checkLogin(){
   else if(/Windows.*Chrome/.test(sua)) sDeviceName='🖥️ Windows · Chrome';
   else if(/Windows/.test(sua)) sDeviceName='🖥️ Windows · 브라우저';
   const sessionEntry={token:sToken,deviceName:sDeviceName,loginAt:new Date().toISOString()};
-  // localStorage에 내 토큰 저장
   saveData('somi_student_session_'+found.id, sessionEntry);
-  // Firebase에 저장 — 덮어쓰기로 기존 기기 자동 로그아웃
   if(_fsSet){ try{ await _fsSet('somi_student_session_'+found.id, JSON.stringify(sessionEntry)); }catch(e){} }
 
   window.location.href='somi_ssam_student.html';
