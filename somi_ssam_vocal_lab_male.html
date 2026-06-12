@@ -889,8 +889,8 @@ function getFullOffsets(){
    【 섹션 D 】 오디오 엔진
 ════════════════════════════════════════════════ */
 console.log('[AUDIO-FIX v4] SR기억+정찰병자동교체 빌드 로드됨 (male) — 2026-06-10');
-let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null,compressor=null,makeupGain=null;
-let metronomeVol=1.0,pianoVol=1.0;
+let audioCtx=null,masterGain=null,metronomeGain=null,pianoGain=null,compressor=null,makeupGain=null,userGain=null;
+let metronomeVol=1.0,pianoVol=1.0,userVol=1.0;
 // ── iPad Safari 오디오 언락 v3: 세션 활성화 + 샘플레이트 순환 + 진단 로그 ──
 // 증상: 제스처 안에서 만든 컨텍스트조차 currentTime이 0에 고착 → 세션/하드웨어 라우팅 레벨 문제
 // 대응: ① navigator.audioSession='playback' (iOS17+, 무음모드/세션 거부 해제)
@@ -940,7 +940,8 @@ function _buildCtx(){
   compressor.threshold.value=-20;compressor.knee.value=6;compressor.ratio.value=12;
   compressor.attack.value=0.002;compressor.release.value=0.12;
   makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?3.0:2.0;
-  masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(audioCtx.destination);
+  userGain=audioCtx.createGain();userGain.gain.value=userVol;
+  masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(userGain);userGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _audioDiag('생성');
@@ -992,7 +993,8 @@ function _adoptProbe(p){
   compressor.threshold.value=-20;compressor.knee.value=6;compressor.ratio.value=12;
   compressor.attack.value=0.002;compressor.release.value=0.12;
   makeupGain=audioCtx.createGain();makeupGain.gain.value=_isPhoneMobile()?3.0:2.0;
-  masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(audioCtx.destination);
+  userGain=audioCtx.createGain();userGain.gain.value=userVol;
+  masterGain.connect(compressor);compressor.connect(makeupGain);makeupGain.connect(userGain);userGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
   pianoGain=audioCtx.createGain();pianoGain.gain.value=pianoVol;pianoGain.connect(masterGain);
   _probes=_probes.filter(x=>x!==p);
@@ -1002,7 +1004,7 @@ function _adoptProbe(p){
 }
 function _teardownCtx(){
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
-  audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;compressor=null;makeupGain=null;
+  audioCtx=null;masterGain=null;metronomeGain=null;pianoGain=null;compressor=null;makeupGain=null;userGain=null;
 }
 function _gestureRebuild(){
   // ★ 반드시 유저 제스처 콜스택 안에서만 호출 — 제스처 밖 재생성은 resume 거부로 무의미
@@ -2141,13 +2143,17 @@ function buildPracticeUI(){
   /* ── 볼륨 ── */
   const vw=document.createElement('div');vw.className='vol-wrap';
   const mR=document.createElement('div');mR.className='vol-row';mR.innerHTML='<span>메트로놈</span>';
-  const mS=document.createElement('input');mS.type='range';mS.min='0';mS.max='200';mS.value=String(Math.round(metronomeVol*100));mS.style.cssText='flex:1;accent-color:var(--accent);cursor:pointer;';
+  const mS=document.createElement('input');mS.type='range';mS.min='0';mS.max='100';mS.value=String(Math.round(metronomeVol*100));mS.style.cssText='flex:1;accent-color:var(--accent);cursor:pointer;';
   mS.oninput=()=>{metronomeVol=parseInt(mS.value)/100;if(metronomeGain)metronomeGain.gain.value=metronomeVol;};
   mR.appendChild(mS);vw.appendChild(mR);
   const piR=document.createElement('div');piR.className='vol-row';piR.innerHTML='<span>피아노</span>';
-  const piS=document.createElement('input');piS.type='range';piS.min='0';piS.max='200';piS.value=String(Math.round(pianoVol*100));piS.style.cssText='flex:1;accent-color:var(--accent2);cursor:pointer;';
+  const piS=document.createElement('input');piS.type='range';piS.min='0';piS.max='100';piS.value=String(Math.round(pianoVol*100));piS.style.cssText='flex:1;accent-color:var(--accent2);cursor:pointer;';
   piS.oninput=()=>{pianoVol=parseInt(piS.value)/100;if(pianoGain)pianoGain.gain.value=pianoVol;};
-  piR.appendChild(piS);vw.appendChild(piR);body.appendChild(vw);
+  piR.appendChild(piS);vw.appendChild(piR);
+  const ugR=document.createElement('div');ugR.className='vol-row';ugR.innerHTML='<span>마스터</span>';
+  const ugS=document.createElement('input');ugS.type='range';ugS.min='0';ugS.max='200';ugS.value=String(Math.round(userVol*100));ugS.style.cssText='flex:1;accent-color:var(--accent3);cursor:pointer;';
+  ugS.oninput=()=>{userVol=parseInt(ugS.value)/100;if(userGain)userGain.gain.value=userVol;};
+  ugR.appendChild(ugS);vw.appendChild(ugR);body.appendChild(vw);
 }
 
 /* ── 기본 모드 키 UI ── */

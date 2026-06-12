@@ -283,8 +283,8 @@ function applyTheme() {
 /* ════════════════════════════════════════════════
    【 섹션 D 】 오디오 엔진
 ════════════════════════════════════════════════ */
-let audioCtx=null, masterGain=null, metronomeGain=null;
-let metronomeVol = 1.0;
+let audioCtx=null, masterGain=null, metronomeGain=null, userGain=null;
+let metronomeVol = 1.0, userVol = 1.0;
 
 console.log('[AUDIO-FIX v4] SR기억+정찰병자동교체 빌드 로드됨 (breath) — 2026-06-10');
 // ── iPad Safari 오디오 언락 v4 (breath): 세션 활성화 + SR기억 + 정찰병 자동 교체 ──
@@ -319,7 +319,9 @@ function _audioDiag(tag){
   }catch(e){}
 }
 function _wireGains(){
-  masterGain=audioCtx.createGain();masterGain.gain.value=1.95;masterGain.connect(audioCtx.destination);
+  masterGain=audioCtx.createGain();masterGain.gain.value=1.95;
+  userGain=audioCtx.createGain();userGain.gain.value=userVol;
+  masterGain.connect(userGain);userGain.connect(audioCtx.destination);
   metronomeGain=audioCtx.createGain();metronomeGain.gain.value=metronomeVol;metronomeGain.connect(masterGain);
 }
 function _buildCtx(){
@@ -375,7 +377,7 @@ function _adoptProbe(p){
 }
 function _teardownCtx(){
   try{if(audioCtx)audioCtx.close().catch(()=>{});}catch(e){}
-  audioCtx=null;masterGain=null;metronomeGain=null;
+  audioCtx=null;masterGain=null;metronomeGain=null;userGain=null;
 }
 function _gestureRebuild(){
   // ★ 반드시 유저 제스처 콜스택 안에서만 호출
@@ -852,9 +854,14 @@ function buildPracticeUI() {
   const vw = document.createElement('div'); vw.className = 'vol-wrap';
   const vr = document.createElement('div'); vr.className = 'vol-row';
   vr.innerHTML = '<span>메트로놈</span>';
-  const sl = document.createElement('input'); sl.type = 'range'; sl.min = '0'; sl.max = '200'; sl.value = String(Math.round(metronomeVol*100));
+  const sl = document.createElement('input'); sl.type = 'range'; sl.min = '0'; sl.max = '100'; sl.value = String(Math.round(metronomeVol*100));
   sl.oninput = () => { metronomeVol = parseInt(sl.value)/100; if(metronomeGain) metronomeGain.gain.value = metronomeVol; };
-  vr.appendChild(sl); vw.appendChild(vr); body.appendChild(vw);
+  vr.appendChild(sl); vw.appendChild(vr);
+  const ugR = document.createElement('div'); ugR.className = 'vol-row';
+  ugR.innerHTML = '<span>마스터</span>';
+  const ugS = document.createElement('input'); ugS.type = 'range'; ugS.min = '0'; ugS.max = '200'; ugS.value = String(Math.round(userVol*100));
+  ugS.oninput = () => { userVol = parseInt(ugS.value)/100; if(userGain) userGain.gain.value = userVol; };
+  ugR.appendChild(ugS); vw.appendChild(ugR); body.appendChild(vw);
 }
 
 function resetAndRebuild() { stopEngine(); elapsedSeconds=0; buildPracticeUI(); }
