@@ -328,17 +328,6 @@ function updateSettingsDot(){
 function enterStudentApp(){
   document.getElementById('app').style.display='flex';
   document.getElementById('tab-name-label').textContent=currentProfile.name;
-  // 접속기록 저장
-  if(currentProfile){
-    const now=new Date();
-    const accessLog=loadData('somi_access_log',{});
-    if(!accessLog[currentProfile.id]) accessLog[currentProfile.id]=[];
-    accessLog[currentProfile.id].push({
-      date:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'),
-      time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')
-    });
-    saveData('somi_access_log',accessLog);
-  }
   currentStamp=currentProfile.stamp||'apple';
   // 도장 SVG 재주입 — 아이패드 타이밍 문제 방지
   _reinjectStampSVGs();
@@ -610,6 +599,19 @@ document.addEventListener('DOMContentLoaded',async function(){
       document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
       renderStudentHome();
       updateSettingsDot();
+    }
+    // 접속기록 저장 — Firebase 로드 완료 후 (당일 중복 시 시간만 업데이트)
+    if(currentProfile){
+      const now=new Date();
+      const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+      const timeStr=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+      const aLog=loadData('somi_access_log',{});
+      if(!aLog[currentProfile.id]) aLog[currentProfile.id]=[];
+      const arr=aLog[currentProfile.id];
+      const todayIdx=arr.findIndex(r=>r.date===dateStr);
+      if(todayIdx>=0){ arr[todayIdx].time=timeStr; }
+      else { arr.push({date:dateStr,time:timeStr}); }
+      saveData('somi_access_log',aLog);
     }
   }catch(e){console.warn('Firebase 연결 실패:',e);}
 });
