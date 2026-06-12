@@ -2141,11 +2141,11 @@ function buildPracticeUI(){
   /* ── 볼륨 ── */
   const vw=document.createElement('div');vw.className='vol-wrap';
   const mR=document.createElement('div');mR.className='vol-row';mR.innerHTML='<span>메트로놈</span>';
-  const mS=document.createElement('input');mS.type='range';mS.min='0';mS.max='100';mS.value=String(Math.round(metronomeVol*100));mS.style.cssText='flex:1;accent-color:var(--accent);cursor:pointer;';
+  const mS=document.createElement('input');mS.type='range';mS.min='0';mS.max='200';mS.value=String(Math.round(metronomeVol*100));mS.style.cssText='flex:1;accent-color:var(--accent);cursor:pointer;';
   mS.oninput=()=>{metronomeVol=parseInt(mS.value)/100;if(metronomeGain)metronomeGain.gain.value=metronomeVol;};
   mR.appendChild(mS);vw.appendChild(mR);
   const piR=document.createElement('div');piR.className='vol-row';piR.innerHTML='<span>피아노</span>';
-  const piS=document.createElement('input');piS.type='range';piS.min='0';piS.max='100';piS.value=String(Math.round(pianoVol*100));piS.style.cssText='flex:1;accent-color:var(--accent2);cursor:pointer;';
+  const piS=document.createElement('input');piS.type='range';piS.min='0';piS.max='200';piS.value=String(Math.round(pianoVol*100));piS.style.cssText='flex:1;accent-color:var(--accent2);cursor:pointer;';
   piS.oninput=()=>{pianoVol=parseInt(piS.value)/100;if(pianoGain)pianoGain.gain.value=pianoVol;};
   piR.appendChild(piS);vw.appendChild(piR);body.appendChild(vw);
 }

@@ -852,7 +852,7 @@ function buildPracticeUI() {
   const vw = document.createElement('div'); vw.className = 'vol-wrap';
   const vr = document.createElement('div'); vr.className = 'vol-row';
   vr.innerHTML = '<span>메트로놈</span>';
-  const sl = document.createElement('input'); sl.type = 'range'; sl.min = '0'; sl.max = '100'; sl.value = String(Math.round(metronomeVol*100));
+  const sl = document.createElement('input'); sl.type = 'range'; sl.min = '0'; sl.max = '200'; sl.value = String(Math.round(metronomeVol*100));
   sl.oninput = () => { metronomeVol = parseInt(sl.value)/100; if(metronomeGain) metronomeGain.gain.value = metronomeVol; };
   vr.appendChild(sl); vw.appendChild(vr); body.appendChild(vw);
 }
