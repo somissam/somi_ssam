@@ -172,13 +172,22 @@ button{font-family:inherit;cursor:pointer;}
 .detail-stat-lbl{font-size:0.68rem;color:var(--text2);margin-top:4px;}
 
 @media (max-width: 480px) {
-  .teacher-content { padding: 12px; }
-  .settings-box { padding: 14px 12px; }
+  .teacher-content { padding: 10px; }
+  .settings-box { padding: 12px 10px; }
+  .settings-box h4 { font-size: 0.82rem; margin-bottom: 10px; }
   .app-header { padding: 10px 14px; }
   .home-link { min-width: unset; padding: 8px 14px; font-size: 0.82rem; }
-  .teacher-tabs { padding: 0 12px !important; }
+  .teacher-tabs { padding: 0 10px !important; }
+  .settings-row { gap: 6px; }
+  .settings-input { font-size: 0.85rem; padding: 9px 10px; }
+  .settings-save { padding: 9px 12px; font-size: 0.8rem; white-space: nowrap; }
+  .device-card { padding: 10px 12px; gap: 8px; }
+  .device-name { font-size: 0.82rem; }
+  .device-badge { font-size: 0.64rem; padding: 2px 6px; }
+  .device-delete { padding: 4px 10px; font-size: 0.72rem; }
   #pattern-table-wrap, #lc-table-wrap { overflow-x: auto; }
-  table { min-width: 280px; }
+  table { min-width: 260px; font-size: 0.78rem; }
+  .pm-checkbox { width: 16px; height: 16px; }
 }
 </style>
 <script src="stamps.js"></script>
@@ -1171,7 +1180,7 @@ function renderPatternTable() {
 
   const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.8rem;';
   const thead=tbl.createTHead(); const hRow=thead.insertRow();
-  const th1=document.createElement('th'); th1.style.cssText='padding:7px 6px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.72rem;width:36px;text-align:left;'; th1.textContent='활성';
+  const th1=document.createElement('th'); th1.style.cssText='padding:7px 4px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.72rem;width:24px;text-align:left;'; th1.textContent='활성';
   const th2=document.createElement('th'); th2.style.cssText='text-align:left;padding:7px 10px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;'; th2.textContent='연습 패턴';
   hRow.appendChild(th1); hRow.appendChild(th2);
 
@@ -1224,7 +1233,7 @@ function renderPatternTable() {
           const isDark2=!document.body.classList.contains('theme-ivory');
           const grpBg=groupToggle?(isDark2?'rgba(255,255,255,0.025)':'rgba(0,0,0,0.025)'):'transparent';
           const tr=document.createElement('tr'); tr.style.background=grpBg;
-          const td1=document.createElement('td'); td1.style.cssText='padding:6px 10px 6px 28px;border-bottom:1px solid var(--border);';
+          const td1=document.createElement('td'); td1.style.cssText='padding:6px 4px 6px 8px;border-bottom:1px solid var(--border);';
           const nameWrap=document.createElement('span'); nameWrap.style.cssText='display:flex;align-items:center;gap:6px;';
           nameWrap.appendChild(Object.assign(document.createElement('span'),{textContent:p.name}));
           td1.appendChild(nameWrap);
@@ -1266,7 +1275,7 @@ function renderPatternTable() {
         const isDark2=!document.body.classList.contains('theme-ivory');
         const grpBg=groupToggle?(isDark2?'rgba(255,255,255,0.025)':'rgba(0,0,0,0.025)'):'transparent';
         const tr=document.createElement('tr'); tr.style.background=grpBg;
-        const td1=document.createElement('td'); td1.style.cssText='padding:6px 10px 6px 20px;border-bottom:1px solid var(--border);';
+        const td1=document.createElement('td'); td1.style.cssText='padding:6px 4px 6px 8px;border-bottom:1px solid var(--border);';
         const nameWrap=document.createElement('span'); nameWrap.style.cssText='display:flex;align-items:center;gap:6px;';
         const nameText=document.createElement('span'); nameText.textContent=p.name;
         nameWrap.appendChild(nameText);
