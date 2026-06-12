@@ -187,7 +187,7 @@ async function checkLogin(){
   }
 
   // ── 선생님 로그인 ──
-  if(inputPw===teacherPw()){
+  if(inputName==='소미쌤'&&inputPw===teacherPw()){
     if(saveFlag){
       const ua=navigator.userAgent;
       const isIpadOS=/Macintosh/.test(ua)&&navigator.maxTouchPoints>1;
