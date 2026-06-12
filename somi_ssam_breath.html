@@ -500,6 +500,7 @@ function schedulerTick() {
     _awaitClock = false;
   }
   while (nextBeatTime < now + 0.15) {
+    if (stopScheduled && nextBeatTime >= stopAudioTime) break;
     scheduleOneBeat(nextBeatTime);
     nextBeatTime += beatInterval;
   }
