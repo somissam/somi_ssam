@@ -1474,14 +1474,14 @@ function renderLevelClassifier() {
     const chapterColors=['var(--surface2)','var(--surface2)','var(--surface2)'];
     const chapterBorders=['var(--accent)','var(--accent2)','var(--accent3)'];
 
-    const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.78rem;';
+    const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.78rem;table-layout:fixed;';
     const thead=tbl.createTHead(); const hRow=thead.insertRow();
-    const thEmpty=document.createElement('th'); thEmpty.style.cssText='padding:7px 6px;border-bottom:2px solid var(--border);width:24px;';
-    const thName=document.createElement('th'); thName.style.cssText='text-align:left;padding:7px 6px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.7rem;'; thName.textContent='패턴';
+    const thEmpty=document.createElement('th'); thEmpty.style.cssText='padding:7px 4px;border-bottom:2px solid var(--border);width:28px;';
+    const thName=document.createElement('th'); thName.style.cssText='text-align:left;padding:7px 4px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.7rem;word-break:keep-all;'; thName.textContent='패턴';
     hRow.appendChild(thEmpty); hRow.appendChild(thName);
     usedGroups.forEach(g=>{
       const th=document.createElement('th');
-      th.style.cssText='padding:7px 6px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.7rem;text-align:center;min-width:54px;';
+      th.style.cssText='padding:7px 2px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.7rem;text-align:center;width:54px;';
       th.textContent=g.label; hRow.appendChild(th);
     });
     const tbody=tbl.createTBody();
@@ -1509,7 +1509,7 @@ function renderLevelClassifier() {
         const tr=tbody.insertRow(); tr.style.background=grpBg;
 
         // 체크박스
-        const cbTd=document.createElement('td'); cbTd.style.cssText='padding:5px 6px;border-bottom:1px solid var(--border);';
+        const cbTd=document.createElement('td'); cbTd.style.cssText='padding:5px 2px;border-bottom:1px solid var(--border);width:28px;';
         const cb=document.createElement('input'); cb.type='checkbox';
         cb.style.cssText='width:14px;height:14px;accent-color:var(--counting);cursor:pointer;';
         cb.onchange=(e)=>{
@@ -1530,14 +1530,14 @@ function renderLevelClassifier() {
         cbTd.appendChild(cb); tr.appendChild(cbTd);
 
         // 패턴명
-        const nameTd=document.createElement('td'); nameTd.style.cssText='padding:5px 6px;border-bottom:1px solid var(--border);';
+        const nameTd=document.createElement('td'); nameTd.style.cssText='padding:5px 4px;border-bottom:1px solid var(--border);word-break:keep-all;font-size:0.75rem;';
         nameTd.textContent=p.name; tr.appendChild(nameTd);
 
         // 각 모드별 드롭다운
         usedGroups.forEach(g=>{
           const patModeKeys=getPatternModes(p).map(m=>m.key);
           const matchedModes=g.keys.filter(k=>patModeKeys.includes(k));
-          const td=document.createElement('td'); td.style.cssText='padding:5px 6px;border-bottom:1px solid var(--border);text-align:center;';
+          const td=document.createElement('td'); td.style.cssText='padding:5px 2px;border-bottom:1px solid var(--border);text-align:center;';
           if(!matchedModes.length){
             const dot=document.createElement('span'); dot.style.cssText='color:var(--text2);font-size:0.8rem;'; dot.textContent='—'; td.appendChild(dot); tr.appendChild(td); return;
           }
@@ -1546,7 +1546,7 @@ function renderLevelClassifier() {
           const lv=levelSettings.find(l=>l.id===curLvId);
           const c=getLvColor(curLvId);
           const btn=document.createElement('button');
-          btn.style.cssText=`font-size:0.72rem;padding:2px 7px;border-radius:6px;border:1px solid ${curLvId?c:'var(--border)'};background:transparent;color:${curLvId?c:'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${curLvId?'700':'400'};white-space:nowrap;`;
+          btn.style.cssText=`font-size:0.68rem;padding:2px 4px;border-radius:6px;border:1px solid ${curLvId?c:'var(--border)'};background:transparent;color:${curLvId?c:'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${curLvId?'700':'400'};white-space:nowrap;width:100%;box-sizing:border-box;`;
           btn.textContent=(lv?lv.label:'—')+' ▾';
           btn.setAttribute('data-lv-pid',p.id); btn.setAttribute('data-lv-mk',matchedModes[0]);
           const menu=document.createElement('div');
