@@ -326,6 +326,7 @@ const INTERVAL_NAMES = {1:'단2도',2:'장2도',3:'단3도',4:'장3도',5:'완�
 
 let profiles             = loadData('somi_profiles', []);
 let practiceLogs         = loadData('somi_logs', {});
+let accessLog            = loadData('somi_access_log', {});
 let teacherPw            = loadData('somi_teacher_pw', '1');
 let teacherStamps        = loadData('somi_teacher_stamps', {});
 let classSettings        = loadData('somi_class_settings', {});
@@ -358,11 +359,11 @@ function getAdvSettings(patternId)      { if(!advancedSettings[patternId]) advan
 function getClassInfo(pid)              { return classSettings[pid]||{voClass:null,extras:[]}; }
 function getDaysSinceLesson(pid)        { const s=lessonStarts[pid]; if(!s) return null; return Math.floor((new Date()-new Date(s))/(1000*60*60*24))+1; }
 function getLastAccess(pid) {
-  const logs=practiceLogs[pid]||[];
+  const logs=(accessLog[pid]||[]);
   if(!logs.length) return '접속 없음';
   const last=logs[logs.length-1];
   const isToday = last.date===toDateStr(new Date());
-  if(isToday) return '오늘 '+( last.time||'');
+  if(isToday) return '오늘 '+(last.time||'');
   return last.date+(last.time?' '+last.time:'');
 }
 
@@ -1945,7 +1946,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices'];
+    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
     await Promise.all(KEYS.map(async k=>{
       try{ const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value); }catch(e){}
     }));
@@ -1958,6 +1959,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     patternLocks=loadData('somi_pattern_locks',{});
     patternLevelOverrides=loadData('somi_pattern_levels',{});
     levelSettings=loadData('somi_level_settings',null)||DEFAULT_LEVEL_SETTINGS.map(l=>({...l}));
+    accessLog=loadData('somi_access_log',{});
 
   } catch(e) {
     console.warn('Firebase 연결 실패, localStorage로 계속:', e);

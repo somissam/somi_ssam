@@ -328,6 +328,17 @@ function updateSettingsDot(){
 function enterStudentApp(){
   document.getElementById('app').style.display='flex';
   document.getElementById('tab-name-label').textContent=currentProfile.name;
+  // 접속기록 저장
+  if(currentProfile){
+    const now=new Date();
+    const accessLog=loadData('somi_access_log',{});
+    if(!accessLog[currentProfile.id]) accessLog[currentProfile.id]=[];
+    accessLog[currentProfile.id].push({
+      date:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'),
+      time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')
+    });
+    saveData('somi_access_log',accessLog);
+  }
   currentStamp=currentProfile.stamp||'apple';
   // 도장 SVG 재주입 — 아이패드 타이밍 문제 방지
   _reinjectStampSVGs();
@@ -582,7 +593,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fbApp=initializeApp({apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"},'somi-student-v3');
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
-    await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings'].map(async k=>{try{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}catch(e){}}));
+    await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_access_log'].map(async k=>{try{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}catch(e){}}));
     profiles=loadData('somi_profiles',[]);
     practiceLogs=loadData('somi_logs',{});
     teacherStamps=loadData('somi_teacher_stamps',{});
