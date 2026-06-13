@@ -9,7 +9,7 @@
 :root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3d;--accent:#7c6af7;--accent2:#f76ac8;--accent3:#6af7c8;--counting:#f7c26a;--text:#e8e8f0;--text2:#8888aa;}
 .theme-ivory{--bg:#f5f0e8;--surface:#fffdf7;--surface2:#f0ebe0;--border:#d8cfc0;--accent:#6b5ce7;--accent2:#e05fa0;--accent3:#2db89a;--counting:#c8960a;--text:#2a2420;--text2:#7a6e60;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;visibility:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
 button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 
@@ -20,6 +20,25 @@ button{font-family:inherit;cursor:pointer;}
 /* ── 로딩 ── */
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════
+   데이터를 받는 동안 화면 전체를 덮어 클릭을 차단한다.
+   - .somi-load-overlay : 반투명 막 (이게 떠 있으면 아래 UI 클릭 불가)
+   - .somi-load-img-slot : 추후 소미쌤 이미지 넣을 자리 (현재는 스피너)
+   - .somi-load-slow : 6초 이상 걸릴 때 노출되는 안내 문구 */
+.somi-load-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  opacity:1;transition:opacity 0.35s ease;}
+.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
+.somi-load-overlay.hide{opacity:0;pointer-events:none;}
+.somi-load-img-slot{width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
+.somi-load-img-slot img{width:100%;height:100%;object-fit:contain;border-radius:20px;}
+.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
+.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
+.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
+.somi-load-slow.show{display:block;}
+.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;}
 
 /* ── 로그인 박스 ── */
 .login-wrap{display:flex;flex-direction:column;align-items:center;gap:28px;width:100%;max-width:380px;}
@@ -57,6 +76,18 @@ button{font-family:inherit;cursor:pointer;}
 </style>
 </head>
 <body>
+
+<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
+<div id="somi-load-overlay" class="somi-load-overlay">
+  <!-- 추후 소미쌤 이미지: 아래 slot 안에 <img src="..."> 만 넣으면 됨 -->
+  <div class="somi-load-img-slot"><div class="somi-load-spinner"></div></div>
+  <div class="somi-load-text">데이터 불러오는 중...</div>
+  <div class="somi-load-sub">SOMI_SSAM</div>
+  <div class="somi-load-slow">
+    연결이 평소보다 느려요.<br>네트워크 상태를 확인해 주세요.
+    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
+  </div>
+</div>
 
 <!-- ══════════ 로딩 ══════════ -->
 <div id="loading-screen" class="full-screen">
@@ -132,6 +163,61 @@ function loadData(k,d){
 }
 function saveData(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
+/* ════════════════════════════════════
+   공용 로딩 오버레이 제어 (전 파일 공통)
+   - somiShowLoading(): 막 띄우기 (클릭 차단 시작)
+   - somiHideLoading(): 막 내리기 (클릭 허용)
+   - 6초 이상이면 '느림' 안내 자동 노출
+════════════════════════════════════ */
+let _somiLoadTimer=null;
+function somiStartSlowTimer(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  const slow=o.querySelector('.somi-load-slow');
+  if(slow) slow.classList.remove('show');
+  clearTimeout(_somiLoadTimer);
+  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },6000);
+}
+function somiShowLoading(text){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
+  o.classList.remove('hide');
+  somiStartSlowTimer();
+}
+function somiHideLoading(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  clearTimeout(_somiLoadTimer);
+  o.classList.add('hide');
+}
+
+/* ════════════════════════════════════
+   안전 저장 가드 (사고 방지 핵심)
+   - 명단(profiles)을 Firebase에 올리기 전 반드시 통과해야 함
+   - 빈 배열이거나, 기존보다 줄어든 명단이면 저장 거부
+════════════════════════════════════ */
+async function safePutProfiles(newProfiles, getDocFn, docFn, dbRef, setDocFn){
+  // 1) 빈/비정상 데이터 차단
+  if(!Array.isArray(newProfiles) || newProfiles.length===0){
+    console.error('🛑 안전가드: 빈 명단 저장 시도 차단됨');
+    return {ok:false, reason:'empty'};
+  }
+  // 2) Firebase 최신 명단과 비교 — 줄어들면 차단
+  let remote=[];
+  try{
+    const snap=await getDocFn(docFn(dbRef,'somi_data','somi_profiles'));
+    if(snap.exists()) remote=JSON.parse(snap.data().value)||[];
+  }catch(e){ /* 네트워크 실패 시엔 비교 생략 */ }
+  if(remote.length > newProfiles.length){
+    console.error('🛑 안전가드: 명단 축소 감지 (기존 '+remote.length+'명 → 신규 '+newProfiles.length+'명) 저장 차단');
+    return {ok:false, reason:'shrink', remote};
+  }
+  // 3) 저장 직전 백업 후 저장
+  try{
+    await setDocFn(docFn(dbRef,'somi_data','somi_profiles_backup_'+Date.now()), {value:JSON.stringify(remote.length?remote:newProfiles)});
+  }catch(e){}
+  await setDocFn(docFn(dbRef,'somi_data','somi_profiles'), {value:JSON.stringify(newProfiles)});
+  return {ok:true};
+}
+
 /* ── 테마 ── */
 const currentTheme=loadData('somi_theme','dark');
 if(currentTheme==='ivory') document.body.classList.add('theme-ivory');
@@ -139,6 +225,7 @@ if(currentTheme==='ivory') document.body.classList.add('theme-ivory');
 /* ── 전역 ── */
 let profiles=[];
 let _fsSet=null;
+let _fbHandle=null;  // {db, doc, getDoc, setDoc} — 안전가드용 Firebase 핸들 보관
 const teacherPw=()=>loadData('somi_teacher_pw','1');
 
 /* ── 자동 로그인 키 ── */
@@ -293,11 +380,34 @@ async function createProfile(){
   document.getElementById('create-duplicate-error').style.display='none';
 
   if(!name||!selectedGender||!pw){document.getElementById('create-error').style.display='block';return;}
-  const fresh=loadData('somi_profiles',[]);
-  if(fresh.find(p=>p.name.trim()===name)){document.getElementById('create-duplicate-error').style.display='block';return;}
 
   document.getElementById('create-btn').disabled=true;
   document.getElementById('create-loading').style.display='block';
+  somiShowLoading('프로필 만드는 중...');
+
+  // ★★ 사고 방지 핵심 ★★
+  // 저장 직전에 Firebase에서 "최신 명단"을 다시 받아온다.
+  // (진입 동기화가 덜 끝났더라도 여기서 한 번 더 확실히 받아옴)
+  let base=loadData('somi_profiles',[]);
+  if(_fbHandle){
+    try{
+      const snap=await _fbHandle.getDoc(_fbHandle.doc(_fbHandle.db,'somi_data','somi_profiles'));
+      if(snap.exists()){
+        const remote=JSON.parse(snap.data().value)||[];
+        // 최신 원격 명단을 기준으로 삼는다 (로컬이 비어있어도 안전)
+        if(remote.length>=base.length) base=remote;
+      }
+    }catch(e){ console.warn('최신 명단 조회 실패, 로컬 기준 진행:',e); }
+  }
+
+  // 중복 이름 검사 (최신 명단 기준)
+  if(base.find(p=>p.name.trim()===name)){
+    document.getElementById('create-duplicate-error').style.display='block';
+    document.getElementById('create-btn').disabled=false;
+    document.getElementById('create-loading').style.display='none';
+    somiHideLoading();
+    return;
+  }
 
   const newId=Date.now().toString();
   const newProfile={
@@ -309,12 +419,10 @@ async function createProfile(){
     stamp:'apple',
     createdAt:new Date().toISOString()
   };
-  const updatedProfiles=[...fresh,newProfile];
-  saveData('somi_profiles',updatedProfiles);
-  profiles=updatedProfiles;
+  // 최신 명단에 신규만 "추가(merge)" — 통째 덮어쓰기가 아님
+  const updatedProfiles=[...base,newProfile];
 
   // ★ 신규 프로필: 모든 패턴을 잠금(false)으로 초기화
-  // 패턴 목록을 localStorage에서 읽어 전부 false 처리
   const locks=loadData('somi_pattern_locks',{});
   const allPatterns=[
     ...JSON.parse(localStorage.getItem('somi_breath_patterns')||'[]'),
@@ -323,14 +431,25 @@ async function createProfile(){
   ];
   locks[newId]={};
   allPatterns.forEach(pat=>{ locks[newId][pat.id]=false; });
-  saveData('somi_pattern_locks',locks);
 
-  if(_fsSet){
-    try{
-      await _fsSet('somi_profiles',JSON.stringify(updatedProfiles));
-      await _fsSet('somi_pattern_locks',JSON.stringify(locks));
-    }catch(e){console.warn('Firebase 저장 실패(로컬엔 저장됨):',e);}
+  // ── Firebase 저장: 안전가드 통과 필수 ──
+  if(_fbHandle){
+    const result=await safePutProfiles(updatedProfiles, _fbHandle.getDoc, _fbHandle.doc, _fbHandle.db, _fbHandle.setDoc);
+    if(!result.ok){
+      // 가드가 막음 — 사용자에게 안내하고 중단 (데이터 보호 우선)
+      somiHideLoading();
+      document.getElementById('create-btn').disabled=false;
+      document.getElementById('create-loading').style.display='none';
+      alert('일시적인 연결 문제로 프로필 저장을 안전하게 중단했어요.\n잠시 후 다시 시도해 주세요. (기존 데이터는 그대로 보호됨)');
+      return;
+    }
+    try{ await _fsSet('somi_pattern_locks',JSON.stringify(locks)); }catch(e){}
   }
+
+  // 로컬도 갱신 (Firebase 저장 성공 후)
+  saveData('somi_profiles',updatedProfiles);
+  saveData('somi_pattern_locks',locks);
+  profiles=updatedProfiles;
 
   saveData(STUDENT_AUTO_KEY,{name:newProfile.name,id:newProfile.id});
   localStorage.setItem('somi_current_profile_id',newId);
@@ -341,9 +460,8 @@ async function createProfile(){
    DOMContentLoaded — Firebase + 자동로그인
 ════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',async function(){
-  document.body.style.visibility='visible';
-
-  // 항상 로딩 스피너 먼저 — Firebase 완료 전에 로그인 화면 절대 안 보여줌
+  // 오버레이는 HTML에 처음부터 떠 있음(커튼 먼저). 여기선 데이터만 받고 끝나면 걷는다.
+  somiStartSlowTimer();  // 6초 이상 느리면 안내 노출
   showScreen('loading-screen');
 
   // Firebase 초기화 + 동기화
@@ -355,6 +473,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
     _fsSet=async(k,j)=>{await setDoc(doc(fsDb,'somi_data',k),{value:j});};
+    _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
 
     const SYNC_KEYS=['somi_profiles','somi_pattern_locks','somi_teacher_pw','somi_teacher_devices'];
     await Promise.all(SYNC_KEYS.map(async k=>{
@@ -402,6 +521,7 @@ document.addEventListener('DOMContentLoaded',async function(){
   }
 
   // 자동 로그인 없으면 로그인 화면
+  somiHideLoading();
   showScreen('login-screen');
 });
 </script>

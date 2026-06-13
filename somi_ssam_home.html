@@ -29,9 +29,24 @@
 
 *{box-sizing:border-box;margin:0;padding:0;}
 html{overflow-x:hidden;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;visibility:hidden;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
+@keyframes spin{to{transform:rotate(360deg)}}
+.somi-load-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
+.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
+.somi-load-overlay.hide{opacity:0;pointer-events:none;}
+.somi-load-img-slot{width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
+.somi-load-img-slot img{width:100%;height:100%;object-fit:contain;border-radius:20px;}
+.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
+.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
+.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
+.somi-load-slow.show{display:block;}
+.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;}
 
 #splash{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:48px;padding:24px;background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);}
 .theme-ivory #splash{background:radial-gradient(ellipse at 30% 20%,#e0d5c5 0%,var(--bg) 60%);}
@@ -195,6 +210,17 @@ button{font-family:inherit;cursor:pointer;}
 </head>
 <body>
 
+<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
+<div id="somi-load-overlay" class="somi-load-overlay">
+  <div class="somi-load-img-slot"><div class="somi-load-spinner"></div></div>
+  <div class="somi-load-text">데이터 불러오는 중...</div>
+  <div class="somi-load-sub">SOMI_SSAM</div>
+  <div class="somi-load-slow">
+    연결이 평소보다 느려요.<br>네트워크 상태를 확인해 주세요.
+    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
+  </div>
+</div>
+
 <!-- ══════════ 스플래시 ══════════ -->
 <div id="splash">
   <div class="logo"><h1>소미쌤</h1><p>선생님 전용 관리 화면</p></div>
@@ -321,6 +347,27 @@ button{font-family:inherit;cursor:pointer;}
 /* ════════════════════════════════════════════════
    【 섹션 A 】 저장/로드 헬퍼
 ════════════════════════════════════════════════ */
+/* ── 공용 로딩 오버레이 제어 ── */
+let _somiLoadTimer=null;
+function somiStartSlowTimer(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
+  clearTimeout(_somiLoadTimer);
+  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },6000);
+}
+function somiShowLoading(text){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
+  o.classList.remove('hide'); somiStartSlowTimer();
+}
+function somiHideLoading(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  clearTimeout(_somiLoadTimer); o.classList.add('hide');
+}
+
+/* ── 안전가드용 Firebase 핸들 ── */
+let _fbHandle=null;  // {db, doc, getDoc, setDoc}
+
 function loadData(k, d) {
   try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; }
 }
@@ -328,8 +375,40 @@ function saveData(k, v) {
   try {
     const json = JSON.stringify(v);
     localStorage.setItem(k, json);
-    if (window._fsSet) window._fsSet(k, json);
+    // somi_profiles는 안전가드(safePutProfiles)를 통해서만 원격 저장한다.
+    // (자동 원격저장을 막아 빈/축소 명단 덮어쓰기 사고를 원천 차단)
+    if (window._fsSet && k!=='somi_profiles') window._fsSet(k, json);
   } catch(e) {}
+}
+
+/* ════════════════════════════════════════════════
+   안전 명단 저장 (사고 방지 핵심)
+   - 빈 배열이면 저장 거부
+   - Firebase 최신 명단보다 줄어들면 거부 + 직전 백업
+════════════════════════════════════════════════ */
+async function safePutProfiles(newProfiles){
+  if(!Array.isArray(newProfiles) || newProfiles.length===0){
+    console.error('🛑 안전가드(home): 빈 명단 저장 차단');
+    return {ok:false, reason:'empty'};
+  }
+  let remote=[];
+  if(_fbHandle){
+    try{
+      const snap=await _fbHandle.getDoc(_fbHandle.doc(_fbHandle.db,'somi_data','somi_profiles'));
+      if(snap.exists()) remote=JSON.parse(snap.data().value)||[];
+    }catch(e){}
+  }
+  if(remote.length > newProfiles.length){
+    console.error('🛑 안전가드(home): 명단 축소 차단 ('+remote.length+'→'+newProfiles.length+')');
+    return {ok:false, reason:'shrink', remote};
+  }
+  // 로컬 저장 + 백업 + 원격 저장
+  saveData('somi_profiles', newProfiles);
+  if(_fbHandle){
+    try{ await _fbHandle.setDoc(_fbHandle.doc(_fbHandle.db,'somi_data','somi_profiles_backup_'+Date.now()),{value:JSON.stringify(remote.length?remote:newProfiles)}); }catch(e){}
+    try{ await _fbHandle.setDoc(_fbHandle.doc(_fbHandle.db,'somi_data','somi_profiles'),{value:JSON.stringify(newProfiles)}); }catch(e){}
+  }
+  return {ok:true};
 }
 
 /* ════════════════════════════════════════════════
@@ -356,7 +435,16 @@ let levelSettings        = loadData('somi_level_settings', null) || DEFAULT_LEVE
 let advancedSettings     = loadData('somi_advanced_settings', {});
 let currentTheme         = loadData('somi_theme', 'dark');
 
-function saveProfiles()       { saveData('somi_profiles', profiles); }
+function saveProfiles()       {
+  // 빈 명단은 즉시 차단 (덮어쓰기 사고 방지)
+  if(!Array.isArray(profiles) || profiles.length===0){
+    console.error('🛑 saveProfiles: 빈 명단 저장 차단');
+    return;
+  }
+  // 로컬 즉시 저장 + 비동기 안전가드(원격 축소 차단/백업)
+  saveData('somi_profiles', profiles);
+  if(_fbHandle){ safePutProfiles(profiles); }
+}
 function saveLogs()           { saveData('somi_logs', practiceLogs); }
 function saveTeacherPw()      { saveData('somi_teacher_pw', teacherPw); }
 function saveTeacherStamps()  { saveData('somi_teacher_stamps', teacherStamps); }
@@ -1964,6 +2052,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   if(currentTheme==='ivory') document.body.classList.add('theme-ivory');
   setTheme(currentTheme);
 
+  // 오버레이는 HTML에 처음부터 떠 있음(커튼 먼저). 데이터 다 받으면 걷는다.
+  somiStartSlowTimer();
+
   const urlParams=new URLSearchParams(window.location.search);
   const isTeacherMode=urlParams.get('mode')==='teacher';
 
@@ -1973,7 +2064,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   } else {
     showScreen('pw-screen');
   }
-  document.body.style.visibility='visible';
 
   // Firebase 동기화
   try {
@@ -1984,6 +2074,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
+    _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
     const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
     await Promise.all(KEYS.map(async k=>{
       try{ const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value); }catch(e){}
@@ -2039,6 +2130,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
   sessionStorage.setItem('somi_prev_profile_count', profiles.length);
+
+  // 모든 데이터 수신·렌더 완료 → 로딩 막 걷기
+  somiHideLoading();
 });
 
 /* ── [1번] 새 프로필 저장 시 알림 (renderProfileManage 저장 버튼에서도 호출 가능하도록) ──
