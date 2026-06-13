@@ -22,21 +22,6 @@
 .theme-ivory{--bg:#f5f0e8;--surface:#fffdf7;--surface2:#f0ebe0;--border:#d8cfc0;--accent:#6b5ce7;--accent2:#e05fa0;--accent3:#2db89a;--counting:#c8960a;--text:#2a2420;--text2:#7a6e60;--tier-lv1:#6A7280;--tier-lv2:#E8C200;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-
-/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
-@keyframes spin{to{transform:rotate(360deg)}}
-.somi-load-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
-.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
-.somi-load-overlay.hide{opacity:0;pointer-events:none;}
-.somi-load-img-slot{width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
-.somi-load-img-slot img{width:100%;height:100%;object-fit:contain;border-radius:20px;}
-.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
-.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
-.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
-.somi-load-slow.show{display:block;}
-.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;}
 button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 .lab-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
@@ -199,18 +184,6 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 </style>
 </head>
 <body>
-
-<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
-<div id="somi-load-overlay" class="somi-load-overlay">
-  <div class="somi-load-img-slot"><div class="somi-load-spinner"></div></div>
-  <div class="somi-load-text">연습 기록 불러오는 중...</div>
-  <div class="somi-load-sub">SOMI_SSAM</div>
-  <div class="somi-load-slow">
-    연결이 평소보다 느려요.<br>네트워크 상태를 확인해 주세요.
-    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
-  </div>
-</div>
-
 <header class="lab-header">
   <a class="home-link" href="somi_ssam_student.html">← 학생 홈</a>
   <div class="lab-brand">
@@ -245,24 +218,6 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
    [ 섹션 F ] UI 빌더
    [ 섹션 H ] 진입점 / 네비게이션
 ════════════════════════════════════════════════════════════════ */
-
-/* ── 공용 로딩 오버레이 제어 ── */
-let _somiLoadTimer=null;
-function somiStartSlowTimer(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
-  clearTimeout(_somiLoadTimer);
-  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },6000);
-}
-function somiShowLoading(text){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
-  o.classList.remove('hide'); somiStartSlowTimer();
-}
-function somiHideLoading(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  clearTimeout(_somiLoadTimer); o.classList.add('hide');
-}
 
 /* ════════════════════════════════════════════════
    【 섹션 A 】 발성 패턴 데이터
@@ -827,7 +782,7 @@ const VOCAL_PATTERNS = [
     display: 'label',
     labelTitle: 'Ah (아)',
     vibrato: true,
-    modeLabels: ['심화'],
+    modeLabels: ['비브라토1','비브라토2','심화'],
   },
 
 ];
@@ -840,14 +795,19 @@ const MODE_PRACTICE   = 'MODE_PRACTICE';
 const MODE_WARMUP_1   = 'MODE_WARMUP_1';
 const MODE_WARMUP_2   = 'MODE_WARMUP_2';
 const MODE_ADVANCED_1 = 'MODE_ADVANCED_1';
+const MODE_VIBRATO1   = 'MODE_VIBRATO1';
+const MODE_VIBRATO2   = 'MODE_VIBRATO2';
 const LABEL_TO_MODE = {
   '기본':MODE_BASIC,'연습':MODE_PRACTICE,
   '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,
   '심화':MODE_ADVANCED_1,
+  '비브라토1':MODE_VIBRATO1,'비브라토2':MODE_VIBRATO2,
 };
 function isStaccatoPat(){return !!(currentPat()&&currentPat().staccato);}
 function isGlissandoPat(){return !!(currentPat()&&currentPat().glissando);}
 function isVibratoPat(){return !!(currentPat()&&currentPat().vibrato);}
+function isVibrato1Mode(){return TMODE===MODE_VIBRATO1;}
+function isVibrato2Mode(){return TMODE===MODE_VIBRATO2;}
 
 /* ════════════════════════════════════════════════
    【 섹션 C 】 음계·코드네임·공용 유틸
@@ -1350,7 +1310,7 @@ function logPractice(){
     if(window._fsSet) window._fsSet('somi_logs',j);
   }catch(e){}
 }
-function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
+function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();_stopVib2CoilAnim();}
 function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
 
 // 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
@@ -1995,6 +1955,241 @@ function _buildVibratoUI(body){
 }
 
 /* ════════════════════════════════════════════════
+   【 섹션 E-VIBRATO1 】 비브라토1 — 반음 왕복 8분음표 (완전 독립)
+════════════════════════════════════════════════ */
+let vib1_rootMidi = 60;
+let vib1_countingDone = false;
+
+function vib1_reset(){ vib1_countingDone = false; }
+
+function vib1_scheduleOneBeat(time){
+  const rootMidi = vib1_rootMidi;
+  const halfBeatInterval = beatInterval * 0.5;
+  if(activeBarType === BAR_TYPE_COUNTING){
+    if(loopCount === 0){
+      const idx = seqStep;
+      playClickAt(idx===0?'accent':'normal', time);
+      beatQueue.push({time, vis:{phase:'counting', idx, loop:0}});
+      if(idx===0){ playPianoNote(midiToFreq(rootMidi), time, beatInterval*4.0); }
+      seqStep++;
+      if(seqStep >= 4){
+        activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0;
+        currentNoteInterval = halfBeatInterval;
+        if(mainStartWallTime===0) mainStartWallTime = Date.now()+(time+beatInterval-audioCtx.currentTime)*1000;
+        loopCount++;
+      }
+    } else {
+      activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0;
+      currentNoteInterval = halfBeatInterval;
+    }
+  } else {
+    const step = patStep; const barBeats = 4;
+    const midi1 = rootMidi; const midi2 = rootMidi - 1;
+    const dur = halfBeatInterval * 0.92;
+    playPianoNote(midiToFreq(midi1), time, dur);
+    playPianoNote(midiToFreq(midi2), time + halfBeatInterval, dur);
+    const ni1 = (step*2) % 8; const ni2 = (step*2+1) % 8;
+    beatQueue.push({time, vis:{phase:'pattern', beatIdx:step, noteIdx:ni1, keyMidi:rootMidi, noteMidi:midi1, dirForDisplay:1, vib1:true}});
+    beatQueue.push({time:time+halfBeatInterval, vis:{phase:'pattern', beatIdx:step, noteIdx:ni2, keyMidi:rootMidi, noteMidi:midi2, dirForDisplay:1, vib1:true}});
+    playClickAt('normal', time);
+    patStep++;
+    if(patStep >= barBeats){ patStep=0; activeBarType=BAR_TYPE_PATTERN; currentNoteInterval=halfBeatInterval; loopCount++; }
+  }
+}
+function vib1_applyVisual(vis){
+  if(vis.phase==='counting'){ updateVocalBeats(BAR_TYPE_COUNTING, vis.idx); }
+  else {
+    updateVocalBeats(BAR_TYPE_PATTERN, vis.beatIdx);
+    updateVocalLabelHighlight(vis.noteIdx);
+    const kd = document.getElementById('vocal-key-display');
+    if(kd) kd.textContent = midiToName(vib1_rootMidi, 1);
+  }
+}
+function vib1_onComplete(){}
+function vib1_getCurrentMidi(){ return vib1_rootMidi; }
+function vib1_advanceKey(){}
+function vib1_isLastKey(){ return false; }
+function vib1_onEngineStart(){}
+function vib1_getTotalLoops(){ return '∞'; }
+
+function buildVib1UI(body){
+  buildTempoUI(body);
+  const VMIN=36, VMAX=76;
+  const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
+  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const lbl=document.createElement('div');lbl.className='basic-key-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 음 선택';inner.appendChild(lbl);
+  const COLS=9; const allBtns=[];
+  for(let midi=VMIN;midi<=VMAX;midi++){
+    const name=midiToName(midi,1).replace(/-?\d+$/,'');
+    const btn=document.createElement('button');
+    btn.className='key-grid-btn'+(isSharpNote(midi)?' sharp':'')+(midi===vib1_rootMidi?' range-start':'');
+    btn.textContent=name;btn.setAttribute('data-midi',midi);
+    btn.onclick=()=>{
+      previewNote(midi); vib1_rootMidi=midi;
+      allBtns.forEach(b=>b.classList.remove('range-start')); btn.classList.add('range-start');
+      const kd=document.getElementById('vocal-key-display'); if(kd) kd.textContent=midiToName(midi,1);
+      stopExercise();
+    };
+    allBtns.push(btn);
+  }
+  for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
+    allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+    inner.appendChild(row);
+  }
+  outer.appendChild(inner);body.appendChild(outer);
+}
+
+/* ════════════════════════════════════════════════
+   【 섹션 E-VIBRATO2 】 비브라토2 — 돼지꼬리 밴딩 4분음표 (완전 독립)
+════════════════════════════════════════════════ */
+let vib2_rootMidi = 60;
+let _vib2CoilAnimId = null;
+let _vib2BeatProgress = 0;
+
+function vib2_reset(){ _vib2BeatProgress=0; }
+
+function vib2_scheduleOneBeat(time){
+  const rootMidi = vib2_rootMidi; const beatDur = beatInterval;
+  if(activeBarType === BAR_TYPE_COUNTING){
+    if(loopCount === 0){
+      const idx = seqStep;
+      playClickAt(idx===0?'accent':'normal', time);
+      beatQueue.push({time, vis:{phase:'counting', idx, loop:0}});
+      if(idx===0){ playPianoNote(midiToFreq(rootMidi), time, beatInterval*4.0); }
+      seqStep++;
+      if(seqStep >= 4){
+        activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0;
+        currentNoteInterval = beatDur;
+        if(mainStartWallTime===0) mainStartWallTime = Date.now()+(time+beatInterval-audioCtx.currentTime)*1000;
+        loopCount++;
+      }
+    } else {
+      activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0; currentNoteInterval = beatDur;
+    }
+  } else {
+    const step = patStep; const barBeats = 4;
+    _vib2ScheduleBendNote(rootMidi, time, beatDur);
+    const ni = step % 4;
+    beatQueue.push({time, vis:{phase:'pattern', beatIdx:step, noteIdx:ni, keyMidi:rootMidi, noteMidi:rootMidi, dirForDisplay:1, vib2:true, beatDur}});
+    playClickAt('normal', time);
+    patStep++;
+    if(patStep >= barBeats){ patStep=0; activeBarType=BAR_TYPE_PATTERN; currentNoteInterval=beatDur; loopCount++; }
+  }
+}
+function _vib2ScheduleBendNote(rootMidi, startTime, duration){
+  if(!audioCtx) return;
+  try{
+    const out = pianoGain||masterGain;
+    const baseFreq = midiToFreq(rootMidi);
+    const osc = audioCtx.createOscillator(); const gNode = audioCtx.createGain();
+    osc.type = 'sine'; osc.connect(gNode); gNode.connect(out);
+    osc.frequency.setValueAtTime(baseFreq, startTime);
+    const steps = 16;
+    for(let i=0;i<=steps;i++){
+      const t=i/steps; const semiBend=Math.sin(t*Math.PI*2)*0.65;
+      osc.frequency.linearRampToValueAtTime(baseFreq*Math.pow(2,semiBend/12), startTime+duration*t);
+    }
+    osc.frequency.linearRampToValueAtTime(baseFreq, startTime+duration*0.98);
+    const osc2=audioCtx.createOscillator(); const g2=audioCtx.createGain();
+    osc2.type='sine'; osc2.connect(g2); g2.connect(out);
+    osc2.frequency.setValueAtTime(baseFreq*2, startTime);
+    for(let i=0;i<=steps;i++){
+      const t=i/steps; const semiBend=Math.sin(t*Math.PI*2)*0.65;
+      osc2.frequency.linearRampToValueAtTime(baseFreq*2*Math.pow(2,semiBend/12), startTime+duration*t);
+    }
+    osc2.frequency.linearRampToValueAtTime(baseFreq*2, startTime+duration*0.98);
+    const vol=0.18;
+    gNode.gain.setValueAtTime(vol,startTime); gNode.gain.exponentialRampToValueAtTime(vol*0.7,startTime+duration*0.15);
+    gNode.gain.exponentialRampToValueAtTime(vol*0.4,startTime+duration*0.7); gNode.gain.exponentialRampToValueAtTime(0.0001,startTime+duration*0.97);
+    g2.gain.setValueAtTime(vol*0.4,startTime); g2.gain.exponentialRampToValueAtTime(0.0001,startTime+duration*0.97);
+    osc.start(startTime); osc.stop(startTime+duration+0.05);
+    osc2.start(startTime); osc2.stop(startTime+duration+0.05);
+  }catch(e){}
+}
+function vib2_applyVisual(vis){
+  if(vis.phase==='counting'){ updateVocalBeats(BAR_TYPE_COUNTING, vis.idx); }
+  else {
+    updateVocalBeats(BAR_TYPE_PATTERN, vis.beatIdx);
+    updateVocalLabelHighlight(vis.noteIdx);
+    _startVib2CoilAnim(vis.beatDur||beatInterval);
+    const kd=document.getElementById('vocal-key-display'); if(kd) kd.textContent=midiToName(vib2_rootMidi,1);
+  }
+}
+function vib2_onComplete(){}
+function vib2_getCurrentMidi(){ return vib2_rootMidi; }
+function vib2_advanceKey(){}
+function vib2_isLastKey(){ return false; }
+function vib2_onEngineStart(){}
+function vib2_getTotalLoops(){ return '∞'; }
+
+function _startVib2CoilAnim(dur){
+  const canvas=document.getElementById('vib2-coil-canvas'); if(!canvas)return;
+  if(_vib2CoilAnimId){cancelAnimationFrame(_vib2CoilAnimId);_vib2CoilAnimId=null;}
+  const startT=performance.now(); const durationMs=dur*1000;
+  function frame(now){
+    if(!isPlaying){_stopVib2CoilAnim();return;}
+    const progress=Math.min((now-startT)/durationMs,1);
+    _drawVib2Coil(canvas,progress);
+    _vib2CoilAnimId=requestAnimationFrame(frame);
+  }
+  _vib2CoilAnimId=requestAnimationFrame(frame);
+}
+function _stopVib2CoilAnim(){
+  if(_vib2CoilAnimId){cancelAnimationFrame(_vib2CoilAnimId);_vib2CoilAnimId=null;}
+  const canvas=document.getElementById('vib2-coil-canvas'); if(canvas)_drawVib2Coil(canvas,0);
+}
+function _drawVib2Coil(canvas,progress){
+  const ctx2d=canvas.getContext('2d'); const W=canvas.width,H=canvas.height;
+  ctx2d.clearRect(0,0,W,H);
+  const coils=5,startX=20,endX=W-20,cy=H/2,amp=H*0.32;
+  ctx2d.beginPath(); ctx2d.strokeStyle='rgba(247,106,200,0.18)'; ctx2d.lineWidth=2;
+  for(let x=startX;x<=endX;x+=1){const t=(x-startX)/(endX-startX);const y=cy+Math.sin(t*coils*Math.PI*2)*amp;if(x===startX)ctx2d.moveTo(x,y);else ctx2d.lineTo(x,y);}
+  ctx2d.stroke();
+  const lightX=startX+(endX-startX)*progress;
+  const lightY=cy+Math.sin(progress*coils*Math.PI*2)*amp;
+  const grad=ctx2d.createLinearGradient(startX,0,lightX,0);
+  grad.addColorStop(0,'rgba(247,106,200,0.05)'); grad.addColorStop(1,'rgba(247,106,200,0.55)');
+  ctx2d.beginPath(); ctx2d.strokeStyle=grad; ctx2d.lineWidth=3;
+  for(let x=startX;x<=lightX;x+=1){const t=(x-startX)/(endX-startX);const y=cy+Math.sin(t*coils*Math.PI*2)*amp;if(x===startX)ctx2d.moveTo(x,y);else ctx2d.lineTo(x,y);}
+  ctx2d.stroke();
+  if(progress>0){
+    const glow=ctx2d.createRadialGradient(lightX,lightY,0,lightX,lightY,12);
+    glow.addColorStop(0,'rgba(247,106,200,0.95)'); glow.addColorStop(0.4,'rgba(247,106,200,0.5)'); glow.addColorStop(1,'rgba(247,106,200,0)');
+    ctx2d.beginPath(); ctx2d.fillStyle=glow; ctx2d.arc(lightX,lightY,12,0,Math.PI*2); ctx2d.fill();
+    ctx2d.beginPath(); ctx2d.fillStyle='rgba(255,255,255,0.95)'; ctx2d.arc(lightX,lightY,3,0,Math.PI*2); ctx2d.fill();
+  }
+}
+function buildVib2UI(body){
+  buildTempoUI(body);
+  const VMIN=36, VMAX=76;
+  const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
+  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const lbl=document.createElement('div');lbl.className='basic-key-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 음 선택';inner.appendChild(lbl);
+  const COLS=9; const allBtns=[];
+  for(let midi=VMIN;midi<=VMAX;midi++){
+    const name=midiToName(midi,1).replace(/-?\d+$/,'');
+    const btn=document.createElement('button');
+    btn.className='key-grid-btn'+(isSharpNote(midi)?' sharp':'')+(midi===vib2_rootMidi?' range-start':'');
+    btn.textContent=name;btn.setAttribute('data-midi',midi);
+    btn.onclick=()=>{
+      previewNote(midi); vib2_rootMidi=midi;
+      allBtns.forEach(b=>b.classList.remove('range-start')); btn.classList.add('range-start');
+      const kd=document.getElementById('vocal-key-display'); if(kd) kd.textContent=midiToName(midi,1);
+      stopExercise();
+    };
+    allBtns.push(btn);
+  }
+  for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
+    const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
+    allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+    inner.appendChild(row);
+  }
+  outer.appendChild(inner);body.appendChild(outer);
+}
+
+
+/* ════════════════════════════════════════════════
    모드 진입 시 함수 포인터 세팅
 ════════════════════════════════════════════════ */
 function setupModeFunctions(){
@@ -2034,6 +2229,24 @@ function setupModeFunctions(){
     _fn_isLastKey=adv_isLastKey;
     _fn_onEngineStart=adv_onEngineStart;
     _fn_getTotalLoops=adv_getTotalLoops;
+  } else if(TMODE===MODE_VIBRATO1){
+    _fn_scheduleOneBeat=vib1_scheduleOneBeat;
+    _fn_applyVisual=vib1_applyVisual;
+    _fn_onComplete=vib1_onComplete;
+    _fn_getCurrentRootMidi=vib1_getCurrentMidi;
+    _fn_advanceKey=vib1_advanceKey;
+    _fn_isLastKey=vib1_isLastKey;
+    _fn_onEngineStart=vib1_onEngineStart;
+    _fn_getTotalLoops=vib1_getTotalLoops;
+  } else if(TMODE===MODE_VIBRATO2){
+    _fn_scheduleOneBeat=vib2_scheduleOneBeat;
+    _fn_applyVisual=vib2_applyVisual;
+    _fn_onComplete=vib2_onComplete;
+    _fn_getCurrentRootMidi=vib2_getCurrentMidi;
+    _fn_advanceKey=vib2_advanceKey;
+    _fn_isLastKey=vib2_isLastKey;
+    _fn_onEngineStart=vib2_onEngineStart;
+    _fn_getTotalLoops=vib2_getTotalLoops;
   }
 }
 
@@ -2050,6 +2263,8 @@ function hardReset(){
   else if(TMODE===MODE_PRACTICE)prac_reset();
   else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)wu_reset();
   else if(TMODE===MODE_ADVANCED_1)adv_reset();
+  else if(TMODE===MODE_VIBRATO1)vib1_reset();
+  else if(TMODE===MODE_VIBRATO2)vib2_reset();
   setupModeFunctions();
   buildPracticeUI();
 }
@@ -2081,6 +2296,8 @@ function buildPracticeUI(){
       else if(modeVal===MODE_PRACTICE)prac_reset();
       else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2)wu_reset();
       else if(modeVal===MODE_ADVANCED_1)adv_reset();
+      else if(modeVal===MODE_VIBRATO1)vib1_reset();
+      else if(modeVal===MODE_VIBRATO2)vib2_reset();
       hardReset();
     };
     mt.appendChild(b);
@@ -2111,44 +2328,91 @@ function buildPracticeUI(){
       const nxt=document.createElement('div');nxt.className='vkp-next';nxt.id='adv-next-key';nxt.textContent='\u00a0';kPan.appendChild(nxt);
     } else {
       const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='vocal-key-display';
-      // 목풀기: b표기, 기본/연습: 시작 방향 기준
-      const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
-      kMid.textContent=midiToName(_fn_getCurrentRootMidi(),initDir);
-      kPan.appendChild(kMid);
-      const dEl=document.createElement('div');dEl.className='vkp-dir';dEl.id='vocal-dir-display';
-      const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?wu_getDirAt(wu_keyIdx):initDir;
-      dEl.textContent=initMoveDir>=0?'▲ 상행':'▼ 하행';
-      kPan.appendChild(dEl);
+      if(TMODE===MODE_VIBRATO1){
+        kMid.textContent=midiToName(vib1_rootMidi,1);
+        kPan.appendChild(kMid);
+      } else if(TMODE===MODE_VIBRATO2){
+        kMid.textContent=midiToName(vib2_rootMidi,1);
+        kPan.appendChild(kMid);
+      } else {
+        // 목풀기: b표기, 기본/연습: 시작 방향 기준
+        const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
+        kMid.textContent=midiToName(_fn_getCurrentRootMidi(),initDir);
+        kPan.appendChild(kMid);
+        const dEl=document.createElement('div');dEl.className='vkp-dir';dEl.id='vocal-dir-display';
+        const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?wu_getDirAt(wu_keyIdx):initDir;
+        dEl.textContent=initMoveDir>=0?'▲ 상행':'▼ 하행';
+        kPan.appendChild(dEl);
+      }
     }
     vlb.appendChild(kPan);
     const labArea=document.createElement('div');labArea.className='vlabel-labels-area';
     labArea.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;';
-    // labelTitle이 있으면 윗줄에 표시
-    if(pat.labelTitle){
+
+    if(TMODE===MODE_VIBRATO1){
       const titleEl=document.createElement('div');
       titleEl.id='vowel-title-display';
       titleEl.style.cssText='font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:0.5px;';
-      titleEl.textContent=pat.labelTitle;
+      titleEl.textContent='Ah';
       labArea.appendChild(titleEl);
-    }
-    const is4beat=(pat.noteDiv||4)===4;
-    const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:wrap;';
-    const lbls=getActiveLabels();
-    lbls.kor.forEach((kor,i2)=>{
-      const col=document.createElement('div');col.className='vlabel-col';
-      // eng는 숨기고 kor만 표시 (labelTitle 패턴)
-      if(!pat.labelTitle){
-        const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.textContent=lbls.eng[i2]||'';
-        col.appendChild(eS);
-      } else {
-        // eng span도 만들되 숨김 (하이라이트 로직 호환)
+      const vib1Labels=['도','시','도','시','도','시','도','시'];
+      const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;';
+      vib1Labels.forEach((kor,i2)=>{
+        const col=document.createElement('div');col.className='vlabel-col';
         const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
+        const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.textContent=kor;
+        col.appendChild(kS);lblsRow.appendChild(col);
+      });
+      labArea.appendChild(lblsRow);
+    } else if(TMODE===MODE_VIBRATO2){
+      const coilWrap=document.createElement('div');
+      coilWrap.style.cssText='width:100%;display:flex;justify-content:center;align-items:center;padding:4px 0;';
+      const canvas=document.createElement('canvas');
+      canvas.id='vib2-coil-canvas';canvas.width=240;canvas.height=44;
+      canvas.style.cssText='width:100%;max-width:240px;height:44px;';
+      coilWrap.appendChild(canvas);
+      labArea.appendChild(coilWrap);
+      const vib2Labels=['도','도','도','도'];
+      const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;';
+      vib2Labels.forEach((kor,i2)=>{
+        const col=document.createElement('div');col.className='vlabel-col';
+        const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
+        const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.textContent=kor;
+        col.appendChild(kS);lblsRow.appendChild(col);
+      });
+      labArea.appendChild(lblsRow);
+    } else {
+      if(pat.labelTitle){
+        const titleEl=document.createElement('div');
+        titleEl.id='vowel-title-display';
+        titleEl.style.cssText='font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:0.5px;';
+        titleEl.textContent=pat.labelTitle;
+        labArea.appendChild(titleEl);
       }
-      const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.innerHTML=formatKorLabel(kor||'');
-      col.appendChild(kS);lblsRow.appendChild(col);
-    });
-    labArea.appendChild(lblsRow);
+      const is4beat=(pat.noteDiv||4)===4;
+      const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:wrap;';
+      const lbls=getActiveLabels();
+      lbls.kor.forEach((kor,i2)=>{
+        const col=document.createElement('div');col.className='vlabel-col';
+        if(!pat.labelTitle){
+          const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.textContent=lbls.eng[i2]||'';
+          col.appendChild(eS);
+        } else {
+          const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
+        }
+        const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.innerHTML=formatKorLabel(kor||'');
+        col.appendChild(kS);lblsRow.appendChild(col);
+      });
+      labArea.appendChild(lblsRow);
+    }
     vlb.appendChild(labArea);body.appendChild(vlb);
+
+    if(TMODE===MODE_VIBRATO2){
+      setTimeout(()=>{
+        const c=document.getElementById('vib2-coil-canvas');
+        if(c)_drawVib2Coil(c,0);
+      },50);
+    }
   }
 
   /* ── 글리산도 슬라이더: 라벨박스 바로 아래 삽입 ── */
@@ -2181,9 +2445,11 @@ function buildPracticeUI(){
     buildTempoUI(body);
   }
   if(TMODE===MODE_ADVANCED_1)buildAdvancedPanel(body);
+  if(TMODE===MODE_VIBRATO1)buildVib1UI(body);
+  if(TMODE===MODE_VIBRATO2)buildVib2UI(body);
 
   /* ── 특수 패턴 전용 UI ── */
-  if(pat.vibrato)_buildVibratoUI(body);
+  if(pat.vibrato && TMODE===MODE_ADVANCED_1)_buildVibratoUI(body);
 
   /* ── 볼륨 ── */
   const vw=document.createElement('div');vw.className='vol-wrap';
@@ -2723,7 +2989,6 @@ function renderPatternCards(){
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  somiStartSlowTimer();  // 오버레이는 HTML에 떠 있음 — 연습기록 받을 때까지 클릭 차단
   // ── 1. 테마 적용
   try{
     const raw=localStorage.getItem('somi_theme');
@@ -2793,11 +3058,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
       // 잠금/레벨 변경 시 카드 재렌더
       renderPatternCards();
-      somiHideLoading();  // 연습기록 동기화 완료 → 로딩 막 걷기 (덮어쓰기 사고 방지)
     }catch(e){
       // 네트워크 오류 등 → 무시하고 localStorage 기준으로 계속 사용
       console.warn('vocal_lab_male Firebase 동기화 실패 (무시됨):', e.message);
-      somiHideLoading();  // 실패해도 막은 걷어 사용 가능하게
     }
   })();
 });
