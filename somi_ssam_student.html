@@ -339,31 +339,38 @@ function formatDur(s){
 }
 
 /* ── 보컬랩 성별 미리보기 토글 (소미쌤 기기 전용) ── */
-let _vocalPreviewGender=localStorage.getItem('somi_vocal_preview_gender')||null;
-
 function _updateVocalGenderToggleBtn(){
   const btn=document.getElementById('vocal-gender-toggle');
   if(!btn) return;
   const isTeacherDevice=localStorage.getItem('somi_role')==='teacher';
-  if(!isTeacherDevice){btn.style.display='none';return;}
+  // 소미쌤 기기 + 짝(pairId)이 연결된 프로필일 때만 토글 표시
+  const pair=(currentProfile&&currentProfile.pairId)?profiles.find(p=>p.id===currentProfile.pairId):null;
+  if(!isTeacherDevice || !pair){ btn.style.display='none'; return; }
   btn.style.display='inline-flex';
-  const effectiveGender=_vocalPreviewGender||(currentProfile?currentProfile.gender||'female':'female');
-  if(effectiveGender==='male'){
-    btn.textContent='👨 남성';
+  // 버튼엔 "전환될 짝"을 표시 (짝이 남성이면 👨, 여성이면 👩)
+  if(pair.gender==='male'){
+    btn.textContent='👨 '+pair.name;
     btn.style.borderColor='var(--accent3)';
     btn.style.color='var(--accent3)';
   } else {
-    btn.textContent='👩 여성';
+    btn.textContent='👩 '+pair.name;
     btn.style.borderColor='var(--accent2)';
     btn.style.color='var(--accent2)';
   }
 }
 
 function toggleVocalGender(){
-  const effectiveGender=_vocalPreviewGender||(currentProfile?currentProfile.gender||'female':'female');
-  _vocalPreviewGender=(effectiveGender==='male')?'female':'male';
-  localStorage.setItem('somi_vocal_preview_gender',_vocalPreviewGender);
-  _updateVocalGenderToggleBtn();
+  // 소미쌤 기기에서만 작동 (학생 직접 로그인 시엔 토글 자체가 안 보임)
+  const isTeacherDevice=localStorage.getItem('somi_role')==='teacher';
+  if(!isTeacherDevice) return;
+  if(!currentProfile||!currentProfile.pairId) return;
+  const pair=profiles.find(p=>p.id===currentProfile.pairId);
+  if(!pair){ alert('짝 프로필을 찾을 수 없어요.'); return; }
+  // 짝 계정으로 로그인 전환 (소미쌤 권한은 유지 → 다시 토글 가능)
+  currentProfile=pair;
+  localStorage.setItem('somi_current_profile_id',pair.id);
+  // 홈 다시 그리기 (이름/배지/달력/도장 등 짝 기준으로 갱신)
+  enterStudentApp();
 }
 
 /* ════════════════════════════════════
@@ -429,8 +436,8 @@ function goToChapter(tab){
   if(currentProfile)localStorage.setItem('somi_current_profile_id',currentProfile.id);
   if(tab==='breath'){window.location.href='somi_ssam_breath.html';}
   else if(tab==='vocal'){
-    const isTeacherDevice=localStorage.getItem('somi_role')==='teacher';
-    const gender=(isTeacherDevice&&_vocalPreviewGender)?_vocalPreviewGender:(currentProfile?currentProfile.gender||'female':'female');
+    // 현재 로그인한 학생의 성별대로 발성랩 진입 (토글로 짝 전환 시 이미 계정이 바뀌어 있음)
+    const gender=currentProfile?currentProfile.gender||'female':'female';
     window.location.href=(gender==='male')?'somi_ssam_vocal_lab_male.html':'somi_ssam_vocal_lab.html';
   }
   else if(tab==='rhythm'){window.location.href='somi_ssam_rhythm_groove.html';}
