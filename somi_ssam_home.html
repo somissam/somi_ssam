@@ -2158,24 +2158,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     if(migrated){ saveProfiles(); }
   }
 
-  // ── 완전 중복 연습기록 정리 (일회성) ──
-  // date+time+exercise+duration이 모두 같은 줄만 제거. 시각이 다른 근접 기록은 보존.
-  if(!localStorage.getItem('somi_dedup_logs_done')){
-    let removed=0;
-    Object.keys(practiceLogs).forEach(pid=>{
-      const arr=practiceLogs[pid]; if(!Array.isArray(arr)) return;
-      const seen=new Set(), kept=[];
-      arr.forEach(l=>{
-        const key=(l.date||'')+'|'+(l.time||'')+'|'+(l.exercise||'')+'|'+(l.duration||0)+'|'+(l.chapter||'');
-        if(seen.has(key)){ removed++; return; } // 완전 동일 → 중복 제거
-        seen.add(key); kept.push(l);
-      });
-      practiceLogs[pid]=kept;
-    });
-    if(removed>0){ saveLogs(); console.log('[dedup] 완전 중복 연습기록 '+removed+'건 정리'); }
-    localStorage.setItem('somi_dedup_logs_done','1');
-  }
-
   if(isTeacherMode){
     requestAnimationFrame(()=>{
       const hdr=document.querySelector('.app-header');
