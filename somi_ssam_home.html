@@ -29,24 +29,9 @@
 
 *{box-sizing:border-box;margin:0;padding:0;}
 html{overflow-x:hidden;}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;visibility:hidden;}
 button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-
-/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
-@keyframes spin{to{transform:rotate(360deg)}}
-.somi-load-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
-.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
-.somi-load-overlay.hide{opacity:0;pointer-events:none;}
-.somi-load-img-slot{width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
-.somi-load-img-slot img{width:100%;height:100%;object-fit:contain;border-radius:20px;}
-.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
-.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
-.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
-.somi-load-slow.show{display:block;}
-.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;}
 
 #splash{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:48px;padding:24px;background:radial-gradient(ellipse at 30% 20%,#1a1040 0%,var(--bg) 60%);}
 .theme-ivory #splash{background:radial-gradient(ellipse at 30% 20%,#e0d5c5 0%,var(--bg) 60%);}
@@ -210,17 +195,6 @@ button{font-family:inherit;cursor:pointer;}
 </head>
 <body>
 
-<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
-<div id="somi-load-overlay" class="somi-load-overlay">
-  <div class="somi-load-img-slot"><div class="somi-load-spinner"></div></div>
-  <div class="somi-load-text">데이터 불러오는 중...</div>
-  <div class="somi-load-sub">SOMI_SSAM</div>
-  <div class="somi-load-slow">
-    연결이 평소보다 느려요.<br>네트워크 상태를 확인해 주세요.
-    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
-  </div>
-</div>
-
 <!-- ══════════ 스플래시 ══════════ -->
 <div id="splash">
   <div class="logo"><h1>소미쌤</h1><p>선생님 전용 관리 화면</p></div>
@@ -272,6 +246,7 @@ button{font-family:inherit;cursor:pointer;}
         <div class="stat-card"><div class="stat-label">오늘 접속</div><div class="stat-value a2" id="t-today">0</div></div>
         <div class="stat-card"><div class="stat-label">이번 주 총 연습</div><div class="stat-value a3" id="t-week">0m</div></div>
       </div>
+      <div id="unchecked-panel" style="margin-bottom:16px;"></div>
       <div class="student-list" id="t-student-list"></div>
       <div style="margin-top:32px">
         <div class="settings-box"><h4>학생 프로필 관리 (반 설정)</h4><div id="t-profile-manage"></div></div>
@@ -347,27 +322,6 @@ button{font-family:inherit;cursor:pointer;}
 /* ════════════════════════════════════════════════
    【 섹션 A 】 저장/로드 헬퍼
 ════════════════════════════════════════════════ */
-/* ── 공용 로딩 오버레이 제어 ── */
-let _somiLoadTimer=null;
-function somiStartSlowTimer(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
-  clearTimeout(_somiLoadTimer);
-  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },6000);
-}
-function somiShowLoading(text){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
-  o.classList.remove('hide'); somiStartSlowTimer();
-}
-function somiHideLoading(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  clearTimeout(_somiLoadTimer); o.classList.add('hide');
-}
-
-/* ── 안전가드용 Firebase 핸들 ── */
-let _fbHandle=null;  // {db, doc, getDoc, setDoc}
-
 function loadData(k, d) {
   try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; }
 }
@@ -375,40 +329,8 @@ function saveData(k, v) {
   try {
     const json = JSON.stringify(v);
     localStorage.setItem(k, json);
-    // somi_profiles는 안전가드(safePutProfiles)를 통해서만 원격 저장한다.
-    // (자동 원격저장을 막아 빈/축소 명단 덮어쓰기 사고를 원천 차단)
-    if (window._fsSet && k!=='somi_profiles') window._fsSet(k, json);
+    if (window._fsSet) window._fsSet(k, json);
   } catch(e) {}
-}
-
-/* ════════════════════════════════════════════════
-   안전 명단 저장 (사고 방지 핵심)
-   - 빈 배열이면 저장 거부
-   - Firebase 최신 명단보다 줄어들면 거부 + 직전 백업
-════════════════════════════════════════════════ */
-async function safePutProfiles(newProfiles){
-  if(!Array.isArray(newProfiles) || newProfiles.length===0){
-    console.error('🛑 안전가드(home): 빈 명단 저장 차단');
-    return {ok:false, reason:'empty'};
-  }
-  let remote=[];
-  if(_fbHandle){
-    try{
-      const snap=await _fbHandle.getDoc(_fbHandle.doc(_fbHandle.db,'somi_data','somi_profiles'));
-      if(snap.exists()) remote=JSON.parse(snap.data().value)||[];
-    }catch(e){}
-  }
-  if(remote.length > newProfiles.length){
-    console.error('🛑 안전가드(home): 명단 축소 차단 ('+remote.length+'→'+newProfiles.length+')');
-    return {ok:false, reason:'shrink', remote};
-  }
-  // 로컬 저장 + 백업 + 원격 저장
-  saveData('somi_profiles', newProfiles);
-  if(_fbHandle){
-    try{ await _fbHandle.setDoc(_fbHandle.doc(_fbHandle.db,'somi_data','somi_profiles_backup_'+Date.now()),{value:JSON.stringify(remote.length?remote:newProfiles)}); }catch(e){}
-    try{ await _fbHandle.setDoc(_fbHandle.doc(_fbHandle.db,'somi_data','somi_profiles'),{value:JSON.stringify(newProfiles)}); }catch(e){}
-  }
-  return {ok:true};
 }
 
 /* ════════════════════════════════════════════════
@@ -435,16 +357,7 @@ let levelSettings        = loadData('somi_level_settings', null) || DEFAULT_LEVE
 let advancedSettings     = loadData('somi_advanced_settings', {});
 let currentTheme         = loadData('somi_theme', 'dark');
 
-function saveProfiles()       {
-  // 빈 명단은 즉시 차단 (덮어쓰기 사고 방지)
-  if(!Array.isArray(profiles) || profiles.length===0){
-    console.error('🛑 saveProfiles: 빈 명단 저장 차단');
-    return;
-  }
-  // 로컬 즉시 저장 + 비동기 안전가드(원격 축소 차단/백업)
-  saveData('somi_profiles', profiles);
-  if(_fbHandle){ safePutProfiles(profiles); }
-}
+function saveProfiles()       { saveData('somi_profiles', profiles); }
 function saveLogs()           { saveData('somi_logs', practiceLogs); }
 function saveTeacherPw()      { saveData('somi_teacher_pw', teacherPw); }
 function saveTeacherStamps()  { saveData('somi_teacher_stamps', teacherStamps); }
@@ -467,12 +380,135 @@ function getClassInfo(pid)              { return classSettings[pid]||{voClass:nu
 function getDaysSinceLesson(pid)        { const s=lessonStarts[pid]; if(!s) return null; return Math.floor((new Date()-new Date(s))/(1000*60*60*24))+1; }
 function getLastAccess(pid) {
   const logs=(accessLog[pid]||[]);
-  if(!logs.length) return '접속 없음';
+  if(!logs.length) return {text:'접속 없음', isToday:false, none:true};
   const last=logs[logs.length-1];
   const isToday = last.date===toDateStr(new Date());
-  if(isToday) return '오늘 '+(last.time||'');
-  return last.date+(last.time?' '+last.time:'');
+  const text = isToday ? '오늘 '+(last.time||'') : last.date+(last.time?' '+last.time:'');
+  return {text, isToday, none:false};
 }
+
+/* ── [5번] 미확인 연습일: 연습기록 O + 선생님 도장 X ── */
+// 한 학생의 미확인 연습 날짜 목록(YYYY-MM-DD) 반환 — 최신순
+function getUncheckedDates(pid) {
+  const days=[...new Set((practiceLogs[pid]||[]).map(l=>l.date))];
+  return days.filter(d=>!teacherStamps[pid+'_'+d]).sort().reverse();
+}
+// 특정 날짜가 미확인인지
+function isUncheckedDate(pid, ds) {
+  if(teacherStamps[pid+'_'+ds]) return false;
+  return (practiceLogs[pid]||[]).some(l=>l.date===ds);
+}
+// 전체 학생의 미확인 항목 [{pid,name,date,duration}] — 최신순
+function getAllUnchecked() {
+  const out=[];
+  profiles.forEach(p=>{
+    const byDay={};
+    (practiceLogs[p.id]||[]).forEach(l=>{ byDay[l.date]=(byDay[l.date]||0)+(l.duration||0); });
+    Object.keys(byDay).forEach(d=>{
+      if(!teacherStamps[p.id+'_'+d]) out.push({pid:p.id, name:p.name, date:d, duration:byDay[d]});
+    });
+  });
+  return out.sort((a,b)=>b.date.localeCompare(a.date) || a.name.localeCompare(b.name,'ko'));
+}
+
+/* ── [5번 B+D] 미확인 연습 모아보기 패널 ── */
+let _uncheckedOpen = false;            // 패널 펼침 상태
+let _uncheckedStampType = 'star';      // 일괄/개별 도장 종류
+let _uncheckedSelected = new Set();    // 선택된 항목 키(pid_date)
+
+function _ukKey(pid,date){ return pid+'_'+date; }
+
+function renderUncheckedPanel(){
+  const box=document.getElementById('unchecked-panel'); if(!box) return;
+  const items=getAllUnchecked();
+  const total=items.length;
+
+  // 모두 확인됨
+  if(total===0){
+    _uncheckedSelected.clear();
+    box.innerHTML=`<div style="padding:12px 16px;border-radius:14px;background:var(--surface2);color:var(--text2);font-size:0.85rem;font-weight:600;text-align:center;">✅ 미확인 연습이 없어요 — 모두 확인했어요</div>`;
+    return;
+  }
+
+  // 사라진 항목은 선택에서 정리
+  const liveKeys=new Set(items.map(it=>_ukKey(it.pid,it.date)));
+  [..._uncheckedSelected].forEach(k=>{ if(!liveKeys.has(k)) _uncheckedSelected.delete(k); });
+
+  const selCount=_uncheckedSelected.size;
+  const caret=_uncheckedOpen?'▾':'▸';
+
+  let html=`<div style="border:1px solid #ff444455;border-radius:14px;overflow:hidden;background:var(--surface);">`;
+  // 헤더
+  html+=`<div onclick="toggleUncheckedPanel()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer;background:rgba(255,68,68,0.06);">
+    <span style="font-weight:800;font-size:0.95rem;color:var(--text)">📌 확인 안 한 연습 <span style="color:#ff4444">${total}건</span></span>
+    <span style="font-size:0.9rem;color:var(--text2)">${caret}</span>
+  </div>`;
+
+  if(_uncheckedOpen){
+    // 컨트롤 바: 전체선택 / 도장종류 / 일괄도장
+    const allSelected = selCount===total && total>0;
+    html+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--border);">
+      <button onclick="toggleSelectAllUnchecked()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;">${allSelected?'전체 해제':'전체 선택'}</button>
+      <span style="font-size:0.78rem;color:var(--text2);">도장</span>
+      <button onclick="setUncheckedStampType('star')" id="uk-stamp-star" style="padding:5px 10px;border-radius:8px;border:2px solid ${_uncheckedStampType==='star'?'#FFEE00':'var(--border)'};background:${_uncheckedStampType==='star'?'rgba(255,238,0,0.15)':'var(--surface2)'};cursor:pointer;font-size:1rem;">⭐</button>
+      <button onclick="setUncheckedStampType('heart')" id="uk-stamp-heart" style="padding:5px 10px;border-radius:8px;border:2px solid ${_uncheckedStampType==='heart'?'#ff6a8a':'var(--border)'};background:${_uncheckedStampType==='heart'?'rgba(255,106,138,0.15)':'var(--surface2)'};cursor:pointer;font-size:1rem;">❤️</button>
+      <button onclick="bulkStampUnchecked()" ${selCount===0?'disabled':''} style="margin-left:auto;padding:7px 14px;border-radius:9px;border:none;background:${selCount===0?'var(--surface2)':'var(--accent2)'};color:${selCount===0?'var(--text2)':'#fff'};font-family:inherit;font-size:0.82rem;font-weight:700;cursor:${selCount===0?'default':'pointer'};">선택 ${selCount}건 도장 찍기</button>
+    </div>`;
+
+    // 리스트
+    html+=`<div style="max-height:340px;overflow-y:auto;">`;
+    items.forEach(it=>{
+      const k=_ukKey(it.pid,it.date);
+      const checked=_uncheckedSelected.has(k);
+      const pidx=profiles.findIndex(p=>p.id===it.pid);
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--border);">
+        <input type="checkbox" ${checked?'checked':''} onclick="toggleUncheckedItem('${it.pid}','${it.date}')" style="width:17px;height:17px;cursor:pointer;flex-shrink:0;accent-color:#ff4444;">
+        <div onclick="jumpToStudent(${pidx})" style="flex:1;min-width:0;cursor:pointer;">
+          <div style="font-weight:700;font-size:0.86rem;color:var(--text);">${it.name} <span style="color:var(--text2);font-weight:500;font-size:0.8rem;">· ${it.date.slice(5)}</span></div>
+          <div style="font-size:0.74rem;color:var(--text2);">${formatDur(it.duration)} 연습</div>
+        </div>
+        <button onclick="stampOneUnchecked('${it.pid}','${it.date}')" style="padding:6px 11px;border-radius:8px;border:none;background:var(--accent2);color:#fff;font-family:inherit;font-size:0.76rem;font-weight:700;cursor:pointer;flex-shrink:0;">도장</button>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  box.innerHTML=html;
+}
+
+function toggleUncheckedPanel(){ _uncheckedOpen=!_uncheckedOpen; renderUncheckedPanel(); }
+function setUncheckedStampType(t){ _uncheckedStampType=t; renderUncheckedPanel(); }
+function toggleUncheckedItem(pid,date){
+  const k=_ukKey(pid,date);
+  if(_uncheckedSelected.has(k)) _uncheckedSelected.delete(k); else _uncheckedSelected.add(k);
+  renderUncheckedPanel();
+}
+function toggleSelectAllUnchecked(){
+  const items=getAllUnchecked();
+  if(_uncheckedSelected.size===items.length){ _uncheckedSelected.clear(); }
+  else { items.forEach(it=>_uncheckedSelected.add(_ukKey(it.pid,it.date))); }
+  renderUncheckedPanel();
+}
+// 코멘트 없이 도장만 기록
+function _writeStamp(pid,date){
+  teacherStamps[pid+'_'+date]={stamp:_uncheckedStampType, comment:'', date:date};
+}
+function stampOneUnchecked(pid,date){
+  _writeStamp(pid,date);
+  saveTeacherStamps();
+  _uncheckedSelected.delete(_ukKey(pid,date));
+  renderUncheckedPanel(); renderTeacher();
+}
+function bulkStampUnchecked(){
+  if(_uncheckedSelected.size===0) return;
+  _uncheckedSelected.forEach(k=>{ const i=k.indexOf('_'); _writeStamp(k.slice(0,i), k.slice(i+1)); });
+  saveTeacherStamps();
+  _uncheckedSelected.clear();
+  renderUncheckedPanel(); renderTeacher();
+}
+function jumpToStudent(pidx){ if(pidx>=0) showStudentDetail(pidx); }
+
+
 
 /* ── 반 색상/클래스 유틸 ── */
 const CLASS_MAP = {
@@ -722,6 +758,12 @@ function renderTeacher() {
     ).join('');
     const birthFmt = p.birth ? formatBirthAge(p.birth) : '';
 
+    // ── [5번 A] 미확인 연습 배지 ──
+    const uncheckedCount = getUncheckedDates(p.id).length;
+    const uncheckedBadge = uncheckedCount>0
+      ? `<span class="s-badge" style="background:#ff4444;color:#fff;border:none;font-weight:800">🔴 미확인 ${uncheckedCount}</span>`
+      : '';
+
     // 디데이
     const ls = lessonStarts[p.id];
     const ddayTxt = ls ? (() => {
@@ -732,8 +774,8 @@ function renderTeacher() {
     div.innerHTML=`
       <div class="s-avatar ${p.gender==='female'?'f':'m'}">${p.name[0]}</div>
       <div class="s-info">
-        <h4>${p.name} ${badgeHtml}${extraBadges}</h4>
-        <p>${birthFmt || (p.gender==='female'?'여성':'남성')} · ${(()=>{const a=getLastAccess(p.id);return a==='접속 없음'?a:`<span style="color:#ff4444">${a}</span>`;})()}${ddayTxt}</p>
+        <h4>${p.name} ${badgeHtml}${extraBadges}${uncheckedBadge}</h4>
+        <p>${birthFmt || (p.gender==='female'?'여성':'남성')} · ${(()=>{const a=getLastAccess(p.id);if(a.none)return a.text;return a.isToday?`<span style="color:#ff4444">${a.text}</span>`:a.text;})()}${ddayTxt}</p>
         ${(()=>{
           const sess=loadData('somi_student_session_'+p.id,null);
           if(!sess||!sess.deviceName) return '';
@@ -754,6 +796,7 @@ function renderTeacher() {
   });
 
   renderProfileManage();
+  renderUncheckedPanel();
 }
 
 function showTeacherTab(tab){
@@ -982,15 +1025,21 @@ function renderTeacherCalendar(pid) {
       div.appendChild(sl);
     }
 
-    const dn=document.createElement('span'); dn.className='date-num'; dn.textContent=d; div.appendChild(dn);
+    // ── [5번] 미확인(연습O + 도장X) 빨간 점 ──
+    if(has && !teacherStamps[tk]){
+      const dot=document.createElement('div');
+      dot.style.cssText='position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff4444;z-index:4;pointer-events:none;box-shadow:0 0 0 1.5px var(--surface);';
+      div.appendChild(dot);
+    }
 
-    // ── [8번] 클릭: 도장이 있는 날 → 삭제 확인(커스텀 모달), 없는 날 → 날짜 선택 ──
+    const dn=document.createElement('span'); dn.className='date-num'; dn.textContent=d; div.appendChild(dn);
     div.onclick=()=>{
       if(teacherStamps[tk]){
         showStampDeleteModal(ds, ()=>{
           delete teacherStamps[tk];
           saveTeacherStamps();
           renderTeacherCalendar(pid);
+          renderUncheckedPanel();
         });
       } else {
         selectedTeacherDate=ds;
@@ -1014,7 +1063,7 @@ function sendTeacherStamp(){
   if(!selectedTeacherDate){ alert('날짜를 먼저 선택해주세요'); return; }
   const tk=teacherDetailProfileId+'_'+selectedTeacherDate;
   teacherStamps[tk]={stamp:selectedTeacherStampType,comment:document.getElementById('teacher-comment').value,date:selectedTeacherDate};
-  saveTeacherStamps(); alert('도장을 보냈어요!'); document.getElementById('teacher-comment').value=''; renderTeacherCalendar(teacherDetailProfileId);
+  saveTeacherStamps(); alert('도장을 보냈어요!'); document.getElementById('teacher-comment').value=''; renderTeacherCalendar(teacherDetailProfileId); renderUncheckedPanel();
 }
 
 /* ── 커스텀 도장 삭제 모달 ── */
@@ -2052,9 +2101,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   if(currentTheme==='ivory') document.body.classList.add('theme-ivory');
   setTheme(currentTheme);
 
-  // 오버레이는 HTML에 처음부터 떠 있음(커튼 먼저). 데이터 다 받으면 걷는다.
-  somiStartSlowTimer();
-
   const urlParams=new URLSearchParams(window.location.search);
   const isTeacherMode=urlParams.get('mode')==='teacher';
 
@@ -2064,6 +2110,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   } else {
     showScreen('pw-screen');
   }
+  document.body.style.visibility='visible';
 
   // Firebase 동기화
   try {
@@ -2074,7 +2121,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-    _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
     const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
     await Promise.all(KEYS.map(async k=>{
       try{ const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value); }catch(e){}
@@ -2130,9 +2176,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
   sessionStorage.setItem('somi_prev_profile_count', profiles.length);
-
-  // 모든 데이터 수신·렌더 완료 → 로딩 막 걷기
-  somiHideLoading();
 });
 
 /* ── [1번] 새 프로필 저장 시 알림 (renderProfileManage 저장 버튼에서도 호출 가능하도록) ──

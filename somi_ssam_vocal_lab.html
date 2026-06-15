@@ -782,7 +782,7 @@ const VOCAL_PATTERNS = [
     display: 'label',
     labelTitle: 'Ah (아)',
     vibrato: true,
-    modeLabels: ['비브라토1','비브라토2','심화'],
+    modeLabels: ['심화'],
   },
 
 ];
@@ -795,19 +795,14 @@ const MODE_PRACTICE   = 'MODE_PRACTICE';
 const MODE_WARMUP_1   = 'MODE_WARMUP_1';
 const MODE_WARMUP_2   = 'MODE_WARMUP_2';
 const MODE_ADVANCED_1 = 'MODE_ADVANCED_1';
-const MODE_VIBRATO1   = 'MODE_VIBRATO1';
-const MODE_VIBRATO2   = 'MODE_VIBRATO2';
 const LABEL_TO_MODE = {
   '기본':MODE_BASIC,'연습':MODE_PRACTICE,
   '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,
   '심화':MODE_ADVANCED_1,
-  '비브라토1':MODE_VIBRATO1,'비브라토2':MODE_VIBRATO2,
 };
 function isStaccatoPat(){return !!(currentPat()&&currentPat().staccato);}
 function isGlissandoPat(){return !!(currentPat()&&currentPat().glissando);}
 function isVibratoPat(){return !!(currentPat()&&currentPat().vibrato);}
-function isVibrato1Mode(){return TMODE===MODE_VIBRATO1;}
-function isVibrato2Mode(){return TMODE===MODE_VIBRATO2;}
 
 /* ════════════════════════════════════════════════
    【 섹션 C 】 음계·코드네임·공용 유틸
@@ -1274,6 +1269,7 @@ function startEngine(){
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
     if(_awaitClock)_startClockWatchdog();return;}
   stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
+  _loggedThisRun=false; // 새 재생 시작 — 저장 플래그 초기화
   activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
   if(isGlissandoPat())_resetGlissandoSlider(true);
   _fn_onEngineStart();
@@ -1287,6 +1283,7 @@ function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTi
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
 function logPractice(){
   if(!_currentProfileId||elapsedSeconds<2) return;
+  if(_loggedThisRun) return; // 이번 재생분은 이미 저장됨 — 중복 방지
   const pat=currentPat(); if(!pat) return;
   const modeLabel={
     [MODE_BASIC]:'기본',[MODE_PRACTICE]:'연습',
@@ -1304,12 +1301,13 @@ function logPractice(){
       exercise:pat.name+' ('+modeLabel+')',
       duration:Math.floor(elapsedSeconds),
     });
+    _loggedThisRun=true; // 저장 완료 표시
     const j=JSON.stringify(_practiceLogs);
     localStorage.setItem('somi_logs',j);
     if(window._fsSet) window._fsSet('somi_logs',j);
   }catch(e){}
 }
-function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();_stopVib2CoilAnim();}
+function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;_loggedThisRun=false;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
 function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
 
 // 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
@@ -1953,398 +1951,6 @@ function _buildVibratoUI(body){
 }
 
 /* ════════════════════════════════════════════════
-   【 섹션 E-VIBRATO1 】 비브라토1 — 반음 왕복 8분음표 (완전 독립)
-   카운팅 최초 1회 → 패턴: 시작음↔반음아래 8분음표 무한반복
-════════════════════════════════════════════════ */
-// 비브라토1 전용 상태
-let vib1_rootMidi = 60; // 기본 C4 (60)
-let vib1_countingDone = false; // 최초 카운팅 완료 여부
-
-// 비브라토1 리셋
-function vib1_reset(){
-  vib1_countingDone = false;
-  // 음 선택은 유지 (선택한 음역 그대로)
-}
-
-// 비브라토1 엔진 — scheduleOneBeat
-function vib1_scheduleOneBeat(time){
-  const pat = currentPat();
-  const rootMidi = vib1_rootMidi;
-  const halfBeatInterval = beatInterval * 0.5; // 8분음표 간격
-
-  if(activeBarType === BAR_TYPE_COUNTING){
-    // 카운팅: 최초 1회만. 루프>0이면 스킵하고 바로 패턴으로
-    if(loopCount === 0){
-      const idx = seqStep;
-      playClickAt(idx===0?'accent':'normal', time);
-      beatQueue.push({time, vis:{phase:'counting', idx, loop:0}});
-      if(idx===0){
-        // 시작음 한 번 미리 울려줌
-        playPianoNote(midiToFreq(rootMidi), time, beatInterval*4.0);
-      }
-      seqStep++;
-      if(seqStep >= 4){
-        activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0;
-        currentNoteInterval = halfBeatInterval;
-        if(mainStartWallTime===0) mainStartWallTime = Date.now()+(time+beatInterval-audioCtx.currentTime)*1000;
-        loopCount++;
-      }
-    } else {
-      // 카운팅 완료 후: 카운팅 없이 바로 패턴
-      activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0;
-      currentNoteInterval = halfBeatInterval;
-    }
-  } else {
-    // 패턴: 1박자 = 8분음표 2개 (시작음, 반음아래)
-    const step = patStep;
-    const barBeats = 4; // 4박 루프
-
-    // 8분음표 2개 스케줄
-    const midi1 = rootMidi;           // 시작음 (도)
-    const midi2 = rootMidi - 1;       // 반음 아래 (시)
-    const dur = halfBeatInterval * 0.92;
-    playPianoNote(midiToFreq(midi1), time, dur);
-    playPianoNote(midiToFreq(midi2), time + halfBeatInterval, dur);
-
-    // 비주얼: 8분음표 noteIdx → 라벨 하이라이트용
-    // korLabels: ['도','시','도','시','도','시','도','시'] — 8개
-    const ni1 = (step*2) % 8;
-    const ni2 = (step*2+1) % 8;
-    beatQueue.push({time, vis:{phase:'pattern', beatIdx:step, noteIdx:ni1, keyMidi:rootMidi, noteMidi:midi1, dirForDisplay:1, vib1:true}});
-    beatQueue.push({time:time+halfBeatInterval, vis:{phase:'pattern', beatIdx:step, noteIdx:ni2, keyMidi:rootMidi, noteMidi:midi2, dirForDisplay:1, vib1:true}});
-
-    playClickAt('normal', time);
-    patStep++;
-    if(patStep >= barBeats){
-      // 다음 바도 패턴 (카운팅 없이 계속)
-      patStep=0; activeBarType=BAR_TYPE_PATTERN; currentNoteInterval=halfBeatInterval;
-      loopCount++;
-    }
-  }
-}
-
-// 비브라토1 비주얼 업데이트
-function vib1_applyVisual(vis){
-  if(vis.phase==='counting'){
-    updateVocalBeats(BAR_TYPE_COUNTING, vis.idx);
-  } else {
-    updateVocalBeats(BAR_TYPE_PATTERN, vis.beatIdx);
-    updateVocalLabelHighlight(vis.noteIdx);
-    // 음이름 표시 (방향표시 없음)
-    const kd = document.getElementById('vocal-key-display');
-    if(kd) kd.textContent = midiToName(vib1_rootMidi, 1);
-  }
-}
-function vib1_onComplete(){}
-function vib1_getCurrentMidi(){ return vib1_rootMidi; }
-function vib1_advanceKey(){}
-function vib1_isLastKey(){ return false; } // 무한루프
-function vib1_onEngineStart(){}
-function vib1_getTotalLoops(){ return '∞'; }
-
-// 비브라토1 UI 빌더
-function buildVib1UI(body){
-  // 1. 템포 (재생버튼 바로 아래)
-  buildTempoUI(body);
-
-  // 2. 음역 선택 (단일 음 선택 그리드)
-  const VMIN=48, VMAX=92;
-  const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
-  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
-  const lbl=document.createElement('div');lbl.className='basic-key-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 음 선택';inner.appendChild(lbl);
-  const COLS=9; const allBtns=[];
-  for(let midi=VMIN;midi<=VMAX;midi++){
-    const name=midiToName(midi,1).replace(/-?\d+$/,'');
-    const btn=document.createElement('button');
-    btn.className='key-grid-btn'+(isSharpNote(midi)?' sharp':'')+(midi===vib1_rootMidi?' range-start':'');
-    btn.textContent=name;btn.setAttribute('data-midi',midi);
-    btn.onclick=()=>{
-      previewNote(midi);
-      vib1_rootMidi=midi;
-      allBtns.forEach(b=>b.classList.remove('range-start'));
-      btn.classList.add('range-start');
-      const kd=document.getElementById('vocal-key-display');
-      if(kd) kd.textContent=midiToName(midi,1);
-      stopExercise();
-    };
-    allBtns.push(btn);
-  }
-  for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
-    const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
-    allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
-    inner.appendChild(row);
-  }
-  outer.appendChild(inner);body.appendChild(outer);
-}
-
-/* ════════════════════════════════════════════════
-   【 섹션 E-VIBRATO2 】 비브라토2 — 돼지꼬리 밴딩 4분음표 (완전 독립)
-   카운팅 최초 1회 → 패턴: 시작음에서 밴딩 원을 그리듯 4분음표 반복
-════════════════════════════════════════════════ */
-let vib2_rootMidi = 60;
-let _vib2CoilAnimId = null;
-let _vib2BeatProgress = 0; // 0~1: 현재 박자 내 진행률
-let _vib2BeatStartTime = 0;
-
-function vib2_reset(){ _vib2BeatProgress=0; }
-
-// 밴딩 피치 곡선: 4분음표 1박 동안 원형 곡선 (0→올라갔다→내려갔다→원점)
-// 돌아오는 느낌: 살짝 올라갔다가 쭉 내려와서 다시 올라오는 "돼지꼬리" 형태
-function _vib2PitchOffset(t){ // t: 0~1
-  // 원형 곡선: sin(t*2π) → 처음엔 올라갔다 내려오는 모양
-  // 0→0.5 올라가고 0.5→1 내려오지만 마지막에 시작음 복귀
-  return Math.sin(t * Math.PI * 2) * 0.7; // 최대 ±0.7 반음 (밴딩 느낌)
-}
-
-function vib2_scheduleOneBeat(time){
-  const rootMidi = vib2_rootMidi;
-  const beatDur = beatInterval;
-
-  if(activeBarType === BAR_TYPE_COUNTING){
-    if(loopCount === 0){
-      const idx = seqStep;
-      playClickAt(idx===0?'accent':'normal', time);
-      beatQueue.push({time, vis:{phase:'counting', idx, loop:0}});
-      if(idx===0){
-        playPianoNote(midiToFreq(rootMidi), time, beatInterval*4.0);
-      }
-      seqStep++;
-      if(seqStep >= 4){
-        activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0;
-        currentNoteInterval = beatDur;
-        if(mainStartWallTime===0) mainStartWallTime = Date.now()+(time+beatInterval-audioCtx.currentTime)*1000;
-        loopCount++;
-      }
-    } else {
-      activeBarType = BAR_TYPE_PATTERN; seqStep=0; patStep=0;
-      currentNoteInterval = beatDur;
-    }
-  } else {
-    const step = patStep;
-    const barBeats = 4;
-
-    // 밴딩 효과: 주파수 변조로 표현 (오실레이터 피치 슬라이드)
-    _vib2ScheduleBendNote(rootMidi, time, beatDur);
-
-    const ni = step % 4;
-    beatQueue.push({time, vis:{phase:'pattern', beatIdx:step, noteIdx:ni, keyMidi:rootMidi, noteMidi:rootMidi, dirForDisplay:1, vib2:true, beatDur}});
-
-    playClickAt('normal', time);
-    patStep++;
-    if(patStep >= barBeats){
-      patStep=0; activeBarType=BAR_TYPE_PATTERN; currentNoteInterval=beatDur;
-      loopCount++;
-    }
-  }
-}
-
-// 밴딩 노트: Web Audio로 피치 곡선 표현
-function _vib2ScheduleBendNote(rootMidi, startTime, duration){
-  if(!audioCtx) return;
-  try{
-    const out = pianoGain||masterGain;
-    const baseFreq = midiToFreq(rootMidi);
-    // 돼지꼬리 곡선: 8 포인트로 피치 보간
-    const osc = audioCtx.createOscillator();
-    const gNode = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.connect(gNode); gNode.connect(out);
-
-    // 기본음 주파수에서 출발
-    osc.frequency.setValueAtTime(baseFreq, startTime);
-    // 원형 곡선 — 12 스텝으로 나눠서 피치 커브
-    const steps = 16;
-    for(let i=0;i<=steps;i++){
-      const t = i/steps;
-      // 돼지꼬리: 올라갔다 내려왔다가 원점 복귀 (반음 단위 밴딩)
-      const semiBend = Math.sin(t * Math.PI * 2) * 0.65;
-      const freq = baseFreq * Math.pow(2, semiBend/12);
-      osc.frequency.linearRampToValueAtTime(freq, startTime + duration * t);
-    }
-    // 마지막: 정확히 시작음으로 복귀
-    osc.frequency.linearRampToValueAtTime(baseFreq, startTime + duration * 0.98);
-
-    // 배음 추가 (2nd, 3rd)
-    const osc2 = audioCtx.createOscillator();
-    const g2 = audioCtx.createGain();
-    osc2.type = 'sine'; osc2.connect(g2); g2.connect(out);
-    osc2.frequency.setValueAtTime(baseFreq*2, startTime);
-    for(let i=0;i<=steps;i++){
-      const t=i/steps;
-      const semiBend=Math.sin(t*Math.PI*2)*0.65;
-      const freq=baseFreq*2*Math.pow(2,semiBend/12);
-      osc2.frequency.linearRampToValueAtTime(freq, startTime+duration*t);
-    }
-    osc2.frequency.linearRampToValueAtTime(baseFreq*2, startTime+duration*0.98);
-
-    const vol = 0.18;
-    gNode.gain.setValueAtTime(vol, startTime);
-    gNode.gain.exponentialRampToValueAtTime(vol*0.7, startTime+duration*0.15);
-    gNode.gain.exponentialRampToValueAtTime(vol*0.4, startTime+duration*0.7);
-    gNode.gain.exponentialRampToValueAtTime(0.0001, startTime+duration*0.97);
-    g2.gain.setValueAtTime(vol*0.4, startTime);
-    g2.gain.exponentialRampToValueAtTime(0.0001, startTime+duration*0.97);
-
-    osc.start(startTime); osc.stop(startTime+duration+0.05);
-    osc2.start(startTime); osc2.stop(startTime+duration+0.05);
-  }catch(e){}
-}
-
-function vib2_applyVisual(vis){
-  if(vis.phase==='counting'){
-    updateVocalBeats(BAR_TYPE_COUNTING, vis.idx);
-  } else {
-    updateVocalBeats(BAR_TYPE_PATTERN, vis.beatIdx);
-    updateVocalLabelHighlight(vis.noteIdx);
-    // 돼지꼬리 코일 애니메이션 트리거
-    _startVib2CoilAnim(vis.beatDur||beatInterval);
-    const kd = document.getElementById('vocal-key-display');
-    if(kd) kd.textContent = midiToName(vib2_rootMidi, 1);
-  }
-}
-function vib2_onComplete(){}
-function vib2_getCurrentMidi(){ return vib2_rootMidi; }
-function vib2_advanceKey(){}
-function vib2_isLastKey(){ return false; }
-function vib2_onEngineStart(){}
-function vib2_getTotalLoops(){ return '∞'; }
-
-// 돼지꼬리 코일 애니메이션
-function _startVib2CoilAnim(dur){
-  const canvas = document.getElementById('vib2-coil-canvas');
-  if(!canvas) return;
-  if(_vib2CoilAnimId){ cancelAnimationFrame(_vib2CoilAnimId); _vib2CoilAnimId=null; }
-  const startT = performance.now();
-  const durationMs = dur * 1000;
-  function frame(now){
-    if(!isPlaying){ _stopVib2CoilAnim(); return; }
-    const elapsed = now - startT;
-    const progress = Math.min(elapsed / durationMs, 1);
-    _drawVib2Coil(canvas, progress);
-    if(progress < 1) _vib2CoilAnimId = requestAnimationFrame(frame);
-    else _vib2CoilAnimId = requestAnimationFrame(frame); // 다음 박자 기다림
-  }
-  _vib2CoilAnimId = requestAnimationFrame(frame);
-}
-function _stopVib2CoilAnim(){
-  if(_vib2CoilAnimId){ cancelAnimationFrame(_vib2CoilAnimId); _vib2CoilAnimId=null; }
-  const canvas = document.getElementById('vib2-coil-canvas');
-  if(canvas) _drawVib2Coil(canvas, 0);
-}
-function _drawVib2Coil(canvas, progress){
-  const ctx2d = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx2d.clearRect(0,0,W,H);
-
-  // 스프링/코일 그리기
-  const coils = 5;
-  const startX = 20, endX = W-20, cy = H/2;
-  const coilW = (endX-startX)/coils;
-  const amp = H*0.32;
-
-  // 배경 코일 (흐리게)
-  ctx2d.beginPath();
-  ctx2d.strokeStyle = 'rgba(247,106,200,0.18)';
-  ctx2d.lineWidth = 2;
-  for(let x=startX; x<=endX; x+=1){
-    const t = (x-startX)/(endX-startX);
-    const y = cy + Math.sin(t*coils*Math.PI*2)*amp;
-    if(x===startX) ctx2d.moveTo(x,y);
-    else ctx2d.lineTo(x,y);
-  }
-  ctx2d.stroke();
-
-  // 빛 슬라이더: 진행률(progress)에 맞춰 코일 위를 따라 이동
-  const lightX = startX + (endX-startX)*progress;
-  const lightT = progress;
-  const lightY = cy + Math.sin(lightT*coils*Math.PI*2)*amp;
-
-  // 빛 트레일 (진행된 부분 밝게)
-  const grad = ctx2d.createLinearGradient(startX,0,lightX,0);
-  grad.addColorStop(0,'rgba(247,106,200,0.05)');
-  grad.addColorStop(1,'rgba(247,106,200,0.55)');
-  ctx2d.beginPath();
-  ctx2d.strokeStyle = grad;
-  ctx2d.lineWidth = 3;
-  for(let x=startX; x<=lightX; x+=1){
-    const t=(x-startX)/(endX-startX);
-    const y=cy+Math.sin(t*coils*Math.PI*2)*amp;
-    if(x===startX) ctx2d.moveTo(x,y);
-    else ctx2d.lineTo(x,y);
-  }
-  ctx2d.stroke();
-
-  // 빛 점 (현재 위치)
-  if(progress>0){
-    const glow = ctx2d.createRadialGradient(lightX,lightY,0,lightX,lightY,12);
-    glow.addColorStop(0,'rgba(247,106,200,0.95)');
-    glow.addColorStop(0.4,'rgba(247,106,200,0.5)');
-    glow.addColorStop(1,'rgba(247,106,200,0)');
-    ctx2d.beginPath();
-    ctx2d.fillStyle = glow;
-    ctx2d.arc(lightX,lightY,12,0,Math.PI*2);
-    ctx2d.fill();
-    ctx2d.beginPath();
-    ctx2d.fillStyle='rgba(255,255,255,0.95)';
-    ctx2d.arc(lightX,lightY,3,0,Math.PI*2);
-    ctx2d.fill();
-  }
-}
-
-// 비브라토2 UI 빌더
-function buildVib2UI(body){
-  // 1. 템포 (재생버튼 바로 아래)
-  buildTempoUI(body);
-
-  // 2. 음역 선택 그리드
-  const VMIN=48, VMAX=92;
-  const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
-  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
-  const lbl=document.createElement('div');lbl.className='basic-key-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 음 선택';inner.appendChild(lbl);
-  const COLS=9; const allBtns=[];
-  for(let midi=VMIN;midi<=VMAX;midi++){
-    const name=midiToName(midi,1).replace(/-?\d+$/,'');
-    const btn=document.createElement('button');
-    btn.className='key-grid-btn'+(isSharpNote(midi)?' sharp':'')+(midi===vib2_rootMidi?' range-start':'');
-    btn.textContent=name;btn.setAttribute('data-midi',midi);
-    btn.onclick=()=>{
-      previewNote(midi);
-      vib2_rootMidi=midi;
-      allBtns.forEach(b=>b.classList.remove('range-start'));
-      btn.classList.add('range-start');
-      const kd=document.getElementById('vocal-key-display');
-      if(kd) kd.textContent=midiToName(midi,1);
-      stopExercise();
-    };
-    allBtns.push(btn);
-  }
-  for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
-    const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
-    allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
-    inner.appendChild(row);
-  }
-  outer.appendChild(inner);body.appendChild(outer);
-}
-
-// 비브라토2 코일 캔버스 UI 빌더 (라벨박스 안에 삽입)
-function _buildVib2CoilInLabel(labelBox){
-  // 발음 자리 대신 코일 캔버스
-  const coilWrap=document.createElement('div');
-  coilWrap.style.cssText='width:100%;display:flex;justify-content:center;align-items:center;padding:4px 0;';
-  const canvas=document.createElement('canvas');
-  canvas.id='vib2-coil-canvas';
-  canvas.width=260; canvas.height=50;
-  canvas.style.cssText='width:100%;max-width:260px;height:50px;';
-  coilWrap.appendChild(canvas);
-  // labelTitle 위에 삽입
-  const titleEl=labelBox.querySelector('#vowel-title-display');
-  if(titleEl) labelBox.insertBefore(coilWrap, titleEl);
-  else labelBox.appendChild(coilWrap);
-  // 초기 상태 그리기
-  _drawVib2Coil(canvas,0);
-}
-
-/* ════════════════════════════════════════════════
    모드 진입 시 함수 포인터 세팅
 ════════════════════════════════════════════════ */
 function setupModeFunctions(){
@@ -2384,24 +1990,6 @@ function setupModeFunctions(){
     _fn_isLastKey=adv_isLastKey;
     _fn_onEngineStart=adv_onEngineStart;
     _fn_getTotalLoops=adv_getTotalLoops;
-  } else if(TMODE===MODE_VIBRATO1){
-    _fn_scheduleOneBeat=vib1_scheduleOneBeat;
-    _fn_applyVisual=vib1_applyVisual;
-    _fn_onComplete=vib1_onComplete;
-    _fn_getCurrentRootMidi=vib1_getCurrentMidi;
-    _fn_advanceKey=vib1_advanceKey;
-    _fn_isLastKey=vib1_isLastKey;
-    _fn_onEngineStart=vib1_onEngineStart;
-    _fn_getTotalLoops=vib1_getTotalLoops;
-  } else if(TMODE===MODE_VIBRATO2){
-    _fn_scheduleOneBeat=vib2_scheduleOneBeat;
-    _fn_applyVisual=vib2_applyVisual;
-    _fn_onComplete=vib2_onComplete;
-    _fn_getCurrentRootMidi=vib2_getCurrentMidi;
-    _fn_advanceKey=vib2_advanceKey;
-    _fn_isLastKey=vib2_isLastKey;
-    _fn_onEngineStart=vib2_onEngineStart;
-    _fn_getTotalLoops=vib2_getTotalLoops;
   }
 }
 
@@ -2418,8 +2006,6 @@ function hardReset(){
   else if(TMODE===MODE_PRACTICE)prac_reset();
   else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)wu_reset();
   else if(TMODE===MODE_ADVANCED_1)adv_reset();
-  else if(TMODE===MODE_VIBRATO1)vib1_reset();
-  else if(TMODE===MODE_VIBRATO2)vib2_reset();
   setupModeFunctions();
   buildPracticeUI();
 }
@@ -2451,8 +2037,6 @@ function buildPracticeUI(){
       else if(modeVal===MODE_PRACTICE)prac_reset();
       else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2)wu_reset();
       else if(modeVal===MODE_ADVANCED_1)adv_reset();
-      else if(modeVal===MODE_VIBRATO1)vib1_reset();
-      else if(modeVal===MODE_VIBRATO2)vib2_reset();
       hardReset();
     };
     mt.appendChild(b);
@@ -2483,92 +2067,44 @@ function buildPracticeUI(){
       const nxt=document.createElement('div');nxt.className='vkp-next';nxt.id='adv-next-key';nxt.textContent='\u00a0';kPan.appendChild(nxt);
     } else {
       const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='vocal-key-display';
-      if(TMODE===MODE_VIBRATO1){
-        kMid.textContent=midiToName(vib1_rootMidi,1);
-        kPan.appendChild(kMid);
-      } else if(TMODE===MODE_VIBRATO2){
-        kMid.textContent=midiToName(vib2_rootMidi,1);
-        kPan.appendChild(kMid);
-      } else {
-        // 목풀기: b표기, 기본/연습: 시작 방향 기준
-        const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
-        kMid.textContent=midiToName(_fn_getCurrentRootMidi(),initDir);
-        kPan.appendChild(kMid);
-        const dEl=document.createElement('div');dEl.className='vkp-dir';dEl.id='vocal-dir-display';
-        const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?wu_getDirAt(wu_keyIdx):initDir;
-        dEl.textContent=initMoveDir>=0?'▲ 상행':'▼ 하행';
-        kPan.appendChild(dEl);
-      }
+      // 목풀기: b표기, 기본/연습: 시작 방향 기준
+      const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
+      kMid.textContent=midiToName(_fn_getCurrentRootMidi(),initDir);
+      kPan.appendChild(kMid);
+      const dEl=document.createElement('div');dEl.className='vkp-dir';dEl.id='vocal-dir-display';
+      const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?wu_getDirAt(wu_keyIdx):initDir;
+      dEl.textContent=initMoveDir>=0?'▲ 상행':'▼ 하행';
+      kPan.appendChild(dEl);
     }
     vlb.appendChild(kPan);
     const labArea=document.createElement('div');labArea.className='vlabel-labels-area';
     labArea.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;';
-
-    if(TMODE===MODE_VIBRATO1){
+    // labelTitle이 있으면 윗줄에 표시
+    if(pat.labelTitle){
       const titleEl=document.createElement('div');
       titleEl.id='vowel-title-display';
       titleEl.style.cssText='font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:0.5px;';
-      titleEl.textContent='Ah';
+      titleEl.textContent=pat.labelTitle;
       labArea.appendChild(titleEl);
-      const vib1Labels=['도','시','도','시','도','시','도','시'];
-      const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;';
-      vib1Labels.forEach((kor,i2)=>{
-        const col=document.createElement('div');col.className='vlabel-col';
+    }
+    const is4beat=(pat.noteDiv||4)===4;
+    const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:wrap;';
+    const lbls=getActiveLabels();
+    lbls.kor.forEach((kor,i2)=>{
+      const col=document.createElement('div');col.className='vlabel-col';
+      // eng는 숨기고 kor만 표시 (labelTitle 패턴)
+      if(!pat.labelTitle){
+        const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.textContent=lbls.eng[i2]||'';
+        col.appendChild(eS);
+      } else {
+        // eng span도 만들되 숨김 (하이라이트 로직 호환)
         const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
-        const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.textContent=kor;
-        col.appendChild(kS);lblsRow.appendChild(col);
-      });
-      labArea.appendChild(lblsRow);
-    } else if(TMODE===MODE_VIBRATO2){
-      const coilWrap=document.createElement('div');
-      coilWrap.style.cssText='width:100%;display:flex;justify-content:center;align-items:center;padding:4px 0;';
-      const canvas=document.createElement('canvas');
-      canvas.id='vib2-coil-canvas';canvas.width=240;canvas.height=44;
-      canvas.style.cssText='width:100%;max-width:240px;height:44px;';
-      coilWrap.appendChild(canvas);
-      labArea.appendChild(coilWrap);
-      const vib2Labels=['도','도','도','도'];
-      const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;';
-      vib2Labels.forEach((kor,i2)=>{
-        const col=document.createElement('div');col.className='vlabel-col';
-        const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
-        const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.textContent=kor;
-        col.appendChild(kS);lblsRow.appendChild(col);
-      });
-      labArea.appendChild(lblsRow);
-    } else {
-      // labelTitle이 있으면 윗줄에 표시
-      if(pat.labelTitle){
-        const titleEl=document.createElement('div');
-        titleEl.id='vowel-title-display';
-        titleEl.style.cssText='font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:0.5px;';
-        titleEl.textContent=pat.labelTitle;
-        labArea.appendChild(titleEl);
       }
-      const is4beat=(pat.noteDiv||4)===4;
-      const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:wrap;';
-      const lbls=getActiveLabels();
-      lbls.kor.forEach((kor,i2)=>{
-        const col=document.createElement('div');col.className='vlabel-col';
-        if(!pat.labelTitle){
-          const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.textContent=lbls.eng[i2]||'';
-          col.appendChild(eS);
-        } else {
-          const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
-        }
-        const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.innerHTML=formatKorLabel(kor||'');
-        col.appendChild(kS);lblsRow.appendChild(col);
-      });
-      labArea.appendChild(lblsRow);
-    }
+      const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.innerHTML=formatKorLabel(kor||'');
+      col.appendChild(kS);lblsRow.appendChild(col);
+    });
+    labArea.appendChild(lblsRow);
     vlb.appendChild(labArea);body.appendChild(vlb);
-
-    if(TMODE===MODE_VIBRATO2){
-      setTimeout(()=>{
-        const c=document.getElementById('vib2-coil-canvas');
-        if(c)_drawVib2Coil(c,0);
-      },50);
-    }
   }
 
   /* ── 글리산도 슬라이더: 라벨박스 바로 아래 삽입 ── */
@@ -2594,11 +2130,9 @@ function buildPracticeUI(){
     buildTempoUI(body);
   }
   if(TMODE===MODE_ADVANCED_1)buildAdvancedPanel(body);
-  if(TMODE===MODE_VIBRATO1)buildVib1UI(body);
-  if(TMODE===MODE_VIBRATO2)buildVib2UI(body);
 
   /* ── 특수 패턴 전용 UI ── */
-  if(pat.vibrato && TMODE===MODE_ADVANCED_1)_buildVibratoUI(body);
+  if(pat.vibrato)_buildVibratoUI(body);
 
   /* ── 볼륨 ── */
   const vw=document.createElement('div');vw.className='vol-wrap';
@@ -3048,12 +2582,14 @@ function closePractice(){
 // ── 잠금 헬퍼 ──
 let _currentProfileId = null;
 let _practiceLogs = null; // Firebase 동기화 후 초기화됨
+let _loggedThisRun = false; // 현재 재생분 저장 여부 — 중복저장 방지
 function _isLocked(patternId){
   if(!_currentProfileId) return false;
   try{
     const locks = JSON.parse(localStorage.getItem('somi_pattern_locks')||'{}');
     const pl = locks[_currentProfileId];
-    return pl && pl[patternId] === false;
+    if(!pl) return false; // 잠금 데이터 자체가 없는 구버전 학생 → 기존대로 열림
+    return pl[patternId] !== true; // 명시적으로 열림(true)이 아니면 잠김 (신규/미지정 = 잠김)
   }catch(e){ return false; }
 }
 
