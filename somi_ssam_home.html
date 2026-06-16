@@ -24,7 +24,9 @@
   --class-pro:#6af7a0;        /* 전문반: 민트그린 */
   --class-hobby:#6ac8f7;      /* 취미반: 하늘색 */
   --class-short:#c49a6c;      /* 단기반: 브라운베이지 */
-  --class-breath:#999999;     /* 숨고르기반: 진회색 */
+  --class-breath:#7e8aa3;     /* 휴식반(숨고르기): 차분한 블루그레이 */
+  --class-ended:#6b6b72;      /* 종료반: 흐린 회색 */
+  --class-tester:#a98cf5;     /* 테스터반: 보라 */
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -69,7 +71,7 @@ button{font-family:inherit;cursor:pointer;}
 
 .teacher-content{padding:20px;max-width:700px;margin:0 auto;}
 .section-desc{color:var(--text2);font-size:0.82rem;margin-bottom:20px;line-height:1.6;}
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.stats-grid{display:grid;grid-template-columns:1fr 0.7fr 1fr;gap:14px;margin-bottom:24px;}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;min-height:90px;}
 .stat-label{font-size:0.72rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;}
 .stat-value{font-size:2rem;font-weight:700;margin-top:6px;font-family:'DM Mono',monospace;}
@@ -83,7 +85,9 @@ button{font-family:inherit;cursor:pointer;}
 .student-row.cls-pro{background:rgba(106,247,160,0.28);border-color:rgba(106,247,160,0.55);}
 .student-row.cls-hobby{background:rgba(106,200,247,0.28);border-color:rgba(106,200,247,0.55);}
 .student-row.cls-short{background:rgba(196,154,108,0.35);border-color:rgba(196,154,108,0.6);}
-.student-row.cls-breath{background:rgba(153,153,153,0.28);border-color:rgba(153,153,153,0.5);}
+.student-row.cls-breath{background:rgba(126,138,163,0.28);border-color:rgba(126,138,163,0.5);}
+.student-row.cls-ended{background:rgba(107,107,114,0.22);border-color:rgba(107,107,114,0.45);}
+.student-row.cls-tester{background:rgba(169,140,245,0.26);border-color:rgba(169,140,245,0.55);}
 
 .s-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;}
 .s-avatar.f{background:linear-gradient(135deg,var(--accent2),#c96af7);}
@@ -100,7 +104,9 @@ button{font-family:inherit;cursor:pointer;}
 .detail-student-card.cls-pro{background:rgba(106,247,160,0.25);border-color:rgba(106,247,160,0.5);}
 .detail-student-card.cls-hobby{background:rgba(106,200,247,0.25);border-color:rgba(106,200,247,0.5);}
 .detail-student-card.cls-short{background:rgba(196,154,108,0.3);border-color:rgba(196,154,108,0.55);}
-.detail-student-card.cls-breath{background:rgba(153,153,153,0.25);border-color:rgba(153,153,153,0.5);}
+.detail-student-card.cls-breath{background:rgba(126,138,163,0.25);border-color:rgba(126,138,163,0.5);}
+.detail-student-card.cls-ended{background:rgba(107,107,114,0.2);border-color:rgba(107,107,114,0.45);}
+.detail-student-card.cls-tester{background:rgba(169,140,245,0.23);border-color:rgba(169,140,245,0.5);}
 .detail-student-card.no-class{background:var(--surface);border-color:var(--border);}
 
 .detail-back{background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.85rem;font-family:inherit;padding:0;margin-bottom:16px;display:flex;align-items:center;gap:6px;}
@@ -190,10 +196,33 @@ button{font-family:inherit;cursor:pointer;}
   table { min-width: 260px; font-size: 0.78rem; }
   .pm-checkbox { width: 16px; height: 16px; }
 }
+/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
+@keyframes spin{to{transform:rotate(360deg)}}
+.somi-load-overlay{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
+.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
+.somi-load-overlay.hide{opacity:0;pointer-events:none;}
+.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
+.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
+.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
+.somi-load-slow.show{display:block;}
+.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;font-family:inherit;cursor:pointer;}
 </style>
 <script src="stamps.js"></script>
 </head>
 <body>
+
+<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
+<div id="somi-load-overlay" class="somi-load-overlay hide">
+  <div class="somi-load-spinner"></div>
+  <div class="somi-load-text">데이터 불러오는 중...</div>
+  <div class="somi-load-sub">SOMI_SSAM</div>
+  <div class="somi-load-slow">
+    연결이 평소보다 느려요.<br>계속 다시 시도하고 있어요.
+    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
+  </div>
+</div>
 
 <!-- ══════════ 스플래시 ══════════ -->
 <div id="splash">
@@ -322,14 +351,41 @@ button{font-family:inherit;cursor:pointer;}
 /* ════════════════════════════════════════════════
    【 섹션 A 】 저장/로드 헬퍼
 ════════════════════════════════════════════════ */
+/* ══════════ 공용 로딩 오버레이 제어 (전 파일 공통 표준) ══════════ */
+let _somiLoadTimer=null;
+function somiStartSlowTimer(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
+  clearTimeout(_somiLoadTimer);
+  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },25000); // 25초 후 비상구 노출
+}
+function somiShowLoading(text){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
+  o.classList.remove('hide'); somiStartSlowTimer();
+}
+function somiHideLoading(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  clearTimeout(_somiLoadTimer); o.classList.add('hide');
+}
+
 function loadData(k, d) {
   try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; }
 }
+// 연습 페이지가 "변경됐을 때만" 재동기화할 수 있도록, 잠금/레벨 변경 시각을 함께 기록
+const _SYNC_WATCH_KEYS = ['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates'];
 function saveData(k, v) {
   try {
     const json = JSON.stringify(v);
     localStorage.setItem(k, json);
     if (window._fsSet) window._fsSet(k, json);
+    // 잠금/레벨류가 바뀌면 동기화 메타(타임스탬프) 갱신 → 학생 연습 페이지가 감지
+    if (_SYNC_WATCH_KEYS.includes(k)) {
+      const meta = { ts: Date.now() };
+      const mj = JSON.stringify(meta);
+      localStorage.setItem('somi_sync_meta', mj);
+      if (window._fsSet) window._fsSet('somi_sync_meta', mj);
+    }
   } catch(e) {}
 }
 
@@ -349,6 +405,8 @@ let practiceLogs         = loadData('somi_logs', {});
 let accessLog            = loadData('somi_access_log', {});
 let teacherPw            = loadData('somi_teacher_pw', '1');
 let teacherStamps        = loadData('somi_teacher_stamps', {});
+let teacherChecks        = loadData('somi_teacher_checks', {});
+let restStartDates       = loadData('somi_rest_start_dates', {});  // {pid: 'YYYY-MM-DD'} 휴식반 진입일
 let classSettings        = loadData('somi_class_settings', {});
 let lessonStarts         = loadData('somi_lesson_starts', {});
 let patternLocks         = loadData('somi_pattern_locks', {});
@@ -361,6 +419,8 @@ function saveProfiles()       { saveData('somi_profiles', profiles); }
 function saveLogs()           { saveData('somi_logs', practiceLogs); }
 function saveTeacherPw()      { saveData('somi_teacher_pw', teacherPw); }
 function saveTeacherStamps()  { saveData('somi_teacher_stamps', teacherStamps); }
+function saveTeacherChecks()  { saveData('somi_teacher_checks', teacherChecks); }
+function saveRestStartDates() { saveData('somi_rest_start_dates', restStartDates); }
 function saveClassSettings()  { saveData('somi_class_settings', classSettings); }
 function saveLessonStarts()   { saveData('somi_lesson_starts', lessonStarts); }
 function savePatternLocks()   { saveData('somi_pattern_locks', patternLocks); }
@@ -372,7 +432,7 @@ function addLevel(label)   { const id='lv_'+Date.now(); levelSettings.push({id,l
 function deleteLevel(id)   { levelSettings=levelSettings.filter(l=>l.id!==id); Object.keys(patternLevelOverrides).forEach(k=>{ if(patternLevelOverrides[k]===id) delete patternLevelOverrides[k]; }); saveLevelSettings(); savePatternLevels(); }
 function renameLevel(id,l) { const lv=levelSettings.find(x=>x.id===id); if(lv){lv.label=l;saveLevelSettings();} }
 
-function isLocked(pid, patternId)       { if(!patternLocks[pid]) return false; return patternLocks[pid][patternId]===false; }
+function isLocked(pid, patternId)       { if(!patternLocks[pid]) return true; return patternLocks[pid][patternId]!==true; }
 function setLock(pid, patternId, locked){ if(!patternLocks[pid]) patternLocks[pid]={}; patternLocks[pid][patternId]=!locked; savePatternLocks(); }
 function getPatternLevel(patternId)     { return patternLevelOverrides[patternId]||(patternData.find(p=>p.id===patternId)||{}).level; }
 function getAdvSettings(patternId)      { if(!advancedSettings[patternId]) advancedSettings[patternId]={enabled:false,intervals:[1,2],random:false}; return advancedSettings[patternId]; }
@@ -387,15 +447,17 @@ function getLastAccess(pid) {
   return {text, isToday, none:false};
 }
 
-/* ── [5번] 미확인 연습일: 연습기록 O + 선생님 도장 X ── */
-// 한 학생의 미확인 연습 날짜 목록(YYYY-MM-DD) 반환 — 최신순
+/* ── [5번] 미확인 연습일: 연습기록 O + (선생님 도장 X AND 확인표시 X) ── */
+// 이 날짜가 이미 확인 처리되었는지 (도장 또는 확인만)
+function _isHandled(pid, ds){ const k=pid+'_'+ds; return !!teacherChecks[k]; }
+// 한 학생의 미확인 날짜 목록(YYYY-MM-DD) 반환 — 최신순
 function getUncheckedDates(pid) {
   const days=[...new Set((practiceLogs[pid]||[]).map(l=>l.date))];
-  return days.filter(d=>!teacherStamps[pid+'_'+d]).sort().reverse();
+  return days.filter(d=>!_isHandled(pid,d)).sort().reverse();
 }
 // 특정 날짜가 미확인인지
 function isUncheckedDate(pid, ds) {
-  if(teacherStamps[pid+'_'+ds]) return false;
+  if(_isHandled(pid,ds)) return false;
   return (practiceLogs[pid]||[]).some(l=>l.date===ds);
 }
 // 전체 학생의 미확인 항목 [{pid,name,date,duration}] — 최신순
@@ -405,7 +467,7 @@ function getAllUnchecked() {
     const byDay={};
     (practiceLogs[p.id]||[]).forEach(l=>{ byDay[l.date]=(byDay[l.date]||0)+(l.duration||0); });
     Object.keys(byDay).forEach(d=>{
-      if(!teacherStamps[p.id+'_'+d]) out.push({pid:p.id, name:p.name, date:d, duration:byDay[d]});
+      if(!_isHandled(p.id,d)) out.push({pid:p.id, name:p.name, date:d, duration:byDay[d]});
     });
   });
   return out.sort((a,b)=>b.date.localeCompare(a.date) || a.name.localeCompare(b.name,'ko'));
@@ -453,6 +515,7 @@ function renderUncheckedPanel(){
       <button onclick="setUncheckedStampType('star')" id="uk-stamp-star" style="padding:5px 10px;border-radius:8px;border:2px solid ${_uncheckedStampType==='star'?'#FFEE00':'var(--border)'};background:${_uncheckedStampType==='star'?'rgba(255,238,0,0.15)':'var(--surface2)'};cursor:pointer;font-size:1rem;">⭐</button>
       <button onclick="setUncheckedStampType('heart')" id="uk-stamp-heart" style="padding:5px 10px;border-radius:8px;border:2px solid ${_uncheckedStampType==='heart'?'#ff6a8a':'var(--border)'};background:${_uncheckedStampType==='heart'?'rgba(255,106,138,0.15)':'var(--surface2)'};cursor:pointer;font-size:1rem;">❤️</button>
       <button onclick="bulkStampUnchecked()" ${selCount===0?'disabled':''} style="margin-left:auto;padding:7px 14px;border-radius:9px;border:none;background:${selCount===0?'var(--surface2)':'var(--accent2)'};color:${selCount===0?'var(--text2)':'#fff'};font-family:inherit;font-size:0.82rem;font-weight:700;cursor:${selCount===0?'default':'pointer'};">선택 ${selCount}건 도장 찍기</button>
+      <button onclick="bulkCheckUnchecked()" ${selCount===0?'disabled':''} style="padding:7px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:${selCount===0?'var(--text2)':'var(--text)'};font-family:inherit;font-size:0.82rem;font-weight:700;cursor:${selCount===0?'default':'pointer'};">확인만</button>
     </div>`;
 
     // 리스트
@@ -468,6 +531,7 @@ function renderUncheckedPanel(){
           <div style="font-size:0.74rem;color:var(--text2);">${formatDur(it.duration)} 연습</div>
         </div>
         <button onclick="stampOneUnchecked('${it.pid}','${it.date}')" style="padding:6px 11px;border-radius:8px;border:none;background:var(--accent2);color:#fff;font-family:inherit;font-size:0.76rem;font-weight:700;cursor:pointer;flex-shrink:0;">도장</button>
+        <button onclick="checkOneUnchecked('${it.pid}','${it.date}')" style="padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:inherit;font-size:0.76rem;font-weight:700;cursor:pointer;flex-shrink:0;">확인</button>
       </div>`;
     });
     html+=`</div>`;
@@ -506,6 +570,23 @@ function bulkStampUnchecked(){
   _uncheckedSelected.clear();
   renderUncheckedPanel(); renderTeacher();
 }
+// 도장 없이 확인만 기록
+function _writeCheck(pid,date){
+  teacherChecks[pid+'_'+date]={date:date, ts:Date.now()};
+}
+function checkOneUnchecked(pid,date){
+  _writeCheck(pid,date);
+  saveTeacherChecks();
+  _uncheckedSelected.delete(_ukKey(pid,date));
+  renderUncheckedPanel(); renderTeacher();
+}
+function bulkCheckUnchecked(){
+  if(_uncheckedSelected.size===0) return;
+  _uncheckedSelected.forEach(k=>{ const i=k.indexOf('_'); _writeCheck(k.slice(0,i), k.slice(i+1)); });
+  saveTeacherChecks();
+  _uncheckedSelected.clear();
+  renderUncheckedPanel(); renderTeacher();
+}
 function jumpToStudent(pidx){ if(pidx>=0) showStudentDetail(pidx); }
 
 
@@ -516,13 +597,57 @@ const CLASS_MAP = {
   '전문반':{ cssClass:'cls-pro',  color:'#6af7a0', label:'전문' },
   '취미반':{ cssClass:'cls-hobby',color:'#6ac8f7', label:'취미' },
   '단기반':{ cssClass:'cls-short',color:'#c49a6c', label:'단기' },
-  '숨고르기':{ cssClass:'cls-breath',color:'#999999', label:'숨' },
+  '숨고르기':{ cssClass:'cls-breath',color:'#7e8aa3', label:'휴식' },
+  '종료반':{ cssClass:'cls-ended', color:'#6b6b72', label:'종료' },
+  '테스터':{ cssClass:'cls-tester',color:'#a98cf5', label:'테스터' },
 };
+// 머릿수(전체 학생)에서 제외되는 반: 종료·테스터
+const EXCLUDED_FROM_TOTAL = ['종료반','테스터'];
+// 괄호로 따로 세는 반 + 표기 라벨
+const COUNT_ASIDE = [
+  { cls:'숨고르기', label:'휴식' },
+  { cls:'테스터',  label:'테스터' },
+];
+
+/* ── 휴식반(숨고르기) 단계별 개방 패턴 규칙 ──
+   진입일 기준: 1개월차 / 2~3개월차 / 4개월차~
+   학생 페이지(발성·호흡)도 동일 규칙을 각자 복제해 사용 */
+const REST_STAGE_RULES = {
+  // 1개월차 (진입 ~ +1개월): 호흡 전체·쓰기 + 발성 H-a 8beat 1/2, Na 4beat 1/2, Ma 4beat 1/2
+  month1: ['breath_full','breath_write',
+           'vocal_ha_8beat_1','vocal_ha_8beat_2',
+           'vocal_na_4beat_1','vocal_na_4beat_2',
+           'vocal_ma_4beat_1','vocal_ma_4beat_2'],
+  // 2~3개월차 (+1개월 ~ +3개월): 호흡 전체·쓰기 + 발성 H-a 8beat 1, Na 4beat 1, Ma 4beat 1
+  month2to3: ['breath_full','breath_write',
+              'vocal_ha_8beat_1','vocal_na_4beat_1','vocal_ma_4beat_1'],
+  // 4개월차~ (+3개월 이후): 전부 잠금
+  month4plus: [],
+};
+// 진입일과 오늘로 휴식 단계 판정: 'month1' | 'month2to3' | 'month4plus'
+function getRestStage(startDateStr, today){
+  if(!startDateStr) return 'month1';
+  const start=new Date(startDateStr+'T00:00:00');
+  const now=today||new Date();
+  // 경과 개월 수 (달력 기준)
+  let months=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());
+  if(now.getDate()<start.getDate()) months--;  // 아직 그 날짜 안 지났으면 -1
+  if(months<1) return 'month1';
+  if(months<3) return 'month2to3';
+  return 'month4plus';
+}
+// 휴식 진입 후 경과 일수 (디데이 표시용)
+function getRestDays(startDateStr, today){
+  if(!startDateStr) return 0;
+  const start=new Date(startDateStr+'T00:00:00');
+  const now=today||new Date();
+  return Math.floor((now-start)/86400000)+1;  // 진입일=1일째
+}
 function getClassCSS(voClass) { return CLASS_MAP[voClass]?.cssClass || ''; }
 function getClassColor(voClass) { return CLASS_MAP[voClass]?.color || null; }
 
 /* ── 반 정렬 순서 ── */
-const CLASS_ORDER = ['입시반','전문반','취미반','단기반','숨고르기',null,''];
+const CLASS_ORDER = ['입시반','전문반','취미반','단기반','숨고르기','테스터','종료반',null,''];
 function classRank(voClass) {
   const i = CLASS_ORDER.indexOf(voClass);
   return i === -1 ? CLASS_ORDER.length : i;
@@ -718,7 +843,18 @@ function deleteDevice(idx){
 function renderTeacher() {
   patternData = loadPatternData();
 
-  document.getElementById('t-total').textContent = profiles.length;
+  // 머릿수: 종료·테스터는 본수 제외, 휴식·테스터는 괄호로 따로 표기
+  const _clsOf = (p)=> (classSettings[p.id]||{}).voClass || null;
+  const mainCount = profiles.filter(p=>!EXCLUDED_FROM_TOTAL.includes(_clsOf(p))).length;
+  const asideParts = COUNT_ASIDE
+    .map(a=>{ const n=profiles.filter(p=>_clsOf(p)===a.cls).length; return n>0?`${a.label}${n}`:null; })
+    .filter(Boolean);
+  const _totalEl = document.getElementById('t-total');
+  if(asideParts.length){
+    _totalEl.innerHTML = `<span style="white-space:nowrap;">${mainCount}<span style="font-size:0.42em;font-weight:600;color:var(--text2);margin-left:5px;letter-spacing:0;font-family:inherit;">(${asideParts.join('·')})</span></span>`;
+  } else {
+    _totalEl.textContent = mainCount;
+  }
   const today = toDateStr(new Date());
   document.getElementById('t-today').textContent = profiles.filter(p=>(practiceLogs[p.id]||[]).some(l=>l.date===today)).length;
   let ws=0; const now=new Date();
@@ -968,7 +1104,7 @@ function renderDetailContent(p) {
     </div>`;
 
   html+=`<div class="teacher-cal" id="t-cal-wrap"><div class="cal-header"><button class="cal-nav" onclick="tCalMove(-1)">‹</button><h3 id="t-cal-title"></h3><button class="cal-nav" onclick="tCalMove(1)">›</button></div><div class="cal-grid" id="t-cal-grid"></div></div>`;
-  html+=`<div class="comment-box"><h4>📮 도장 + 코멘트 보내기 (<span id="selected-date-label">날짜를 선택해주세요</span>)</h4><div style="display:flex;gap:8px;margin-bottom:10px"><button id="stamp-type-star" onclick="selectTeacherStampType('star')" style="padding:6px 14px;border-radius:8px;border:2px solid #FFEE00;background:rgba(255,238,0,0.15);cursor:pointer;font-size:1.1rem">⭐</button><button id="stamp-type-heart" onclick="selectTeacherStampType('heart')" style="padding:6px 14px;border-radius:8px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-size:1.1rem">❤️</button></div><textarea class="comment-input" id="teacher-comment" placeholder="코멘트를 입력해주세요 (선택사항)"></textarea><button class="send-stamp-btn" onclick="sendTeacherStamp()">도장 보내기</button></div>`;
+  html+=`<div class="comment-box"><h4>📮 도장 + 코멘트 보내기 (<span id="selected-date-label">날짜를 선택해주세요</span>)</h4><div style="display:flex;gap:8px;margin-bottom:10px"><button id="stamp-type-star" onclick="selectTeacherStampType('star')" style="padding:6px 14px;border-radius:8px;border:2px solid #FFEE00;background:rgba(255,238,0,0.15);cursor:pointer;font-size:1.1rem">⭐</button><button id="stamp-type-heart" onclick="selectTeacherStampType('heart')" style="padding:6px 14px;border-radius:8px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-size:1.1rem">❤️</button></div><textarea class="comment-input" id="teacher-comment" placeholder="코멘트를 입력해주세요 (선택사항)"></textarea><div style="display:flex;gap:8px;align-items:center"><button class="send-stamp-btn" onclick="sendTeacherStamp()">도장 보내기</button><button class="send-stamp-btn" onclick="checkTeacherDate()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)">확인만</button></div></div>`;
   html+=`<div style="margin-top:24px"><div style="font-size:1rem;font-weight:700;margin-bottom:14px">상세 연습 기록</div>`;
   const byDay={}; logs.forEach(l=>{ if(!byDay[l.date])byDay[l.date]=[]; byDay[l.date].push(l); });
   const dayKeys=Object.keys(byDay).sort().reverse();
@@ -1025,8 +1161,8 @@ function renderTeacherCalendar(pid) {
       div.appendChild(sl);
     }
 
-    // ── [5번] 미확인(연습O + 도장X) 빨간 점 ──
-    if(has && !teacherStamps[tk]){
+    // ── [5번] 새 연습 알림 빨간 점 — 도장 발송과 무관, 확인표시 전까지 유지 ──
+    if(has && !_isHandled(pid, ds)){
       const dot=document.createElement('div');
       dot.style.cssText='position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff4444;z-index:4;pointer-events:none;box-shadow:0 0 0 1.5px var(--surface);';
       div.appendChild(dot);
@@ -1064,6 +1200,15 @@ function sendTeacherStamp(){
   const tk=teacherDetailProfileId+'_'+selectedTeacherDate;
   teacherStamps[tk]={stamp:selectedTeacherStampType,comment:document.getElementById('teacher-comment').value,date:selectedTeacherDate};
   saveTeacherStamps(); alert('도장을 보냈어요!'); document.getElementById('teacher-comment').value=''; renderTeacherCalendar(teacherDetailProfileId); renderUncheckedPanel();
+}
+// 도장 없이 확인만 처리
+function checkTeacherDate(){
+  if(!selectedTeacherDate){ alert('날짜를 먼저 선택해주세요'); return; }
+  const tk=teacherDetailProfileId+'_'+selectedTeacherDate;
+  if(teacherStamps[tk]){ alert('이미 도장을 보낸 날이에요.'); return; }
+  teacherChecks[tk]={date:selectedTeacherDate, ts:Date.now()};
+  saveTeacherChecks();
+  renderTeacherCalendar(teacherDetailProfileId); renderUncheckedPanel();
 }
 
 /* ── 커스텀 도장 삭제 모달 ── */
@@ -1107,8 +1252,8 @@ function pmPendingInit() {
 }
 function pmIsLocked(pid, patternId) {
   if(!pmPending) pmPendingInit();
-  if(!pmPending[pid]) return false;
-  return pmPending[pid][patternId] === false;
+  if(!pmPending[pid]) return true;
+  return pmPending[pid][patternId] !== true;
 }
 function pmSetLock(pid, patternId, active) {
   if(!pmPending) pmPendingInit();
@@ -1124,10 +1269,10 @@ function updatePmSaveBtnState() {
   let changed = false;
   outer: for(const pid of Object.keys(pmPending||{})){
     for(const patId of Object.keys(pmPending[pid])){
-      const orig = (patternLocks[pid] !== undefined && patternLocks[pid][patId] !== undefined) ? patternLocks[pid][patId] : true;
+      const orig = (patternLocks[pid] !== undefined && patternLocks[pid][patId] !== undefined) ? patternLocks[pid][patId] : false;
       const cur  = pmPending[pid][patId];
-      const origNorm = (orig === false) ? false : true;
-      const curNorm  = (cur  === false) ? false : true;
+      const origNorm = (orig === true) ? true : false;
+      const curNorm  = (cur  === true) ? true : false;
       if(origNorm !== curNorm){ changed = true; break outer; }
     }
   }
@@ -1756,7 +1901,7 @@ function renderProfileManage() {
   filterBar.appendChild(sortBtn);
 
   // ── [2번] 반 필터 버튼에 색상 배지 반영 ──
-  ['취미반','전문반','입시반','단기반','숨고르기'].forEach(cls=>{
+  ['취미반','전문반','입시반','단기반','숨고르기','테스터','종료반'].forEach(cls=>{
     const clsColor = getClassColor(cls);
     const b=document.createElement('button');
     b.style.cssText=`padding:4px 10px;border-radius:20px;border:1px solid ${clsColor||'var(--border)'};background:${clsColor?clsColor+'22':'var(--surface2)'};color:${clsColor||'var(--text2)'};font-size:0.78rem;cursor:pointer;transition:all 0.15s;font-weight:600;`;
@@ -1811,22 +1956,44 @@ function renderProfileManage() {
       const prevClass=(prevSettings[p.id]||{}).voClass||null;
       const newClass=(classSettings[p.id]||{}).voClass||null;
       if(prevClass===newClass) return;
+      const todayStr=toDateStr(new Date());
+
+      // 휴식반(숨고르기) 진입 → 진입일 기록 (잠금은 학생 페이지가 진입일 기준 단계로 동적 계산)
       if(newClass==='숨고르기'){
+        if(!restStartDates[p.id]) restStartDates[p.id]=todayStr;  // 이미 있으면 유지
         backups[p.id]=JSON.parse(JSON.stringify(locks[p.id]||{}));
+      }
+      // 휴식반에서 나감 → 진입일 제거
+      else if(prevClass==='숨고르기'){
+        delete restStartDates[p.id];
+      }
+
+      if(newClass==='숨고르기'){
+        // 잠금은 동적 계산이므로 여기선 별도 기록 안 함 (학생 페이지가 restStartDates로 판단)
+      } else if(newClass==='종료반'){
+        // 종료반: 전부 잠금
         locks[p.id]={};
         allPatterns.forEach(pat=>{ locks[p.id][pat.id]=false; });
+      } else if(newClass==='테스터'){
+        // 테스터: 전부 열기
+        locks[p.id]={};
+        allPatterns.forEach(pat=>{ locks[p.id][pat.id]=true; });
       } else if(prevClass==='숨고르기'){
+        // 휴식반 → 일반반 복귀: 백업 있으면 복원, 없으면 전부 잠금 후 호흡전체 개방
         if(backups[p.id]){
           locks[p.id]=backups[p.id]; delete backups[p.id];
         } else {
           locks[p.id]={};
           allPatterns.forEach(pat=>{ locks[p.id][pat.id]=false; });
-          if(locks[p.id]['breath_full']!==undefined) locks[p.id]['breath_full']=true;
-          else {
-            const hasBreathFull=allPatterns.some(pat=>pat.id==='breath_full');
-            if(!hasBreathFull) locks[p.id]['breath_full']=true;
-          }
+          const hasBreathFull=allPatterns.some(pat=>pat.id==='breath_full');
+          if(hasBreathFull) locks[p.id]['breath_full']=true;
         }
+      } else if((prevClass==='종료반'||prevClass==='테스터') && newClass && newClass!=='숨고르기'){
+        // 종료/테스터 → 일반반: 전부 잠금 후 호흡전체 개방
+        locks[p.id]={};
+        allPatterns.forEach(pat=>{ locks[p.id][pat.id]=false; });
+        const hasBreathFull=allPatterns.some(pat=>pat.id==='breath_full');
+        if(hasBreathFull) locks[p.id]['breath_full']=true;
       } else if(!prevClass&&newClass&&newClass!=='숨고르기'){
         if(!locks[p.id]) locks[p.id]={};
         allPatterns.forEach(pat=>{ locks[p.id][pat.id]=false; });
@@ -1834,6 +2001,7 @@ function renderProfileManage() {
       }
     });
     patternLocks=locks; savePatternLocks();
+    saveRestStartDates();
     localStorage.setItem('somi_pattern_locks_backup',JSON.stringify(backups));
     saveBtn.textContent='✓ 저장됐어요!';
     saveBtn.style.background='var(--accent3)';
@@ -1932,7 +2100,7 @@ function renderProfileManage() {
         if(!isOpen) classDd.style.display='block';
       };
 
-      [null,'취미반','전문반','입시반','단기반','숨고르기'].forEach(cls=>{
+      [null,'취미반','전문반','입시반','단기반','숨고르기','테스터','종료반'].forEach(cls=>{
         const opt=document.createElement('button'); const isSel=ci.voClass===cls;
         const optColor=getClassColor(cls);
         opt.style.cssText=`display:block;width:100%;text-align:left;padding:6px 10px;border:none;border-radius:6px;background:${isSel?(optColor?optColor+'22':'rgba(124,106,247,0.15)'):'transparent'};color:${isSel?(optColor||'var(--accent)'):'var(--text)'};font-size:0.83rem;cursor:pointer;font-family:inherit;font-weight:${isSel?'700':'400'};`;
@@ -2112,37 +2280,51 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
   document.body.style.visibility='visible';
 
-  // Firebase 동기화
-  try {
-    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
-    const { getFirestore, doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-    const FB_CONFIG={apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"};
-    const APP_NAME='somi-home-v4';
-    const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
-    const fsDb=getFirestore(fbApp);
-    window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
-    await Promise.all(KEYS.map(async k=>{
-      try{ const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value); }catch(e){}
-    }));
-    profiles=loadData('somi_profiles',[]);
-    // 학생 세션 데이터 개별 로드
-    await Promise.all(profiles.map(async p=>{
-      try{ const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+p.id)); if(snap.exists()) localStorage.setItem('somi_student_session_'+p.id,snap.data().value); }catch(e){}
-    }));
-    practiceLogs=loadData('somi_logs',{});
-    teacherPw=loadData('somi_teacher_pw','1');
-    teacherStamps=loadData('somi_teacher_stamps',{});
-    classSettings=loadData('somi_class_settings',{});
-    lessonStarts=loadData('somi_lesson_starts',{});
-    patternLocks=loadData('somi_pattern_locks',{});
-    patternLevelOverrides=loadData('somi_pattern_levels',{});
-    levelSettings=loadData('somi_level_settings',null)||DEFAULT_LEVEL_SETTINGS.map(l=>({...l}));
-    accessLog=loadData('somi_access_log',{});
+  // ── 로딩화면 표시 → 동기화 끝까지 완료 후 해제 ──
+  // 선생님 화면: 옛 명단/기록을 보거나 동기화 중 저장 충돌을 막기 위해
+  // 동기화가 끝날 때까지 화면을 막고, 실패 시 자동 재시도한다. (25초 후 비상구 버튼)
+  somiShowLoading('데이터 불러오는 중...');
+  let _offlineForced = false;
+  window.somiHideLoading = (function(orig){
+    return function(){ _offlineForced = true; orig(); };
+  })(window.somiHideLoading);
 
-  } catch(e) {
-    console.warn('Firebase 연결 실패, localStorage로 계속:', e);
+  // Firebase 동기화 (성공할 때까지 재시도, 비상구 누르면 중단)
+  let _syncOk=false;
+  while(!_offlineForced && !_syncOk){
+    try {
+      const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+      const { getFirestore, doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+      const FB_CONFIG={apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"};
+      const APP_NAME='somi-home-v4';
+      const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
+      const fsDb=getFirestore(fbApp);
+      window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
+      const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+      await Promise.all(KEYS.map(async k=>{
+        const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
+      }));
+      profiles=loadData('somi_profiles',[]);
+      // 학생 세션 데이터 개별 로드
+      await Promise.all(profiles.map(async p=>{
+        try{ const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+p.id)); if(snap.exists()) localStorage.setItem('somi_student_session_'+p.id,snap.data().value); }catch(e){}
+      }));
+      practiceLogs=loadData('somi_logs',{});
+      teacherPw=loadData('somi_teacher_pw','1');
+      teacherStamps=loadData('somi_teacher_stamps',{});
+      classSettings=loadData('somi_class_settings',{});
+      lessonStarts=loadData('somi_lesson_starts',{});
+      patternLocks=loadData('somi_pattern_locks',{});
+      patternLevelOverrides=loadData('somi_pattern_levels',{});
+      levelSettings=loadData('somi_level_settings',null)||DEFAULT_LEVEL_SETTINGS.map(l=>({...l}));
+      accessLog=loadData('somi_access_log',{});
+      _syncOk=true;
+    } catch(e) {
+      console.warn('home Firebase 동기화 재시도:', e.message);
+      await new Promise(r=>setTimeout(r,1500));
+    }
   }
+  somiHideLoading();
 
   // ── 리듬베이직 → 리베 마이그레이션 (Firebase 성공/실패 무관하게 항상 실행) ──
   { let migrated=false;

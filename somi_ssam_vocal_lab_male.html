@@ -28,12 +28,24 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 .lab-brand{display:flex;flex-direction:column;gap:1px;text-align:right;}
 .lab-brand .brand-title{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'DM Mono',monospace;}
 .lab-brand .brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
+.rest-dday-header{flex-shrink:0;margin-top:4px;font-size:0.76rem;font-weight:700;color:#7e8aa3;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.rest-dday-header .dot{width:6px;height:6px;border-radius:50%;background:#7e8aa3;flex-shrink:0;}
 .home-link{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;min-width:120px;justify-content:center;white-space:nowrap;}
 .home-link:hover{border-color:var(--accent);color:var(--text);}
 .pattern-select{max-width:600px;margin:0 auto;padding:28px 20px 60px;}
 .select-title{font-size:1.1rem;font-weight:700;margin-bottom:6px;}
 .select-desc{color:var(--text2);font-size:0.82rem;margin-bottom:24px;line-height:1.6;}
 .pattern-cards{display:flex;flex-direction:column;gap:12px;}
+/* 종료반 안개 가림: 래퍼로 높이 자르고 위에 그라데이션 덮기 */
+.ended-fog-wrap{position:relative;overflow:hidden;max-height:62vh;}
+.ended-fog-wrap .pattern-cards{max-height:none;}
+.ended-fog-veil{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;z-index:5;
+  background:linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 28%, var(--bg) 72%, var(--bg) 100%);}
+.theme-ivory .ended-fog-veil{background:linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 28%, var(--bg) 72%, var(--bg) 100%);}
+.ended-fog-dots{position:absolute;left:0;right:0;bottom:10px;z-index:6;text-align:center;color:var(--text2);font-size:1.5rem;letter-spacing:5px;opacity:0.45;pointer-events:none;}
+/* 휴식 디데이 배지 (호흡/발성 공통 - 동그라미 자리) */
+.rest-dday{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:18px;padding:9px 16px;border-radius:12px;background:rgba(126,138,163,0.14);border:1px solid rgba(126,138,163,0.35);color:var(--text2);font-size:0.8rem;font-weight:600;}
+.rest-dday .dot{width:7px;height:7px;border-radius:50%;background:#7e8aa3;}
 .pattern-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;cursor:pointer;transition:all 0.2s;position:relative;}
 .pattern-card:hover:not(.locked){border-color:var(--accent);transform:translateX(4px);}
 .pattern-card.locked{opacity:0.45;cursor:default;}
@@ -181,9 +193,31 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
   .ctrl-btn.play{width:64px;height:64px;}
   .vbn{font-size:2.5rem;min-width:38px;}
 }
+/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
+@keyframes spin{to{transform:rotate(360deg)}}
+.somi-load-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
+.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
+.somi-load-overlay.hide{opacity:0;pointer-events:none;}
+.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
+.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
+.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
+.somi-load-slow.show{display:block;}
+.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;font-family:inherit;cursor:pointer;}
 </style>
 </head>
 <body>
+<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
+<div id="somi-load-overlay" class="somi-load-overlay">
+  <div class="somi-load-spinner"></div>
+  <div class="somi-load-text">데이터 불러오는 중...</div>
+  <div class="somi-load-sub">SOMI_SSAM</div>
+  <div class="somi-load-slow">
+    연결이 평소보다 느려요.<br>계속 다시 시도하고 있어요.
+    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
+  </div>
+</div>
 <header class="lab-header">
   <a class="home-link" href="somi_ssam_student.html">← 학생 홈</a>
   <div class="lab-brand">
@@ -192,8 +226,13 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
   </div>
 </header>
 <div class="pattern-select" id="pattern-select">
-  <div class="select-title">보컬랩(남성) 연습 패턴 선택</div>
-  <div class="select-desc">패턴을 선택하면 연습 모드가 열립니다.</div>
+  <div class="select-head-row" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+    <div style="flex:1;min-width:0;">
+      <div class="select-title">보컬랩(남성) 연습 패턴 선택</div>
+      <div class="select-desc">패턴을 선택하면 연습 모드가 열립니다.</div>
+    </div>
+    <div id="rest-dday-header" class="rest-dday-header" style="display:none;"></div>
+  </div>
   <div class="pattern-cards" id="pattern-cards"></div>
 </div>
 <div id="practice-screen">
@@ -1059,9 +1098,15 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     if(isPlaying||elapsedSeconds>2) logPractice();
   }
-  if(document.visibilityState==='visible'&&audioCtx){
-    if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
-    _playSilentElement();
+  if(document.visibilityState==='visible'){
+    if(audioCtx){
+      if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+      _playSilentElement();
+    }
+    // 복귀 = 접속: 접속기록 갱신 (audioCtx 유무와 무관)
+    _recordAccess();
+    // 연습 중이면 화면 갱신 보류, 아니면 변경됐을 때만 재동기화
+    if(isPlaying){ _resyncPending=true; } else { _checkAndResync(); }
   }
 });
 window.addEventListener('pagehide',()=>{
@@ -1308,7 +1353,7 @@ function logPractice(){
     if(window._fsSet) window._fsSet('somi_logs',j);
   }catch(e){}
 }
-function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;_loggedThisRun=false;clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
+function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;_loggedThisRun=false;if(_resyncPending){_resyncPending=false;_checkAndResync();}clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
 function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
 
 // 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
@@ -2581,6 +2626,8 @@ function closePractice(){
   const wrap=document.querySelector('.basic-key-wrap');if(wrap)wrap.querySelectorAll('.basic-key-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('practice-screen').style.display='none';
   document.getElementById('pattern-select').style.display='block';
+  renderPatternCards();
+  _maybeShowRestStagePopup();
   const savedY=sessionStorage.getItem('somi_vocal_scroll');
   if(savedY)requestAnimationFrame(()=>window.scrollTo(0,parseInt(savedY)||0));
 }
@@ -2589,14 +2636,153 @@ function closePractice(){
 let _currentProfileId = null;
 let _practiceLogs = null; // Firebase 동기화 후 초기화됨
 let _loggedThisRun = false; // 현재 재생분 저장 여부 — 중복저장 방지
+
+/* ══════════ 공용 로딩 오버레이 제어 (전 파일 공통 표준) ══════════ */
+let _somiLoadTimer=null;
+function somiStartSlowTimer(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
+  clearTimeout(_somiLoadTimer);
+  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },25000); // 25초 후 비상구 노출
+}
+function somiShowLoading(text){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
+  o.classList.remove('hide'); somiStartSlowTimer();
+}
+function somiHideLoading(){
+  const o=document.getElementById('somi-load-overlay'); if(!o) return;
+  clearTimeout(_somiLoadTimer); o.classList.add('hide');
+}
+
+/* ══════════ 연습기록 병합 (덮어쓰기 방지 — 동기화 전 쌓인 기록 보존) ══════════
+   같은 학생끼리 배열을 합치되 완전중복(date+time+exercise+duration)은 1개만 유지 */
+function _mergeLogs(local, remote){
+  local = local || {}; remote = remote || {};
+  const out = {};
+  const ids = new Set([...Object.keys(local), ...Object.keys(remote)]);
+  ids.forEach(id=>{
+    const a = Array.isArray(local[id]) ? local[id] : [];
+    const b = Array.isArray(remote[id]) ? remote[id] : [];
+    const seen = new Set(); const merged = [];
+    [...a, ...b].forEach(rec=>{
+      if(!rec) return;
+      const key = (rec.date||'')+'|'+(rec.time||'')+'|'+(rec.exercise||'')+'|'+(rec.duration||'');
+      if(seen.has(key)) return;
+      seen.add(key); merged.push(rec);
+    });
+    out[id] = merged;
+  });
+  return out;
+}
+
+// ── 접속기록 + 복귀 시 변경감지 재동기화 ──
+let _fsDb = null, _fsDoc = null, _fsGetDoc = null; // Firebase 핸들 (첫 동기화 때 보관)
+let _lastSyncTs = 0;          // 마지막으로 반영한 잠금/레벨 변경 시각
+let _resyncPending = false;   // 연습 중 보류된 재동기화 요청
+function _readSyncTs(){
+  try{ return (JSON.parse(localStorage.getItem('somi_sync_meta')||'{}').ts)||0; }catch(e){ return 0; }
+}
+function _recordAccess(){
+  if(!_currentProfileId) return;
+  try{
+    const now=new Date();
+    const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    const timeStr=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+    const aLog=JSON.parse(localStorage.getItem('somi_access_log')||'{}');
+    if(!aLog[_currentProfileId]) aLog[_currentProfileId]=[];
+    const arr=aLog[_currentProfileId];
+    const idx=arr.findIndex(r=>r.date===dateStr);
+    if(idx>=0){ arr[idx].time=timeStr; } else { arr.push({date:dateStr,time:timeStr}); }
+    const j=JSON.stringify(aLog);
+    localStorage.setItem('somi_access_log',j);
+    if(window._fsSet) window._fsSet('somi_access_log',j);
+  }catch(e){}
+}
+async function _checkAndResync(){
+  if(!_fsDb||!_fsGetDoc||!_fsDoc) return;
+  try{
+    const snap=await _fsGetDoc(_fsDoc(_fsDb,'somi_data','somi_sync_meta'));
+    if(!snap.exists()) return;
+    localStorage.setItem('somi_sync_meta', snap.data().value);
+    const serverTs=_readSyncTs();
+    if(serverTs<=_lastSyncTs) return; // 변경 없음 → 아무것도 안 함
+    const KEYS=['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates'];
+    await Promise.all(KEYS.map(async k=>{
+      try{ const s=await _fsGetDoc(_fsDoc(_fsDb,'somi_data',k)); if(s.exists()) localStorage.setItem(k,s.data().value); }catch(e){}
+    }));
+    _lastSyncTs=serverTs;
+    renderPatternCards();
+    _maybeShowRestStagePopup();
+  }catch(e){}
+}
+
+/* ════════════════════════════════════════════════
+   휴식반(숨고르기) 단계 자동 잠금 · 종료반 가림 — 발성(남) 독립 복제
+   home과 동일 규칙을 이 페이지에 독립적으로 보관
+════════════════════════════════════════════════ */
+// 휴식 단계별 "발성 허용 패턴" (호흡 패턴은 호흡 페이지가 담당하므로 여기선 발성만)
+const _REST_VOCAL_ALLOWED = {
+  month1:    ['vocal_ha_8beat_1','vocal_ha_8beat_2','vocal_na_4beat_1','vocal_na_4beat_2','vocal_ma_4beat_1','vocal_ma_4beat_2'],
+  month2to3: ['vocal_ha_8beat_1','vocal_na_4beat_1','vocal_ma_4beat_1'],
+  month4plus: [],
+};
+// 현재 프로필의 반 이름
+function _getProfileClass(){
+  if(!_currentProfileId) return null;
+  try{
+    const cs=JSON.parse(localStorage.getItem('somi_class_settings')||'{}');
+    return (cs[_currentProfileId]||{}).voClass||null;
+  }catch(e){ return null; }
+}
+// 휴식반 진입일 (YYYY-MM-DD)
+function _getRestStartDate(){
+  if(!_currentProfileId) return null;
+  try{
+    const r=JSON.parse(localStorage.getItem('somi_rest_start_dates')||'{}');
+    return r[_currentProfileId]||null;
+  }catch(e){ return null; }
+}
+// 진입일+오늘 → 단계 판정
+function _getRestStage(startDateStr){
+  if(!startDateStr) return 'month1';
+  const start=new Date(startDateStr+'T00:00:00'); const now=new Date();
+  let months=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());
+  if(now.getDate()<start.getDate()) months--;
+  if(months<1) return 'month1';
+  if(months<3) return 'month2to3';
+  return 'month4plus';
+}
+// 휴식 경과 일수 (진입일=1일째)
+function _getRestDays(startDateStr){
+  if(!startDateStr) return 0;
+  const start=new Date(startDateStr+'T00:00:00'); const now=new Date();
+  return Math.floor((now-start)/86400000)+1;
+}
+function _isRestClass(){ return _getProfileClass()==='숨고르기'; }
+function _isEndedClass(){ return _getProfileClass()==='종료반'; }
+
 function _isLocked(patternId){
   if(!_currentProfileId) return false;
   try{
     const locks = JSON.parse(localStorage.getItem('somi_pattern_locks')||'{}');
     const pl = locks[_currentProfileId];
-    if(!pl) return false; // 잠금 데이터 자체가 없는 구버전 학생 → 기존대로 열림
+    // 원래(선생님 설정) 열림 여부
+    const baseOpen = pl ? (pl[patternId]===true) : true; // 잠금데이터 없는 구버전 = 열림
+
+    // 종료반: 전부 잠금
+    if(_isEndedClass()) return true;
+
+    // 휴식반: "원래 열림 ∩ 단계 허용" 교집합 — 절대 늘지 않고 줄기만 함
+    if(_isRestClass()){
+      const stage=_getRestStage(_getRestStartDate());
+      const allowed=_REST_VOCAL_ALLOWED[stage]||[];
+      return !(baseOpen && allowed.includes(patternId));
+    }
+
+    if(!pl) return true; // 잠금 데이터 없으면 기본 잠금 (가입직후/유실 = 잠김)
     return pl[patternId] !== true; // 명시적으로 열림(true)이 아니면 잠김 (신규/미지정 = 잠김)
-  }catch(e){ return false; }
+  }catch(e){ return true; }
 }
 
 // home.html의 modeLabel → modeKey 매핑 (getLvKey 기준)
@@ -2651,8 +2837,58 @@ function _getLevelColor(patternId){
   }catch(e){return null;}
 }
 
+// 휴식 단계 안내 팝업 (앱 전체에서 경계당 1회) — 대기업 안내톤
+function _maybeShowRestStagePopup(){
+  if(!_isRestClass()) return;
+  const startDate=_getRestStartDate();
+  const stage=_getRestStage(startDate);
+  if(stage==='month1') return; // 1개월차는 진입 안내 없음(변화 시점만 안내)
+  const seenKey='somi_rest_stage_seen_'+_currentProfileId;
+  let seen=null;
+  try{ seen=localStorage.getItem(seenKey); }catch(e){}
+  if(seen===stage) return; // 이미 이 단계 안내를 봄 → 다시 안 띄움
+
+  const msg = stage==='month2to3'
+    ? '휴식 기간이 1개월을 넘어, 연습 패턴 범위가 자동으로 조정되었습니다.\n\n쉬어가는 동안 핵심 패턴 위주로 가볍게 유지하실 수 있도록 구성되었습니다. 수업을 재개하시면 이전 범위로 복원됩니다.'
+    : '휴식 기간이 3개월을 넘어, 연습 패턴이 모두 잠금 상태로 전환되었습니다.\n\n다시 함께하고 싶으실 때 언제든 선생님께 말씀해 주세요. 반갑게 다시 열어드리겠습니다.';
+  _showRestModal(stage==='month2to3'?'연습 범위가 조정되었어요':'연습이 잠시 멈춰졌어요', msg);
+  try{ localStorage.setItem(seenKey, stage); }catch(e){}
+}
+function _showRestModal(title, body){
+  let m=document.getElementById('rest-stage-modal');
+  if(!m){
+    m=document.createElement('div'); m.id='rest-stage-modal';
+    m.style.cssText='position:fixed;inset:0;z-index:5000;display:flex;align-items:center;justify-content:center;padding:24px;';
+    m.innerHTML='<div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);"></div>'
+      +'<div style="position:relative;max-width:380px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px 24px;box-shadow:0 20px 60px rgba(0,0,0,0.35);">'
+      +'<div id="rsm-title" style="font-size:1.02rem;font-weight:800;margin-bottom:12px;color:var(--text);"></div>'
+      +'<div id="rsm-body" style="font-size:0.86rem;line-height:1.7;color:var(--text2);white-space:pre-line;"></div>'
+      +'<button id="rsm-ok" style="margin-top:22px;width:100%;padding:12px;border-radius:11px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;">확인</button>'
+      +'</div>';
+    document.body.appendChild(m);
+    m.querySelector('#rsm-ok').onclick=()=>{ m.style.display='none'; };
+  }
+  m.querySelector('#rsm-title').textContent=title;
+  m.querySelector('#rsm-body').textContent=body;
+  m.style.display='flex';
+}
+// 헤더 로고 아래에 휴식 디데이 표시/갱신
+function _renderRestDday(){
+  const el=document.getElementById('rest-dday-header'); if(!el) return;
+  if(!_isRestClass()){ el.style.display='none'; el.innerHTML=''; return; }
+  const days=_getRestDays(_getRestStartDate());
+  if(days<=0){ el.style.display='none'; return; }
+  el.innerHTML='<span class="dot"></span> 숨 고르기 · '+days+'일째';
+  el.style.display='flex';
+}
+
 function renderPatternCards(){
   const container=document.getElementById('pattern-cards');container.innerHTML='';
+  // 이전 렌더의 안개 래퍼/점 정리 (중복 방지)
+  _clearEndedFog();
+  // 휴식 디데이 배지
+  _renderRestDday();
+  const ended=_isEndedClass();
   // 활성화 패턴 상단, 비활성화(잠금) 패턴 하단 — 기본 순서 유지
   const active=VOCAL_PATTERNS.filter(p=>!_isLocked(p.id));
   const locked=VOCAL_PATTERNS.filter(p=>_isLocked(p.id));
@@ -2680,6 +2916,33 @@ function renderPatternCards(){
     if(!isLocked) card.onclick=()=>startExercise(pat.id);
     container.appendChild(card);
   });
+  // 종료반: 카드목록을 래퍼로 감싸 화면 일부만 노출 + 안개 + 스크롤 차단
+  if(ended) _applyEndedFog(container);
+}
+// 종료반 안개: container를 래퍼로 감싸고, 화면 일부만 노출 + 바닥에서 완전히 가림
+function _applyEndedFog(container){
+  if(!container || !container.parentNode) return;
+  if(container.closest('.ended-fog-wrap')) return; // 이미 감쌈
+  const wrap=document.createElement('div');
+  wrap.className='ended-fog-wrap';
+  container.parentNode.insertBefore(wrap, container);
+  wrap.appendChild(container);
+  const veil=document.createElement('div'); veil.className='ended-fog-veil'; wrap.appendChild(veil);
+  const dots=document.createElement('div'); dots.className='ended-fog-dots'; dots.textContent='···'; wrap.appendChild(dots);
+  // 페이지 자체 스크롤 차단 (종료반 동안)
+  document.body.style.overflow='hidden';
+  document.documentElement.style.overflow='hidden';
+}
+function _clearEndedFog(){
+  document.body.style.overflow='';
+  document.documentElement.style.overflow='';
+  const wrap=document.querySelector('.ended-fog-wrap');
+  if(wrap){
+    const cards=wrap.querySelector('#pattern-cards');
+    if(cards) wrap.parentNode.insertBefore(cards, wrap);
+    wrap.remove();
+  }
+  document.querySelectorAll('.ended-fog-veil,.ended-fog-dots').forEach(el=>el.remove());
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -2704,58 +2967,90 @@ document.addEventListener('DOMContentLoaded', ()=>{
     localStorage.setItem('somi_vocal_patterns_male', JSON.stringify(vocList));
   }catch(e){}
 
-  // ── 4. localStorage 기준으로 카드 즉시 렌더 (검은화면 없음)
+  // ── 4. localStorage 기준으로 카드 먼저 렌더 (로딩화면 뒤에서 준비)
   setupModeFunctions();
   renderPatternCards();
+  _maybeShowRestStagePopup();
 
-  // ── 4-1. 남/여 전환 후 같은 패턴 자동 진입
+  // ── 4-1. 남/여 전환 후 같은 패턴 자동 진입 (동기화 완료 후 실행되도록 보류)
   const _autoOpenPat=sessionStorage.getItem('somi_vocal_open_pat');
-  if(_autoOpenPat){
-    sessionStorage.removeItem('somi_vocal_open_pat');
-    const _found=VOCAL_PATTERNS.find(p=>p.id===_autoOpenPat);
-    if(_found)setTimeout(()=>startExercise(_autoOpenPat),80);
+  if(_autoOpenPat) sessionStorage.removeItem('somi_vocal_open_pat');
+
+  // ── 5. 로딩화면 표시 → 동기화 끝까지 완료 후 해제 ──
+  // 연습기록(somi_logs)을 받기 전에 학생이 연습을 끝내면 기록이 덮여 유실되므로
+  // 동기화가 끝날 때까지 화면을 막고, 실패 시 자동 재시도한다. (25초 후 비상구 버튼)
+  somiShowLoading('데이터 불러오는 중...');
+  let _syncDone = false;
+  let _offlineForced = false;
+  // 비상구 버튼이 눌리면 즉시 로컬 데이터로 진입
+  window.somiHideLoading = (function(orig){
+    return function(){ _offlineForced = true; orig(); _afterSync(true); };
+  })(window.somiHideLoading);
+
+  function _afterSync(offline){
+    if(_syncDone) return; _syncDone = true;
+    // 동기화(또는 비상구)로 받은 최신 기록을 메모리에 반영
+    let remote = {};
+    try{ remote = JSON.parse(localStorage.getItem('somi_logs')||'{}'); }catch(e){}
+    // 이미 메모리에 쌓인 기록과 병합 (덮어쓰기 방지)
+    _practiceLogs = _mergeLogs(_practiceLogs, remote);
+    try{ _lastSyncTs = _readSyncTs(); }catch(e){}
+    renderPatternCards();
+    _recordAccess();
+    if(!offline) somiHideLoading();
+    // 보류했던 자동 진입 실행
+    if(_autoOpenPat){
+      const _found=VOCAL_PATTERNS.find(p=>p.id===_autoOpenPat);
+      if(_found) setTimeout(()=>startExercise(_autoOpenPat),80);
+    }
   }
 
-  // ── 5. Firebase 백그라운드 동기화 (렌더 막지 않음)
-  // 북마크로 바로 진입했을 때도 선생님 잠금 최신 반영 + 연습기록 저장 활성화
   (async ()=>{
-    try{
-      const {initializeApp,getApps} = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
-      const {getFirestore,doc,getDoc,setDoc} = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+    let fsDb=null, doc=null, getDoc=null, setDoc=null;
+    // 5-1. Firebase 모듈 로드 + 초기화 (성공할 때까지 재시도)
+    while(!_offlineForced && !fsDb){
+      try{
+        const appMod = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+        const fsMod  = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+        const {initializeApp,getApps} = appMod;
+        ({doc,getDoc,setDoc} = fsMod);
+        const FB_CONFIG = {
+          apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",
+          authDomain:"somi-ssam.firebaseapp.com",
+          projectId:"somi-ssam",
+          storageBucket:"somi-ssam.firebasestorage.app",
+          messagingSenderId:"841594074779",
+          appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"
+        };
+        const APP_NAME = 'somi-vocal-lab-v1';
+        const fbApp = getApps().find(a=>a.name===APP_NAME) || initializeApp(FB_CONFIG, APP_NAME);
+        fsDb = fsMod.getFirestore(fbApp);
+      }catch(e){
+        console.warn('vocal_lab_male Firebase 초기화 재시도:', e.message);
+        await new Promise(r=>setTimeout(r,1500));
+      }
+    }
+    if(_offlineForced) return;
+    _fsDb = fsDb; _fsDoc = doc; _fsGetDoc = getDoc; // 복귀 시 재동기화에 재사용
+    window._fsSet = async(k,j)=>{ try{ await setDoc(doc(fsDb,'somi_data',k),{value:j}); }catch(e){} };
 
-      const FB_CONFIG = {
-        apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",
-        authDomain:"somi-ssam.firebaseapp.com",
-        projectId:"somi-ssam",
-        storageBucket:"somi-ssam.firebasestorage.app",
-        messagingSenderId:"841594074779",
-        appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"
-      };
-      const APP_NAME = 'somi-vocal-lab-v1';
-      const fbApp = getApps().find(a=>a.name===APP_NAME) || initializeApp(FB_CONFIG, APP_NAME);
-      const fsDb  = getFirestore(fbApp);
-
-      // window._fsSet 등록 — logPractice에서 Firebase에 연습기록 저장할 때 사용
-      window._fsSet = async(k,j)=>{ try{ await setDoc(doc(fsDb,'somi_data',k),{value:j}); }catch(e){} };
-
-      // 잠금 + 레벨 + 연습기록 데이터 한꺼번에 동기화
-      const KEYS = ['somi_logs','somi_pattern_locks','somi_pattern_levels','somi_level_settings'];
-      await Promise.all(KEYS.map(async k=>{
-        try{
+    // 5-2. 잠금+레벨+연습기록+메타 동기화 (모든 키 성공할 때까지 재시도)
+    const KEYS = ['somi_logs','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_sync_meta'];
+    let _ok=false;
+    while(!_offlineForced && !_ok){
+      try{
+        await Promise.all(KEYS.map(async k=>{
           const snap = await getDoc(doc(fsDb,'somi_data',k));
           if(snap.exists()) localStorage.setItem(k, snap.data().value);
-        }catch(e){}
-      }));
-
-      // 동기화 후 연습기록 변수 최신화
-      _practiceLogs = JSON.parse(localStorage.getItem('somi_logs')||'{}');
-
-      // 잠금/레벨 변경 시 카드 재렌더
-      renderPatternCards();
-    }catch(e){
-      // 네트워크 오류 등 → 무시하고 localStorage 기준으로 계속 사용
-      console.warn('vocal_lab_male Firebase 동기화 실패 (무시됨):', e.message);
+        }));
+        _ok=true;
+      }catch(e){
+        console.warn('vocal_lab_male 동기화 재시도:', e.message);
+        await new Promise(r=>setTimeout(r,1500));
+      }
     }
+    if(_offlineForced) return;
+    _afterSync(false);
   })();
 });
 </script>

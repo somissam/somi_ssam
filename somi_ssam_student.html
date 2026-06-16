@@ -25,7 +25,7 @@ button{font-family:inherit;cursor:pointer;}
 .stab:hover{color:var(--text);}
 .stab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700;}
 /* ── 설정 탭 빨간 점 ── */
-.stab-dot{position:absolute;top:8px;right:10px;width:7px;height:7px;border-radius:50%;background:#f76a6a;display:none;}
+.stab-dot{position:absolute;top:5px;right:2px;width:10px;height:10px;border-radius:50%;background:#ff0000;box-shadow:0 0 5px 1px rgba(255,0,0,0.8);display:none;}
 .stab-dot.show{display:block;}
 .home-content{padding:20px;max-width:600px;margin:0 auto;}
 /* ── 오늘의 요약 ── */
@@ -147,7 +147,7 @@ button{font-family:inherit;cursor:pointer;}
   <div class="somi-load-text">데이터 불러오는 중...</div>
   <div class="somi-load-sub">SOMI_SSAM</div>
   <div class="somi-load-slow">
-    연결이 평소보다 느려요.<br>네트워크 상태를 확인해 주세요.
+    연결이 평소보다 느려요.<br>계속 다시 시도하고 있어요.
     <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
   </div>
 </div>
@@ -266,7 +266,7 @@ function somiStartSlowTimer(){
   const o=document.getElementById('somi-load-overlay'); if(!o) return;
   const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
   clearTimeout(_somiLoadTimer);
-  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },6000);
+  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },25000);
 }
 function somiShowLoading(text){
   const o=document.getElementById('somi-load-overlay'); if(!o) return;
@@ -405,7 +405,7 @@ function enterStudentApp(){
     if(hdr)document.documentElement.style.setProperty('--header-h',hdr.offsetHeight+'px');
   });
   showTab('home',document.getElementById('tab-home'));
-  somiHideLoading();  // 로컬 데이터로 홈 표시 완료 → 로딩 막 걷기 (동기화는 백그라운드 진행)
+  // 로딩화면은 동기화 완료까지 유지 (home·연습페이지와 동일) — 여기서 걷지 않음
 }
 
 /* ── 도장 SVG 재주입 공통 함수 (3번 버그 핵심) ── */
@@ -452,6 +452,19 @@ function renderStudentHome(){
 function renderClassInfo(){
   classSettings=loadData('somi_class_settings',{});lessonStarts=loadData('somi_lesson_starts',{});
   const ci=getClassInfo(currentProfile.id),voClass=ci.voClass||'(반 미설정)',extras=ci.extras||[],days=getDaysSinceLesson(currentProfile.id);
+  // 휴식반(숨고르기) 디데이 계산
+  let restLine='';
+  if((ci.voClass)==='숨고르기'){
+    const rd=loadData('somi_rest_start_dates',{});
+    const sd=rd[currentProfile.id];
+    if(sd){
+      const start=new Date(sd+'T00:00:00');
+      const restDays=Math.floor((new Date()-start)/86400000)+1;
+      restLine=`<div style="margin-top:8px;color:var(--text2);font-size:0.84rem;font-weight:600;display:flex;align-items:center;gap:7px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#7e8aa3;flex-shrink:0;"></span>
+        🌿 숨 고르기 ${restDays}일째 — 잠시 쉬어가는 중이에요</div>`;
+    }
+  }
   let box=document.getElementById('class-info-box');
   if(!box){box=document.createElement('div');box.id='class-info-box';document.getElementById('stab-home').insertBefore(box,document.getElementById('stab-home').firstChild);}
   box.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 24px;margin-bottom:16px;';
@@ -471,7 +484,7 @@ function renderClassInfo(){
         <div style="display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;">${badgeRow}</div>
       </div>
       ${daysHtml}
-    </div>`;
+    </div>${restLine}`;
 }
 function toDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
@@ -649,14 +662,23 @@ document.addEventListener('DOMContentLoaded',async function(){
     somiHideLoading();
     window.location.href='index.html';
   }
-  try{
-    const{initializeApp}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+  // 비상구 버튼이 눌리면 재시도 중단
+  let _offlineForced=false;
+  somiHideLoading = (function(orig){
+    return function(){ _offlineForced=true; orig(); };
+  })(somiHideLoading);
+
+  let _syncOk=false;
+  while(!_offlineForced && !_syncOk){
+   try{
+    const{initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
     const{getFirestore,doc,getDoc,setDoc}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-    const fbApp=initializeApp({apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"},'somi-student-v3');
+    const APP_NAME='somi-student-v3';
+    const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp({apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"},APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
     _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
-    await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_access_log'].map(async k=>{try{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}catch(e){}}));
+    await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_access_log'].map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
     // 내 세션 키도 Firebase에서 로드 (다른 기기 로그인 감지용)
     if(currentProfile){
       try{const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+currentProfile.id));if(snap.exists())localStorage.setItem('somi_student_session_'+currentProfile.id,snap.data().value);}catch(e){}
@@ -710,8 +732,13 @@ document.addEventListener('DOMContentLoaded',async function(){
       else { arr.push({date:dateStr,time:timeStr}); }
       saveData('somi_access_log',aLog);
     }
+    _syncOk=true;
     somiHideLoading();  // 동기화 완료 — 혹시 아직 떠있으면 확실히 해제
-  }catch(e){console.warn('Firebase 연결 실패:',e); somiHideLoading();}
+   }catch(e){
+     console.warn('student Firebase 동기화 재시도:',e.message);
+     await new Promise(r=>setTimeout(r,1500));
+   }
+  }
 });
 </script>
 </body>

@@ -84,7 +84,7 @@ button{font-family:inherit;cursor:pointer;}
   <div class="somi-load-text">데이터 불러오는 중...</div>
   <div class="somi-load-sub">SOMI_SSAM</div>
   <div class="somi-load-slow">
-    연결이 평소보다 느려요.<br>네트워크 상태를 확인해 주세요.
+    연결이 평소보다 느려요.<br>계속 다시 시도하고 있어요.
     <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
   </div>
 </div>
@@ -146,7 +146,7 @@ button{font-family:inherit;cursor:pointer;}
       <div class="form-label">비밀번호 설정</div>
       <input type="password" class="form-input" id="new-pw" placeholder="비밀번호를 설정하세요" maxlength="20" autocomplete="new-password">
     </div>
-    <div class="pw-error" id="create-error">이름, 성별, 비밀번호를 모두 입력해주세요</div>
+    <div class="pw-error" id="create-error">이름, 성별, 생년월일, 비밀번호를 모두 입력해주세요</div>
     <div id="create-duplicate-error" class="pw-error">이미 같은 이름의 프로필이 있어요</div>
     <div id="create-loading" style="display:none;text-align:center;font-size:0.82rem;color:var(--text2);">저장 중...</div>
     <button class="pw-btn" id="create-btn" onclick="createProfile()">프로필 생성</button>
@@ -175,7 +175,7 @@ function somiStartSlowTimer(){
   const slow=o.querySelector('.somi-load-slow');
   if(slow) slow.classList.remove('show');
   clearTimeout(_somiLoadTimer);
-  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },6000);
+  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },25000);
 }
 function somiShowLoading(text){
   const o=document.getElementById('somi-load-overlay'); if(!o) return;
@@ -375,11 +375,11 @@ function selectGender(g){
 async function createProfile(){
   const name=document.getElementById('new-name').value.trim();
   const pw=document.getElementById('new-pw').value;
-  const birth=document.getElementById('new-birth').value||''; // 선택 항목 — 빈 값 허용
+  const birth=document.getElementById('new-birth').value||''; // 필수 항목
   document.getElementById('create-error').style.display='none';
   document.getElementById('create-duplicate-error').style.display='none';
 
-  if(!name||!selectedGender||!pw){document.getElementById('create-error').style.display='block';return;}
+  if(!name||!selectedGender||!pw||!birth){document.getElementById('create-error').style.display='block';return;}
 
   document.getElementById('create-btn').disabled=true;
   document.getElementById('create-loading').style.display='block';
@@ -460,30 +460,41 @@ async function createProfile(){
    DOMContentLoaded — Firebase + 자동로그인
 ════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded',async function(){
-  // 오버레이는 HTML에 처음부터 떠 있음(커튼 먼저). 여기선 데이터만 받고 끝나면 걷는다.
-  somiStartSlowTimer();  // 6초 이상 느리면 안내 노출
+  // 오버레이는 HTML에 처음부터 떠 있음(커튼 먼저). 여기선 데이터를 받을 때까지 기다린 뒤 걷는다.
+  somiStartSlowTimer();  // 25초 이상 느리면 비상구 안내 노출
   showScreen('loading-screen');
 
-  // Firebase 초기화 + 동기화
-  try{
-    const{initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
-    const{getFirestore,doc,getDoc,setDoc}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-    const FB_CONFIG={apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"};
-    const APP_NAME='somi-index-v2';
-    const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
-    const fsDb=getFirestore(fbApp);
-    _fsSet=async(k,j)=>{await setDoc(doc(fsDb,'somi_data',k),{value:j});};
-    _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
+  // 비상구 버튼이 눌리면 재시도 중단하고 로컬 데이터로 진행
+  let _offlineForced=false;
+  somiHideLoading = (function(orig){
+    return function(){ _offlineForced=true; orig(); };
+  })(somiHideLoading);
 
-    const SYNC_KEYS=['somi_profiles','somi_pattern_locks','somi_teacher_pw','somi_teacher_devices'];
-    await Promise.all(SYNC_KEYS.map(async k=>{
-      try{const snap=await getDoc(doc(fsDb,'somi_data',k));if(snap.exists())localStorage.setItem(k,snap.data().value);}catch(e){}
-    }));
-    profiles=loadData('somi_profiles',[]);
-  }catch(e){
-    console.warn('Firebase 연결 실패, localStorage 사용:',e);
-    profiles=loadData('somi_profiles',[]);
+  // Firebase 초기화 + 동기화 (성공할 때까지 자동 재시도)
+  let _syncOk=false;
+  while(!_offlineForced && !_syncOk){
+    try{
+      const{initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+      const{getFirestore,doc,getDoc,setDoc}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+      const FB_CONFIG={apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"};
+      const APP_NAME='somi-index-v2';
+      const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
+      const fsDb=getFirestore(fbApp);
+      _fsSet=async(k,j)=>{await setDoc(doc(fsDb,'somi_data',k),{value:j});};
+      _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
+
+      const SYNC_KEYS=['somi_profiles','somi_pattern_locks','somi_teacher_pw','somi_teacher_devices'];
+      await Promise.all(SYNC_KEYS.map(async k=>{
+        const snap=await getDoc(doc(fsDb,'somi_data',k));if(snap.exists())localStorage.setItem(k,snap.data().value);
+      }));
+      profiles=loadData('somi_profiles',[]);
+      _syncOk=true;
+    }catch(e){
+      console.warn('index Firebase 동기화 재시도:',e.message);
+      await new Promise(r=>setTimeout(r,1500));
+    }
   }
+  if(!_syncOk) profiles=loadData('somi_profiles',[]); // 비상구로 빠진 경우 로컬 사용
 
   // Firebase 완료 후 — 자동 로그인 체크
   // ── 선생님 자동 로그인 ──
