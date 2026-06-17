@@ -702,7 +702,27 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
     _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
-    await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_access_log'].map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
+    // ── [캐싱·안전] 데이터를 두 그룹으로 분리 (선생님 홈 somi_sync_meta 방식 독립 적용) ──
+    //  · CACHED_KEYS : home의 _SYNC_WATCH_KEYS로 ts가 갱신되는 묶음 → ts 같으면 생략
+    //  · ALWAYS_KEYS : ts 갱신 대상이 아니거나 자주 바뀌어 학생이 꼭 봐야 하는 묶음 → 매번 수신
+    const CACHED_KEYS=['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings'];
+    const ALWAYS_KEYS=['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_lesson_starts','somi_access_log'];
+    let _skipCached=false, _remoteTs=0;
+    try{
+      const metaSnap=await getDoc(doc(fsDb,'somi_data','somi_sync_meta'));
+      _remoteTs=metaSnap.exists()?(JSON.parse(metaSnap.data().value||'{}').ts||0):0;
+      const localTs=parseInt(localStorage.getItem('somi_student_synced_ts')||'0',10);
+      // ts가 같고 + 캐시 묶음이 로컬에 이미 있으면 → 무거운 묶음만 생략
+      if(_remoteTs && _remoteTs===localTs && CACHED_KEYS.every(k=>localStorage.getItem(k)!==null)){ _skipCached=true; }
+    }catch(e){ _skipCached=false; }
+    // 자주 바뀌는 묶음은 항상 수신
+    await Promise.all(ALWAYS_KEYS.map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
+    // 무거운 묶음은 변경됐을 때만 수신
+    if(!_skipCached){
+      await Promise.all(CACHED_KEYS.map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
+      // 수신 성공 직후에만 ts 기록 (받다 끊기면 다음에 다시 받도록)
+      if(_remoteTs) localStorage.setItem('somi_student_synced_ts', String(_remoteTs));
+    }
     // 내 세션 키도 Firebase에서 로드 (다른 기기 로그인 감지용)
     if(currentProfile){
       try{const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+currentProfile.id));if(snap.exists())localStorage.setItem('somi_student_session_'+currentProfile.id,snap.data().value);}catch(e){}
@@ -743,8 +763,9 @@ document.addEventListener('DOMContentLoaded',async function(){
         }
       }catch(e){}
     }
-    // 접속기록 저장 — Firebase 로드 완료 후 (당일 중복 시 시간만 업데이트)
+    // 접속기록 저장 — 안전 병합: 방금 받은 서버본을 다시 읽어 내 줄만 갱신 (덮어쓰기로 인한 타기기 기록 유실 방지)
     if(currentProfile){
+      try{ const fresh=await getDoc(doc(fsDb,'somi_data','somi_access_log')); if(fresh.exists())localStorage.setItem('somi_access_log',fresh.data().value); }catch(e){}
       const now=new Date();
       const dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
       const timeStr=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');

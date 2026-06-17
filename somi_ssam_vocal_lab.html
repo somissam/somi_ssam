@@ -1307,7 +1307,7 @@ function _practiceStartGate(){
     return true;
   }
   if(TMODE===MODE_ADVANCED_1){
-    if(!adv_intervalOrder||adv_intervalOrder.length===0){ alert('① 음정 간격을 먼저 선택하세요.'); return false; }
+    if((!adv_intervalOrder||adv_intervalOrder.length===0)&&!adv_intervalRandom){ alert('① 음정 간격을 먼저 선택하세요. (숫자 또는 🎲무작위)'); return false; }
     if(!adv_dirChosen){ alert('② 진행 방향을 선택하세요. (기본 또는 왕복)'); return false; }
     if(!adv_rangeSelected){ alert('③ 음역 범위를 선택하세요. (시작음·끝음 차례로 클릭)'); return false; }
     return true;
@@ -1363,7 +1363,8 @@ function logPractice(){
     [MODE_ADVANCED_1]:'심화'
   }[TMODE]||'기본';
   try{
-    if(!_practiceLogs) _practiceLogs=JSON.parse(localStorage.getItem('somi_logs')||'{}');
+    // 저장 직전 최신본을 다시 읽어 병합 — 다른 기기/탭이 추가한 기록 유실 방지
+    { const _latest=JSON.parse(localStorage.getItem('somi_logs')||'{}'); _practiceLogs=_latest; }
     if(!_practiceLogs[_currentProfileId]) _practiceLogs[_currentProfileId]=[];
     const now=new Date();
     _practiceLogs[_currentProfileId].push({
