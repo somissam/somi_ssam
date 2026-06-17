@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- PWA: 홈 화면 추가 (아이콘/이름은 manifest.json과 icon-*.png 교체로 변경 가능) -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f5f0e8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="소미쌤">
+<link rel="apple-touch-icon" href="./icon-180.png">
 <title>학생 · somi_ssam</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
@@ -60,7 +68,7 @@ button{font-family:inherit;cursor:pointer;}
 .date-num{position:relative;z-index:2;font-size:1rem;font-weight:500;line-height:1;}
 .teacher-stamp{position:absolute;top:-2px;left:-2px;width:28px;height:28px;z-index:3;pointer-events:none;}
 .student-stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none;}
-.student-stamp svg{width:85%;height:85%;opacity:0.55;}
+.student-stamp svg{width:72%;height:72%;opacity:0.55;}
 .practice-bar-wrap{position:absolute;bottom:2px;left:2px;right:2px;height:3px;display:flex;gap:1px;border-radius:2px;overflow:hidden;z-index:1;}
 .practice-bar-seg{height:100%;border-radius:1px;}
 /* ── 도장 피커 + 로딩 스피너 ── */
@@ -199,11 +207,6 @@ button{font-family:inherit;cursor:pointer;}
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <!-- 도장 피커 -->
-    <div class="stamp-picker" style="margin-top:16px" id="stamp-picker-wrap">
-      <h4>이번 주 도장 선택</h4>
-      <div class="stamp-options" id="stamp-options-wrap"></div>
-    </div>
   </div>
   <div id="stab-breath" style="display:none">
     <div class="chapter-goto"><div class="icon">🫁</div><p>호흡 연습 페이지로 이동합니다</p><button class="goto-btn" onclick="goToChapter('breath')">호흡 연습 시작 →</button></div>
@@ -301,6 +304,9 @@ async function safePutProfiles(newProfiles){
 let profiles=loadData('somi_profiles',[]);
 let practiceLogs=loadData('somi_logs',{});
 let teacherStamps=loadData('somi_teacher_stamps',{});
+// ── 학생 날짜별 도장: { "pid_YYYY-MM-DD": "apple" } 형태로 독립 저장 ──
+let studentDayStamps=loadData('somi_student_day_stamps',{});
+function saveStudentDayStamps(){ saveData('somi_student_day_stamps',studentDayStamps); }
 let classSettings=loadData('somi_class_settings',{});
 let lessonStarts=loadData('somi_lesson_starts',{});
 let currentTheme=loadData('somi_theme','dark');
@@ -547,7 +553,7 @@ function updateSummary(){
 }
 
 function renderCalendar(){
-  practiceLogs=loadData('somi_logs',{});teacherStamps=loadData('somi_teacher_stamps',{});
+  practiceLogs=loadData('somi_logs',{});teacherStamps=loadData('somi_teacher_stamps',{});studentDayStamps=loadData('somi_student_day_stamps',{});
   const grid=document.getElementById('cal-grid');
   document.getElementById('cal-title').textContent=calYear+'년 '+(calMonth+1)+'월';
   grid.innerHTML='';
@@ -562,7 +568,8 @@ function renderCalendar(){
     if(dayLogs.length>0){
       const tk=currentProfile.id+'_'+ds;
       if(teacherStamps[tk]){const tl=document.createElement('div');tl.className='teacher-stamp';tl.innerHTML=getTeacherStampSVG(teacherStamps[tk].stamp, 20);div.appendChild(tl);}
-      const sl=document.createElement('div');sl.className='student-stamp';sl.innerHTML=getStampSVG(currentStamp);div.appendChild(sl);
+      const dayStamp=studentDayStamps[currentProfile.id+'_'+ds];
+      if(dayStamp){const sl=document.createElement('div');sl.className='student-stamp';sl.innerHTML=getStampSVG(dayStamp);div.appendChild(sl);}
     }
     const dn=document.createElement('span');dn.className='date-num';if(dayLogs.length>0)dn.style.fontWeight='800';dn.textContent=d;div.appendChild(dn);
     if(dayLogs.length>0){const bw=document.createElement('div');bw.className='practice-bar-wrap';['breath','vocal','rhythm'].forEach(c=>{const cnt=dayLogs.filter(l=>l.chapter===c).length;if(cnt>0){const seg=document.createElement('div');seg.className='practice-bar-seg';seg.style.flex=String(cnt);seg.style.background=c==='breath'?'var(--accent)':c==='vocal'?'var(--accent2)':'var(--accent3)';bw.appendChild(seg);}});div.appendChild(bw);}
@@ -597,8 +604,25 @@ function showDayLog(dateStr){
   let box=document.getElementById('inline-day-log');
   if(!box){box=document.createElement('div');box.id='inline-day-log';box.style.cssText='margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;';document.getElementById('stab-home').appendChild(box);}
   const pc=c=>c==='breath'?'b':c==='vocal'?'v':'r',cn=c=>c==='breath'?'호흡':c==='vocal'?'발성':'리듬';
-  box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1rem;font-weight:700">${dateStr} 연습 기록</h3><button onclick="document.getElementById('inline-day-log').remove()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button></div>`+(logs.length?`<table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${l.time||''}</td><td><span class="pill ${pc(l.chapter)}">${cn(l.chapter)}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text2);text-align:center;padding:16px">연습 기록이 없어요</p>');
+  // 연습 기록이 있는 날만 도장 선택 UI 노출
+  let stampHtml='';
+  if(logs.length){
+    const cur=studentDayStamps[currentProfile.id+'_'+dateStr]||'';
+    const opts=Object.keys(STAMPS).map(key=>`<div class="stamp-opt${cur===key?' active':''}" data-stamp="${key}" onclick="selectDayStamp('${dateStr}','${key}',this)">${getStampSVG(key)}</div>`).join('');
+    stampHtml=`<div class="stamp-picker" style="margin-top:16px"><h4>이 날의 도장 선택</h4><div class="stamp-options">${opts}</div></div>`;
+  }
+  box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1rem;font-weight:700">${dateStr} 연습 기록</h3><button onclick="document.getElementById('inline-day-log').remove()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button></div>`+(logs.length?`<table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${l.time||''}</td><td><span class="pill ${pc(l.chapter)}">${cn(l.chapter)}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text2);text-align:center;padding:16px">연습 기록이 없어요</p>')+stampHtml;
   box.scrollIntoView({behavior:'smooth'});
+}
+
+/* ── 날짜별 도장 선택 (연습 기록 있는 날만) ── */
+function selectDayStamp(dateStr,key,el){
+  const k=currentProfile.id+'_'+dateStr;
+  if(studentDayStamps[k]===key){ delete studentDayStamps[k]; el.classList.remove('active'); } // 같은 도장 다시 누르면 해제
+  else{ studentDayStamps[k]=key; }
+  saveStudentDayStamps();
+  el.parentElement.querySelectorAll('.stamp-opt').forEach(o=>o.classList.toggle('active',o.getAttribute('data-stamp')===studentDayStamps[k]));
+  renderCalendar();
 }
 
 /* ════════════════════════════════════
@@ -678,7 +702,7 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
     _fbHandle={db:fsDb, doc, getDoc, setDoc};  // 안전가드용 핸들 보관
-    await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_access_log'].map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
+    await Promise.all(['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_access_log'].map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
     // 내 세션 키도 Firebase에서 로드 (다른 기기 로그인 감지용)
     if(currentProfile){
       try{const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+currentProfile.id));if(snap.exists())localStorage.setItem('somi_student_session_'+currentProfile.id,snap.data().value);}catch(e){}

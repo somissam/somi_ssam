@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- PWA: 홈 화면 추가 (아이콘/이름은 manifest.json과 icon-*.png 교체로 변경 가능) -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#f5f0e8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="소미쌤">
+<link rel="apple-touch-icon" href="./icon-180.png">
 <title>보컬랩(남성) · somi_ssam</title>
 <script>
 (function(){
@@ -1292,7 +1300,26 @@ function timerFrame(){
   }
   if(isPlaying||stopScheduled)timerRafId=requestAnimationFrame(timerFrame);
 }
-function togglePlay(){if(isPlaying)pauseEngine();else startEngine();}
+/* ── [작업4] 연습/심화 시작 전제조건 검사 ──
+   기본·목풀기는 그대로 즉시 시작. 연습=음역(방향 포함) 필수, 심화=간격→방향→음역 순서 필수. */
+function _practiceStartGate(){
+  if(TMODE===MODE_PRACTICE){
+    if(!prac_rangeSelected){ alert('음역 범위를 먼저 선택하세요.\n(시작음과 끝음을 차례로 누르면 진행 방향까지 정해집니다.)'); return false; }
+    return true;
+  }
+  if(TMODE===MODE_ADVANCED_1){
+    if(!adv_intervalOrder||adv_intervalOrder.length===0){ alert('① 음정 간격을 먼저 선택하세요.'); return false; }
+    if(!adv_dirChosen){ alert('② 진행 방향을 선택하세요. (기본 또는 왕복)'); return false; }
+    if(!adv_rangeSelected){ alert('③ 음역 범위를 선택하세요. (시작음·끝음 차례로 클릭)'); return false; }
+    return true;
+  }
+  return true; // 기본·목풀기 등은 제한 없음
+}
+function togglePlay(){
+  if(isPlaying){pauseEngine();return;}
+  if(!isPaused && !_practiceStartGate())return;
+  startEngine();
+}
 function startEngine(){
   // ═══ iPad Safari 핵심: 이 함수 전체가 유저 제스처 핸들러 안에서 '동기식'으로 끝까지 실행됨 ═══
   // .then() 비동기 콜백 안에서 셋업하면 Safari가 제스처 컨텍스트 소실로 판단 → currentTime 0 고착
@@ -1686,6 +1713,7 @@ function wu_onComplete(){
    ※ 다른 모드와 변수/함수 공유 없음
 ════════════════════════════════════════════════ */
 let adv_dir='basic';         // 'basic'|'loop'
+let adv_dirChosen=false;     // [작업4] 사용자가 진행방향을 명시적으로 눌렀는지 (게이트용, 계산엔 미사용)
 let adv_currentMidi=53;
 let adv_pendingMidi=-1;
 let adv_rangeMin=41,adv_rangeMax=77;
@@ -1750,7 +1778,7 @@ function adv_onEngineStart(){
 
 function adv_reset(){
   adv_intervalOrder=[];adv_intervalRandom=false;adv_intervalSeqIdx=0;
-  adv_dir='basic';adv_rangeSelected=false;adv_rangeFirstMidi=null;
+  adv_dir='basic';adv_dirChosen=false;adv_rangeSelected=false;adv_rangeFirstMidi=null;
   adv_displayStart=null;adv_displayEnd=null;
   adv_rangeMin=41;adv_rangeMax=77;adv_rangeStartDir=1;
   adv_loopStart=53;adv_loopEnd=65;adv_loopDir=1;
@@ -2462,7 +2490,7 @@ function buildAdvancedPanel(body){
         else{adv_intervalOrder.push(iv);b.classList.add('active');}
         adv_intervalSeqIdx=0;refreshOrderDisplay();updateRandBtnState();
         const basicBtn2=document.getElementById('adv-dir-basic-btn');
-        if((adv_intervalOrder.length>=1||adv_intervalRandom)&&adv_dir==='basic'&&basicBtn2){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));basicBtn2.classList.add('active');}
+        if((adv_intervalOrder.length>=1||adv_intervalRandom)&&adv_dir==='basic'&&basicBtn2){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));basicBtn2.classList.add('active');adv_dirChosen=true;}
         if(adv_intervalOrder.length===0&&!adv_intervalRandom){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));adv_dir='basic';}
         renderAdvRangeGrid();
       };
@@ -2476,7 +2504,7 @@ function buildAdvancedPanel(body){
   ivRandBtn.onclick=()=>{
     if(ivRandBtn.disabled)return;adv_intervalRandom=!adv_intervalRandom;ivRandBtn.classList.toggle('active',adv_intervalRandom);updateDirBtnStates();
     const basicBtn2=document.getElementById('adv-dir-basic-btn');
-    if(adv_intervalRandom&&adv_dir==='basic'&&basicBtn2){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));basicBtn2.classList.add('active');}
+    if(adv_intervalRandom&&adv_dir==='basic'&&basicBtn2){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));basicBtn2.classList.add('active');adv_dirChosen=true;}
     if(!adv_intervalRandom&&adv_intervalOrder.length===0){document.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));adv_dir='basic';}
   };
   ivLayout.appendChild(ivNumCols);ivLayout.appendChild(ivRandBtn);
@@ -2493,7 +2521,7 @@ function buildAdvancedPanel(body){
     const initActive=adv_dir===val&&adv_intervalOrder.length>0;
     b.className='dir-btn'+(initActive?' active':'');b.textContent=label;if(id)b.id=id;
     b.onclick=()=>{
-      if(b.disabled)return;adv_dir=val;dg.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+      if(b.disabled)return;adv_dir=val;adv_dirChosen=true;dg.querySelectorAll('.dir-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
       stopExercise();adv_rangeSelected=false;adv_rangeFirstMidi=null;updateRngInfo();renderAdvRangeGrid();
     };
     dg.appendChild(b);
