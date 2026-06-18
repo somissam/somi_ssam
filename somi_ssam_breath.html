@@ -88,8 +88,11 @@ button{font-family:inherit;cursor:pointer;}
 #practice-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:200;flex-direction:column;overflow-y:auto;}
 .prac-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
 .prac-header h2{font-size:0.95rem;font-weight:600;flex:1;}
-.back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:10px 20px;border-radius:10px;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;cursor:pointer;min-width:120px;justify-content:center;white-space:nowrap;}
+.back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:10px;font-size:0.85rem;font-weight:500;transition:all 0.2s;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .back-btn:hover{border-color:var(--accent);color:var(--text);}
+.refresh-btn{background:var(--surface2);border:none;color:var(--text2);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:0;}
+.refresh-btn:hover{color:var(--accent);background:var(--border);}
+.refresh-btn svg{display:block;}
 .prac-body{display:flex;flex-direction:column;align-items:center;padding:24px 20px 52px;gap:22px;max-width:560px;margin:0 auto;width:100%;}
 
 /* 모드 탭 */
@@ -137,6 +140,7 @@ button{font-family:inherit;cursor:pointer;}
 /* 컨트롤 */
 .controls{display:flex;gap:14px;align-items:center;}
 .ctrl-btn{width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;font-size:1.3rem;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.ctrl-btn svg{display:block;}
 .ctrl-btn.reset{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
 .ctrl-btn.reset:hover{border-color:var(--counting);color:var(--counting);}
 .ctrl-btn.play{background:var(--accent);color:white;width:68px;height:68px;font-size:1.5rem;}
@@ -216,6 +220,7 @@ button{font-family:inherit;cursor:pointer;}
 <!-- ══════════ 연습 화면 ══════════ -->
 <div id="practice-screen">
   <div class="prac-header">
+    <button class="refresh-btn" onclick="labRefresh()" aria-label="새로고침" title="최신 데이터 불러오기"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
     <button class="back-btn" onclick="closePractice()">← 뒤로</button>
     <h2 id="prac-title">호흡 연습</h2>
   </div>
@@ -636,6 +641,10 @@ function playClick(type, time) {
    공통 런타임 변수
 ════════════════════════════════════════════════ */
 let EX = '', TMODE = 'basic', SUB = '4', HTARGET = 15;
+// 재생/일시정지 아이콘 (이모지 대신 테마색 SVG)
+const ICON_PLAY  = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>';
+function setPlayIcon(playing) { const pb = document.getElementById('play-btn'); if (pb) pb.innerHTML = playing ? ICON_PAUSE : ICON_PLAY; }
 let seqPhase = 'counting', seqStep = 0, loopCount = 0;
 let isPlaying = false, isPaused = false;
 let mainStartWallTime = 0, elapsedSeconds = 0, pausedElapsed = 0;
@@ -679,7 +688,7 @@ function startEngine() {
   }
 
   isPlaying = true;
-  const pb = document.getElementById('play-btn'); if (pb) pb.textContent = '⏸';
+  setPlayIcon(true);
   schedulerTimer = setInterval(schedulerTick, 25);
   timerRafId = requestAnimationFrame(timerFrame);
 }
@@ -833,6 +842,8 @@ function startExercise(id) {
   buildPracticeUI();
   document.getElementById('pattern-select').style.display = 'none';
   document.getElementById('practice-screen').style.display = 'flex';
+  // 화면이 보인 뒤(폭이 잡힌 뒤) 자동 맞춤 실행
+  requestAnimationFrame(() => requestAnimationFrame(fitAllBreath));
 }
 
 function closePractice() {
@@ -928,8 +939,6 @@ function buildPracticeUI() {
       else s.classList.add('col-write');
       br.appendChild(s);
     });
-    // 자동 맞춤(간격 먼저, 부족하면 폰트 축소)
-    requestAnimationFrame(() => fitBeatRow(br, getWriteLabels().length));
 
   } else {
     // breathCycle: 카운팅 레이어(1~4) + 패턴 레이어(n박) 분리
@@ -1022,10 +1031,6 @@ function buildPracticeUI() {
     const wrs = document.createElement('div'); wrs.className = 'write-seg write-s'; wrs.textContent = '쓰기';
     seg.appendChild(ws); seg.appendChild(is2); seg.appendChild(wrs);
     writeWrap.appendChild(seg);
-    // 각 칸 라벨이 한 줄에 들어가도록 자동 축소(특히 좁은 "마시기" 칸)
-    requestAnimationFrame(() => {
-      [ws, is2, wrs].forEach(s => fitTextOneLine(s, 0.78, 0.5));
-    });
 
     body.appendChild(writeWrap);
   }
@@ -1035,7 +1040,6 @@ function buildPracticeUI() {
   const ia = document.createElement('div'); ia.className = 'info-action'; ia.id = 'info-action'; ia.textContent = '시작 버튼을 눌러주세요';
   const is2 = document.createElement('div'); is2.className = 'info-sub'; is2.id = 'info-sub'; is2.textContent = '';
   ib.appendChild(ia); ib.appendChild(is2); body.appendChild(ib);
-  requestAnimationFrame(() => fitTextOneLine(ia, 2.1, 1.0));
 
   /* ── 타이머 ── */
   const tw = document.createElement('div'); tw.className = 'timer-wrap';
@@ -1046,7 +1050,10 @@ function buildPracticeUI() {
 
   /* ── 컨트롤 ── */
   const ctrl = document.createElement('div'); ctrl.className = 'controls';
-  ctrl.innerHTML = `<button class="ctrl-btn reset" onclick="hardReset()">↺</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶</button><button class="ctrl-btn stop" onclick="stopExercise()">■</button>`;
+  const SVG_RESET = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
+  const SVG_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+  const SVG_STOP = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+  ctrl.innerHTML = `<button class="ctrl-btn reset" onclick="hardReset()" aria-label="다시">${SVG_RESET}</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()" aria-label="재생">${SVG_PLAY}</button><button class="ctrl-btn stop" onclick="stopExercise()" aria-label="정지">${SVG_STOP}</button>`;
   body.appendChild(ctrl);
 
   /* ── 볼륨 슬라이더 ── */
@@ -1061,6 +1068,8 @@ function buildPracticeUI() {
   const ugS = document.createElement('input'); ugS.type = 'range'; ugS.min = '0'; ugS.max = '200'; ugS.value = String(Math.round(userVol*100)); ugS.style.cssText='flex:1;accent-color:var(--accent3);cursor:pointer;';
   ugS.oninput = () => { userVol = parseInt(ugS.value)/100; if(userGain) userGain.gain.value = userVol; };
   ugR.appendChild(ugS); vw.appendChild(ugR); body.appendChild(vw);
+  // 빌드 후 화면 폭이 잡히면 자동 맞춤
+  requestAnimationFrame(() => requestAnimationFrame(fitAllBreath));
 }
 
 function resetAndRebuild() { stopEngine(); elapsedSeconds=0; buildPracticeUI(); }
@@ -1076,6 +1085,23 @@ function togglePlay() {
 ════════════════════════════════════════════════ */
 // 텍스트가 박스 폭을 넘으면 한 줄에 들어갈 때까지 폰트를 자동 축소.
 // maxRem: 기본(여유 있을 때) 크기, minRem: 하한.
+// 현재 호흡 화면의 박자 숫자/라벨을 화면 폭에 맞게 한 번에 조정.
+function fitAllBreath() {
+  const beats = parseInt(SUB) || 4;
+  // breathCycle 패턴 레이어
+  const pl = document.getElementById('bc-pat-layer');
+  if (pl) fitBeatRow(pl, beats);
+  // 쓰기호흡 큰 숫자 행 (4 + 쓰기박수)
+  const wr = document.getElementById('write-wrap');
+  const br = document.getElementById('beat-row');
+  if (wr && br) fitBeatRow(br, 4 + beats);
+  // 세그먼트 라벨 한 줄
+  document.querySelectorAll('.write-seg').forEach(s => fitTextOneLine(s, 0.78, 0.46));
+  // 인포 박스 한 줄
+  const ae = document.getElementById('info-action');
+  if (ae) fitTextOneLine(ae, 2.1, 1.0);
+}
+
 function fitTextOneLine(el, maxRem, minRem) {
   if (!el) return;
   el.style.whiteSpace = 'nowrap';
@@ -1243,7 +1269,7 @@ function pauseEngine() {
   isPlaying = false;
   clearInterval(schedulerTimer); schedulerTimer = null;
   cancelAnimationFrame(timerRafId); timerRafId = null;
-  const pb = document.getElementById('play-btn'); if(pb) pb.textContent = '▶';
+  setPlayIcon(false);
   const tm = document.getElementById('timer-main'); if(tm) tm.className = 'timer-main';
   isPaused = true; pausedElapsed = elapsedSeconds;
 }
@@ -1297,7 +1323,7 @@ function showSuccess(msg) {
   if (ae) { ae.textContent = '🎉 ' + msg; fitTextOneLine(ae, 1.4, 0.9); }
   if (se) se.textContent = '↺ 버튼으로 다시 도전';
   // 플레이 버튼 초기화
-  const pb = document.getElementById('play-btn'); if(pb) pb.textContent = '▶';
+  setPlayIcon(false);
 }
 function closeSuccess() {
   document.getElementById('success-overlay').style.display = 'none';
@@ -1524,7 +1550,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       const br = document.getElementById('beat-row');
       if (wr && br) fitBeatRow(br, 4 + beats); // 쓰기호흡: 4 + 쓰기박수
       // 세그먼트 라벨 + 인포 박스 한 줄 재맞춤
-      document.querySelectorAll('.write-seg').forEach(s => fitTextOneLine(s, 0.78, 0.5));
+      document.querySelectorAll('.write-seg').forEach(s => fitTextOneLine(s, 0.78, 0.46));
       const ae = document.getElementById('info-action');
       if (ae) fitTextOneLine(ae, 2.1, 1.0);
     }, 150);
