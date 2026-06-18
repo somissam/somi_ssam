@@ -101,8 +101,8 @@ button{font-family:inherit;cursor:pointer;}
 .hold-tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
 
 /* 박자 행 */
-.beat-row{display:flex;gap:16px;align-items:center;justify-content:center;width:100%;max-width:420px;}
-.beat-num{font-family:'DM Mono',monospace;font-size:2.8rem;font-weight:700;color:var(--border);transition:color 0.08s,text-shadow 0.08s,transform 0.08s;min-width:42px;text-align:center;line-height:1;}
+.beat-row{display:flex;gap:16px;align-items:center;justify-content:center;width:100%;max-width:420px;padding:0 12px;box-sizing:border-box;overflow:hidden;}
+.beat-num{font-family:'DM Mono',monospace;font-size:2.8rem;font-weight:700;color:var(--border);transition:color 0.08s,text-shadow 0.08s,transform 0.08s;min-width:0;text-align:center;line-height:1;flex-shrink:0;}
 .beat-num.col-wait{color:rgba(247,194,106,0.35);}
 .beat-num.col-inhale{color:rgba(124,106,247,0.35);}
 .beat-num.col-write{color:rgba(247,106,200,0.6);}
@@ -115,7 +115,7 @@ button{font-family:inherit;cursor:pointer;}
 /* 쓰기호흡 진행 바 */
 .progress-bar-wrap{width:100%;max-width:420px;}
 .write-segments{width:100%;max-width:420px;}
-.write-seg{padding:10px 4px;border-radius:10px;text-align:center;font-size:0.78rem;font-weight:600;opacity:0.4;transition:opacity 0.15s,box-shadow 0.15s;min-width:0;overflow:hidden;}
+.write-seg{padding:10px 4px;border-radius:10px;text-align:center;font-size:0.78rem;font-weight:600;opacity:0.4;transition:opacity 0.15s,box-shadow 0.15s;min-width:0;overflow:hidden;white-space:nowrap;}
 .write-seg.wait{background:rgba(247,194,106,0.2);color:var(--col-wait);border:1.5px solid rgba(247,194,106,0.4);}
 .write-seg.inhale{background:rgba(124,106,247,0.2);color:var(--col-inhale);border:1.5px solid rgba(124,106,247,0.4);}
 .write-seg.write-s{background:rgba(247,106,200,0.2);color:var(--col-write);border:1.5px solid rgba(247,106,200,0.4);}
@@ -126,7 +126,7 @@ button{font-family:inherit;cursor:pointer;}
 
 /* 인포박스 */
 .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;text-align:center;width:100%;max-width:420px;min-height:96px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;}
-.info-action{font-size:2.1rem;font-weight:700;transition:all 0.2s;line-height:1.2;}
+.info-action{font-size:2.1rem;font-weight:700;transition:all 0.2s;line-height:1.2;white-space:nowrap;}
 .info-sub{font-size:0.85rem;color:var(--text2);}
 
 /* 타이머 */
@@ -928,6 +928,8 @@ function buildPracticeUI() {
       else s.classList.add('col-write');
       br.appendChild(s);
     });
+    // 자동 맞춤(간격 먼저, 부족하면 폰트 축소)
+    requestAnimationFrame(() => fitBeatRow(br, getWriteLabels().length));
 
   } else {
     // breathCycle: 카운팅 레이어(1~4) + 패턴 레이어(n박) 분리
@@ -1020,6 +1022,10 @@ function buildPracticeUI() {
     const wrs = document.createElement('div'); wrs.className = 'write-seg write-s'; wrs.textContent = '쓰기';
     seg.appendChild(ws); seg.appendChild(is2); seg.appendChild(wrs);
     writeWrap.appendChild(seg);
+    // 각 칸 라벨이 한 줄에 들어가도록 자동 축소(특히 좁은 "마시기" 칸)
+    requestAnimationFrame(() => {
+      [ws, is2, wrs].forEach(s => fitTextOneLine(s, 0.78, 0.5));
+    });
 
     body.appendChild(writeWrap);
   }
@@ -1029,6 +1035,7 @@ function buildPracticeUI() {
   const ia = document.createElement('div'); ia.className = 'info-action'; ia.id = 'info-action'; ia.textContent = '시작 버튼을 눌러주세요';
   const is2 = document.createElement('div'); is2.className = 'info-sub'; is2.id = 'info-sub'; is2.textContent = '';
   ib.appendChild(ia); ib.appendChild(is2); body.appendChild(ib);
+  requestAnimationFrame(() => fitTextOneLine(ia, 2.1, 1.0));
 
   /* ── 타이머 ── */
   const tw = document.createElement('div'); tw.className = 'timer-wrap';
@@ -1067,6 +1074,43 @@ function togglePlay() {
 /* ════════════════════════════════════════════════
    【 섹션 G 】 비주얼 업데이트
 ════════════════════════════════════════════════ */
+// 텍스트가 박스 폭을 넘으면 한 줄에 들어갈 때까지 폰트를 자동 축소.
+// maxRem: 기본(여유 있을 때) 크기, minRem: 하한.
+function fitTextOneLine(el, maxRem, minRem) {
+  if (!el) return;
+  el.style.whiteSpace = 'nowrap';
+  el.style.fontSize = maxRem + 'rem';
+  // 부모(박스)의 가용 내폭 기준. el 자신의 패딩은 글자 영역 밖이므로 scrollWidth와 비교.
+  let rem = maxRem;
+  // scrollWidth(실제 글자폭) > clientWidth(보이는폭)면 넘친 것
+  let guard = 0;
+  while (el.scrollWidth > el.clientWidth && rem > minRem && guard < 40) {
+    rem = Math.max(minRem, rem - 0.06);
+    el.style.fontSize = rem.toFixed(3) + 'rem';
+    guard++;
+  }
+}
+
+// 박자 숫자 자동 맞춤: 간격을 먼저 줄이고, 부족하면 폰트를 살짝 줄인다.
+function fitBeatRow(layerEl, n) {
+  if (!layerEl || !n) return;
+  const row = document.querySelector('.beat-row');
+  const base = (row && row.clientWidth) ? row.clientWidth : window.innerWidth;
+  const avail = Math.min(420, base - 24);
+  const glyph = 32; // 2.8rem 숫자 1글자 대략 폭(px, 안드로이드 여유 포함)
+  // 1) 간격: 넉넉하면 16px, 빡빡하면 최소 4px까지 줄임
+  let gap = Math.max(4, Math.min(16, (avail - n * glyph) / Math.max(1, n - 1)));
+  // 2) 최소 간격으로도 넘치면 폰트 축소(2.8rem → 하한 1.6rem)
+  let fontRem = 2.8;
+  const needed = n * glyph + (n - 1) * gap;
+  if (needed > avail) {
+    const scale = (avail - (n - 1) * gap) / (n * glyph);
+    fontRem = Math.max(1.6, 2.8 * Math.max(0.57, scale));
+  }
+  layerEl.style.gap = gap.toFixed(1) + 'px';
+  layerEl.querySelectorAll('.beat-num').forEach(s => { s.style.fontSize = fontRem.toFixed(2) + 'rem'; });
+}
+
 function applyVisual(vis) {
   if (!vis) return;
   const pat = currentPat(); if (!pat) return;
@@ -1105,6 +1149,7 @@ function applyVisual(vis) {
     const cl = document.getElementById('bc-count-layer'); if(cl) cl.style.display = 'none';
     const pl = document.getElementById('bc-pat-layer');   if(pl) pl.style.display = 'flex';
     const beats = parseInt(SUB) || 4;
+    if (pl && !pl.dataset.fitted) { pl.dataset.fitted = '1'; fitBeatRow(pl, beats); }
     const cls = vis.phase === 'exhale' ? 'active-exhale' : 'active-inhale';
     for (let i=0; i<beats; i++) {
       const el = document.getElementById('bn-'+i); if (!el) continue;
@@ -1187,7 +1232,7 @@ function applyWriteVisual(vis) {
 }
 
 function setInfoBox(a, s) {
-  const ae = document.getElementById('info-action'); if(ae) ae.textContent = a;
+  const ae = document.getElementById('info-action'); if(ae){ ae.textContent = a; fitTextOneLine(ae, 2.1, 1.0); }
   const se = document.getElementById('info-sub');    if(se) se.textContent = s;
 }
 
@@ -1249,7 +1294,7 @@ function showSuccess(msg) {
   // 라벨박스(info-box) 안에서 메시지 표시
   const ae = document.getElementById('info-action');
   const se = document.getElementById('info-sub');
-  if (ae) { ae.style.fontSize = '1.4rem'; ae.textContent = '🎉 ' + msg; }
+  if (ae) { ae.textContent = '🎉 ' + msg; fitTextOneLine(ae, 1.4, 0.9); }
   if (se) se.textContent = '↺ 버튼으로 다시 도전';
   // 플레이 버튼 초기화
   const pb = document.getElementById('play-btn'); if(pb) pb.textContent = '▶';
@@ -1466,6 +1511,23 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
   window.addEventListener('pagehide',()=>{
     if(isPlaying||elapsedSeconds>2) logPractice();
+  });
+  // 화면 회전/리사이즈 시 박자 숫자 재맞춤
+  let _fitTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(_fitTimer);
+    _fitTimer = setTimeout(() => {
+      const beats = parseInt(SUB) || 4;
+      const pl = document.getElementById('bc-pat-layer');
+      if (pl && pl.style.display !== 'none') fitBeatRow(pl, beats);
+      const wr = document.getElementById('write-wrap');
+      const br = document.getElementById('beat-row');
+      if (wr && br) fitBeatRow(br, 4 + beats); // 쓰기호흡: 4 + 쓰기박수
+      // 세그먼트 라벨 + 인포 박스 한 줄 재맞춤
+      document.querySelectorAll('.write-seg').forEach(s => fitTextOneLine(s, 0.78, 0.5));
+      const ae = document.getElementById('info-action');
+      if (ae) fitTextOneLine(ae, 2.1, 1.0);
+    }, 150);
   });
 });
 </script>
