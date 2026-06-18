@@ -25,7 +25,7 @@ button{font-family:inherit;cursor:pointer;}
 .brand-wrap{display:flex;flex-direction:column;gap:1px;text-align:right;}
 .brand-title{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'DM Mono',monospace;}
 .brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
-.home-link{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;min-width:120px;justify-content:center;white-space:nowrap;}
+.home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.85rem;font-weight:500;transition:all 0.2s;font-family:inherit;white-space:nowrap;flex-shrink:0;}
 .home-link:hover{border-color:var(--accent);color:var(--text);}
 .student-tabs{display:flex;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;overflow-x:auto;scrollbar-width:none;}
 .student-tabs::-webkit-scrollbar{display:none;}
@@ -163,11 +163,11 @@ button{font-family:inherit;cursor:pointer;}
 <div id="app">
   <div class="app-header">
     <div style="display:flex;align-items:center;gap:8px;">
+      <button onclick="studentRefresh()" aria-label="새로고침" title="최신 데이터 불러오기" style="background:none;border:none;color:var(--text2);width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
       <button class="home-link" id="teacher-mode-btn" style="display:none;" onclick="goToTeacherMode()">👩‍🏫 소미쌤</button>
       <button class="home-link" id="vocal-gender-toggle" style="display:none;" onclick="toggleVocalGender()" title="보컬랩 성별 미리보기 전환"></button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <button onclick="studentRefresh()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:1rem;padding:5px 9px;cursor:pointer;line-height:1;" title="최신 데이터 불러오기">🔄</button>
       <div class="brand-wrap">
         <div class="brand-title">소미쌤</div>
         <div class="brand-sub">STUDENT · SOMI_SSAM</div>

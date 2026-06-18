@@ -57,7 +57,7 @@ button{font-family:inherit;cursor:pointer;}
   background:linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 28%, var(--bg) 72%, var(--bg) 100%);}
 .theme-ivory .ended-fog-veil{background:linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 28%, var(--bg) 72%, var(--bg) 100%);}
 .ended-fog-dots{position:absolute;left:0;right:0;bottom:10px;z-index:6;text-align:center;color:var(--text2);font-size:1.5rem;letter-spacing:5px;opacity:0.45;pointer-events:none;}
-.home-link{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;min-width:120px;justify-content:center;white-space:nowrap;}
+.home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.85rem;font-weight:500;transition:all 0.2s;font-family:inherit;white-space:nowrap;flex-shrink:0;}
 .home-link:hover{border-color:var(--accent);color:var(--text);}
 
 /* ══════════════════════════════════════
@@ -90,8 +90,8 @@ button{font-family:inherit;cursor:pointer;}
 .prac-header h2{font-size:0.95rem;font-weight:600;flex:1;}
 .back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:10px;font-size:0.85rem;font-weight:500;transition:all 0.2s;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 .back-btn:hover{border-color:var(--accent);color:var(--text);}
-.refresh-btn{background:var(--surface2);border:none;color:var(--text2);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:0;}
-.refresh-btn:hover{color:var(--accent);background:var(--border);}
+.refresh-btn{background:none;border:none;color:var(--text2);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;padding:0;}
+.refresh-btn:hover{color:var(--accent);background:none;}
 .refresh-btn svg{display:block;}
 .prac-body{display:flex;flex-direction:column;align-items:center;padding:24px 20px 52px;gap:22px;max-width:560px;margin:0 auto;width:100%;}
 
@@ -195,9 +195,13 @@ button{font-family:inherit;cursor:pointer;}
 
 <!-- ══════════ HEADER ══════════ -->
 <header class="lab-header">
-  <a class="home-link" href="somi_ssam_student.html">← 학생 홈</a>
+  
   <div style="display:flex;align-items:center;gap:8px;">
-    <button onclick="labRefresh()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:1rem;padding:5px 9px;cursor:pointer;line-height:1;" title="최신 데이터 불러오기">🔄</button>
+    <button onclick="labRefresh()" aria-label="새로고침" title="최신 데이터 불러오기" style="background:none;border:none;color:var(--text2);width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+    <a class="home-link" href="somi_ssam_student.html">← 학생 홈</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    
     <div class="lab-brand">
       <div class="brand-title">호흡</div>
       <div class="brand-sub">BREATH · SOMI_SSAM</div>
@@ -1117,16 +1121,19 @@ function fitTextOneLine(el, maxRem, minRem) {
   }
 }
 
-// 박자 숫자 자동 맞춤: 간격을 먼저 줄이고, 부족하면 폰트를 살짝 줄인다.
+// 박자 숫자 자동 맞춤: 박스 가로폭에 균등 분배(최대 간격 제한), 넘치면 폰트 축소.
 function fitBeatRow(layerEl, n) {
   if (!layerEl || !n) return;
   const row = document.querySelector('.beat-row');
   const base = (row && row.clientWidth) ? row.clientWidth : window.innerWidth;
   const avail = Math.min(420, base - 24);
-  const glyph = 32; // 2.8rem 숫자 1글자 대략 폭(px, 안드로이드 여유 포함)
-  // 1) 간격: 넉넉하면 16px, 빡빡하면 최소 4px까지 줄임
-  let gap = Math.max(4, Math.min(16, (avail - n * glyph) / Math.max(1, n - 1)));
-  // 2) 최소 간격으로도 넘치면 폰트 축소(2.8rem → 하한 1.6rem)
+  const glyph = 32;     // 2.8rem 숫자 1글자 대략 폭(px)
+  const GAP_MAX = 36;   // 숫자가 적을 때 너무 벌어지지 않게 간격 상한
+  const GAP_MIN = 4;
+  // 남은 공간을 간격으로 균등 분배(박스 폭에 맞춰 펼침)
+  let gap = n > 1 ? (avail - n * glyph) / (n - 1) : 0;
+  gap = Math.max(GAP_MIN, Math.min(GAP_MAX, gap));
+  // 균등 분배로도(최소 간격에서) 넘치면 폰트 축소(2.8rem → 하한 1.6rem)
   let fontRem = 2.8;
   const needed = n * glyph + (n - 1) * gap;
   if (needed > avail) {
