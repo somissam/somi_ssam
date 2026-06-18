@@ -1524,13 +1524,19 @@ function renderPatternTable() {
 
   const tbody=tbl.createTBody();
 
-  const allActive=!noPid && patternData.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
+  // ★ '전체' 토글은 현재 화면에 보이는 패턴에만 적용 (레벨 필터 반영)
+  //    레벨 필터가 걸려 있으면 그 레벨 패턴만, 없으면 전체 패턴 대상.
+  const _selLvsTop = pmFilter.selectedLevels||[];
+  const visiblePatterns = (_selLvsTop.length>0)
+    ? patternData.filter(p=>_selLvsTop.includes(getPatternLevel(p.id)))
+    : patternData;
+  const allActive=!noPid && visiblePatterns.length>0 && visiblePatterns.every(p=>pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)));
   const topRowEl=tbody.insertRow(); topRowEl.style.cssText='background:var(--surface);';
   const topTd2=topRowEl.insertCell(); topTd2.style.cssText='padding:8px 6px;text-align:left;border-bottom:3px solid var(--border);';
   const topTd1=topRowEl.insertCell(); topTd1.style.cssText='padding:8px 10px;font-weight:900;font-size:0.82rem;border-bottom:3px solid var(--border);'; topTd1.textContent='전체';
   if(!noPid){
     topTd2.appendChild(makeToggle(allActive, checked=>{
-      patternData.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)));
+      visiblePatterns.forEach(p=>pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)));
       renderPatternTable();
     }));
   } else {
@@ -1579,7 +1585,7 @@ function renderPatternTable() {
           if(!noPid){
             td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
               pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
-            }));
+            }, p.id));
           } else {
             const tog=makeToggle(false,()=>{}); tog.disabled=true; td2.appendChild(tog);
           }
@@ -1631,7 +1637,7 @@ function renderPatternTable() {
         if(!noPid){
           td2.appendChild(makeToggle(pmFilter.pids.every(pid=>!pmIsLocked(pid,p.id)), checked=>{
             pmFilter.pids.forEach(pid=>pmSetLock(pid,p.id,checked)); renderPatternTable();
-          }));
+          }, p.id));
         } else {
           const tog=makeToggle(false,()=>{}); tog.disabled=true; td2.appendChild(tog);
         }
@@ -1643,21 +1649,34 @@ function renderPatternTable() {
   wrap.appendChild(tbl);
 }
 
-let _lastCheckedPmIdx = -1;  // 재렌더에도 살아남도록 요소 대신 인덱스로 기억
-function makeToggle(checked, onChange) {
+let _lastCheckedPmId = null;  // 패턴ID로 기억 — 재렌더 후에도 유효
+function makeToggle(checked, onChange, patternId) {
   const inp=document.createElement('input'); inp.type='checkbox'; inp.checked=checked;
   inp.className='pm-checkbox';
+  if(patternId) inp.dataset.pid=patternId;
+  inp._pmOnChange=onChange;  // 쉬프트 범위에서 직접 데이터만 갱신할 때 사용
   inp.onclick=(e)=>{
-    const allBoxes=[...document.querySelectorAll('.pm-checkbox:not(:disabled)')];
-    const myIdx=allBoxes.indexOf(inp);
-    if(e.shiftKey && _lastCheckedPmIdx>=0 && _lastCheckedPmIdx<allBoxes.length && _lastCheckedPmIdx!==myIdx){
-      const [from,to]=[Math.min(_lastCheckedPmIdx,myIdx),Math.max(_lastCheckedPmIdx,myIdx)];
-      const val=inp.checked;
-      allBoxes.slice(from,to+1).forEach(cb=>{
-        if(cb!==inp && cb.checked!==val){ cb.checked=val; cb.dispatchEvent(new Event('change')); }
-      });
+    const myPid=inp.dataset.pid||null;
+    if(e.shiftKey && _lastCheckedPmId && myPid && _lastCheckedPmId!==myPid){
+      const allPidBoxes=[...document.querySelectorAll('.pm-checkbox[data-pid]:not(:disabled)')];
+      const allPids=allPidBoxes.map(cb=>cb.dataset.pid);
+      const fromIdx=allPids.indexOf(_lastCheckedPmId);
+      const toIdx=allPids.indexOf(myPid);
+      if(fromIdx>=0 && toIdx>=0 && fromIdx!==toIdx){
+        const [lo,hi]=[Math.min(fromIdx,toIdx),Math.max(fromIdx,toIdx)];
+        const val=inp.checked;
+        // dispatchEvent('change')는 onChange→renderPatternTable()을 반복 호출해 DOM 재생성.
+        // 범위 내 _pmOnChange(데이터 갱신)만 일괄 호출하고 렌더는 마지막 1번만.
+        allPidBoxes.slice(lo, hi+1).forEach(cb=>{
+          if(cb._pmOnChange) cb._pmOnChange(val);
+        });
+        renderPatternTable();
+        if(myPid) _lastCheckedPmId=myPid;
+        e.preventDefault();  // onclick 후 onchange 중복 방지
+        return;
+      }
     }
-    _lastCheckedPmIdx=myIdx;
+    if(myPid) _lastCheckedPmId=myPid;
   };
   inp.onchange=()=>onChange(inp.checked);
   return inp;
@@ -2102,15 +2121,24 @@ function renderProfileManage() {
     pm.querySelectorAll('.profile-row').forEach(r=>r.remove());
     if(pmBtnRow.parentNode) pmBtnRow.remove();
 
-    // ── [6번] 프로필 관리 하단은 가나다순만 ──
+    // ── [6번] 프로필 관리 하단은 가나다순만 (단, 반 미배정은 최상단) ──
     let list=[...profiles];
     if(pmClassFilter) list=list.filter(p=>(pending[p.id]||{}).voClass===pmClassFilter);
-    list.sort((a,b)=>pmSortAsc?a.name.localeCompare(b.name,'ko'):b.name.localeCompare(a.name,'ko'));
+    list.sort((a,b)=>{
+      const aHas=!!(pending[a.id]||{}).voClass;
+      const bHas=!!(pending[b.id]||{}).voClass;
+      if(!aHas && bHas) return -1;
+      if(aHas && !bHas) return 1;
+      return pmSortAsc?a.name.localeCompare(b.name,'ko'):b.name.localeCompare(a.name,'ko');
+    });
 
     list.forEach(p=>{
       const ci=pending[p.id]||{voClass:null,extras:[],account:null};
+      const isUnassigned=!ci.voClass;
       const row=document.createElement('div'); row.className='profile-row';
-      row.style.cssText='padding:12px 0;border-bottom:1px solid var(--border);';
+      row.style.cssText=isUnassigned
+        ? 'padding:12px 8px;border-bottom:none;background:rgba(220,60,60,0.07);border:4px solid #dc3c3c;border-radius:8px;margin-bottom:6px;'
+        : 'padding:12px 0;border-bottom:1px solid var(--border);';
 
       const line1=document.createElement('div');
       line1.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;';
