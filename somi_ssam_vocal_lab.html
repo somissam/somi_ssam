@@ -228,9 +228,12 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 </div>
 <header class="lab-header">
   <a class="home-link" href="somi_ssam_student.html">← 학생 홈</a>
-  <div class="lab-brand">
-    <div class="brand-title">보컬랩(여성)</div>
-    <div class="brand-sub">VOCAL LAB · SOMI_SSAM</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button onclick="labRefresh()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:1rem;padding:5px 9px;cursor:pointer;line-height:1;" title="최신 데이터 불러오기">🔄</button>
+    <div class="lab-brand">
+      <div class="brand-title">보컬랩(여성)</div>
+      <div class="brand-sub">VOCAL LAB · SOMI_SSAM</div>
+    </div>
   </div>
 </header>
 <div class="pattern-select" id="pattern-select">
@@ -2707,6 +2710,29 @@ function _readSyncTs(){
   try{ return (JSON.parse(localStorage.getItem('somi_sync_meta')||'{}').ts)||0; }catch(e){ return 0; }
 }
 // 접속기록 저장 (당일 첫 활동이면 추가, 이후엔 시각만 갱신) — student.html과 동일 규칙
+async function labRefresh() {
+  somiShowLoading('최신 데이터 불러오는 중...');
+  try {
+    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+    const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+    const FB_CONFIG={apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"};
+    const APP_NAME='somi-vocal-lab-v1';
+    const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
+    const fsDb=getFirestore(fbApp);
+    const KEYS=['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates','somi_logs'];
+    await Promise.all(KEYS.map(async k=>{
+      const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
+    }));
+    if(_currentProfileId){
+      _practiceLogs=loadData('somi_logs',{});
+    }
+    renderPatternCards();
+  } catch(e) {
+    alert('새로고침 실패: 네트워크를 확인해주세요');
+  }
+  somiHideLoading();
+}
+
 function _recordAccess(){
   if(!_currentProfileId) return;
   try{

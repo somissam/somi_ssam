@@ -261,9 +261,12 @@ button{font-family:inherit;cursor:pointer;}
 <div id="app">
   <div class="app-header">
     <button class="home-link" onclick="goToSoMi()">🎤 임소미</button>
-    <div class="brand-wrap">
-      <div class="brand-title">소미쌤</div>
-      <div class="brand-sub">TEACHER · SOMI_SSAM</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button onclick="teacherRefresh()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:1rem;padding:5px 9px;cursor:pointer;line-height:1;" title="최신 데이터 불러오기">🔄</button>
+      <div class="brand-wrap">
+        <div class="brand-title">소미쌤</div>
+        <div class="brand-sub">TEACHER · SOMI_SSAM</div>
+      </div>
     </div>
   </div>
 
@@ -457,7 +460,7 @@ function getLastAccess(pid) {
 
 /* ── [5번] 미확인 연습일: 연습기록 O + (선생님 도장 X AND 확인표시 X) ── */
 // 이 날짜가 이미 확인 처리되었는지 (도장 또는 확인만)
-function _isHandled(pid, ds){ const k=pid+'_'+ds; return !!teacherChecks[k]; }
+function _isHandled(pid, ds){ const k=pid+'_'+ds; return !!teacherChecks[k] || !!teacherStamps[k]; }
 // 한 학생의 미확인 날짜 목록(YYYY-MM-DD) 반환 — 최신순
 function getUncheckedDates(pid) {
   const days=[...new Set((practiceLogs[pid]||[]).map(l=>l.date))];
@@ -742,6 +745,41 @@ function checkPw() {
 }
 
 /* ── 임소미로 이동 (선생님 전용 테스트 계정) ── */
+async function teacherRefresh() {
+  somiShowLoading('최신 데이터 불러오는 중...');
+  try {
+    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+    const { getFirestore, doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+    const FB_CONFIG={apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"};
+    const APP_NAME='somi-home-v4';
+    const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
+    const fsDb=getFirestore(fbApp);
+    window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
+    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_teacher_checks','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+    await Promise.all(KEYS.map(async k=>{
+      const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
+    }));
+    profiles=loadData('somi_profiles',[]);
+    await Promise.all(profiles.map(async p=>{
+      try{ const snap=await getDoc(doc(fsDb,'somi_data','somi_student_session_'+p.id)); if(snap.exists()) localStorage.setItem('somi_student_session_'+p.id,snap.data().value); }catch(e){}
+    }));
+    practiceLogs=loadData('somi_logs',{});
+    teacherStamps=loadData('somi_teacher_stamps',{});
+    teacherChecks=loadData('somi_teacher_checks',{});
+    classSettings=loadData('somi_class_settings',{});
+    lessonStarts=loadData('somi_lesson_starts',{});
+    patternLocks=loadData('somi_pattern_locks',{});
+    patternLevelOverrides=loadData('somi_pattern_levels',{});
+    levelSettings=loadData('somi_level_settings',null)||DEFAULT_LEVEL_SETTINGS.map(l=>({...l}));
+    accessLog=loadData('somi_access_log',{});
+    renderTeacher();
+    renderUncheckedPanel();
+  } catch(e) {
+    alert('새로고침 실패: 네트워크를 확인해주세요');
+  }
+  somiHideLoading();
+}
+
 function goToSoMi() {
   const soMi = profiles.find(p => p.name === '임소미');
   if (!soMi) { alert('임소미 프로필을 찾을 수 없어요.\n프로필 이름을 확인해주세요.'); return; }
