@@ -1427,7 +1427,13 @@ function renderPatternManager() {
   saveBtn.textContent='저장';
   saveBtn.onclick=()=>{
     if(!pmDirty) return;
-    patternLocks=JSON.parse(JSON.stringify(pmPending));
+    // 병합 저장: 디스크 최신본 위에, 이번에 화면에서 건드린 학생만 덮어쓴다.
+    // (전체 교체 시 화면에 없던 다른 학생/다른 페이지 동기화분이 날아가는 문제 방지)
+    const _disk = loadData('somi_pattern_locks', {});
+    for(const _pid of Object.keys(pmPending||{})){
+      _disk[_pid] = JSON.parse(JSON.stringify(pmPending[_pid]));
+    }
+    patternLocks = _disk;
     savePatternLocks();
     pmPendingInit();
     renderPatternTable();
@@ -1718,16 +1724,25 @@ function renderLevelClassifier() {
     g.keys.some(mk=> patternData.some(p=>getPatternModes(p).some(m=>m.key===mk)))
   );
 
-  const getLvKey=(pid,mk)=>pid+'__'+mk;
-  const getLv=(pid,mk)=>{
-    const pk=getLvKey(pid,mk);
-    if(window.lcPending[pk]!==undefined) return window.lcPending[pk];
-    return patternLevelOverrides[pk]||patternLevelOverrides[pid]||(patternData.find(p=>p.id===pid)||{}).level;
+  // 패턴별 단일 레벨 키 (모드 구분 없음)
+  const getLvKey=(pid)=>pid;
+  const getLv=(pid)=>{
+    if(window.lcPending[pid]!==undefined) return window.lcPending[pid];
+    if(patternLevelOverrides[pid]) return patternLevelOverrides[pid];
+    // 구버전 모드별 키 폴백 — 한 패턴 안에서는 값이 동일하므로 첫 발견값
+    const modeKeyMap={'기본':'basic','연습':'free','심화':'adv','심화1':'adv','심화2':'adv2','목풀기1':'warmup1','목풀기2':'warmup2','목풀기3':'warmup3'};
+    const pat=patternData.find(p=>p.id===pid);
+    if(pat){
+      for(const label of (pat.modeLabels||[])){
+        const mk=modeKeyMap[label];
+        if(mk && patternLevelOverrides[pid+'__'+mk]) return patternLevelOverrides[pid+'__'+mk];
+      }
+    }
+    return (pat||{}).level;
   };
-  const setLv=(pid,mk,lvId)=>{
-    const pk=getLvKey(pid,mk);
-    if(lvId) window.lcPending[pk]=lvId;
-    else delete window.lcPending[pk];
+  const setLv=(pid,lvId)=>{
+    if(lvId) window.lcPending[pid]=lvId;
+    else window.lcPending[pid]=null;  // null로 명시 — 저장 시 구버전 키도 정리
     updateLcSaveBtnState();
   };
 
@@ -1756,10 +1771,7 @@ function renderLevelClassifier() {
     b.textContent=lv.label;
     b.onclick=()=>{
       if(!selected.size){alert('패턴을 먼저 체크해주세요');return;}
-      const matchedModes=usedGroups.map(g=>g.keys).flat();
-      selected.forEach(pid=>{
-        matchedModes.forEach(mk=>setLv(pid,mk,lv.id));
-      });
+      selected.forEach(pid=>setLv(pid,lv.id));
       refreshDropdownLabels();
     };
     lvBtnsWrap.appendChild(b);
@@ -1770,8 +1782,7 @@ function renderLevelClassifier() {
   clearAllBtn.textContent='초기화';
   clearAllBtn.onclick=()=>{
     if(!selected.size){alert('패턴을 먼저 체크해주세요');return;}
-    const matchedModes=usedGroups.map(g=>g.keys).flat();
-    selected.forEach(pid=>{ matchedModes.forEach(mk=>setLv(pid,mk,null)); });
+    selected.forEach(pid=>setLv(pid,null));
     refreshDropdownLabels();
   };
   lvBtnsWrap.appendChild(clearAllBtn);
@@ -1788,7 +1799,15 @@ function renderLevelClassifier() {
   lcSaveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;';
   lcSaveBtn.textContent='저장';
   lcSaveBtn.onclick=()=>{
-    Object.assign(patternLevelOverrides, window.lcPending);
+    const modeKeyMap={'기본':'basic','연습':'free','심화':'adv','심화1':'adv','심화2':'adv2','목풀기1':'warmup1','목풀기2':'warmup2','목풀기3':'warmup3'};
+    Object.keys(window.lcPending).forEach(pid=>{
+      const val=window.lcPending[pid];
+      if(val){ patternLevelOverrides[pid]=val; }
+      else { delete patternLevelOverrides[pid]; }
+      // 구버전 모드별 키 정리 (단일 키로 통합)
+      const pat=patternData.find(p=>p.id===pid);
+      if(pat){ (pat.modeLabels||[]).forEach(label=>{ const mk=modeKeyMap[label]; if(mk) delete patternLevelOverrides[pid+'__'+mk]; }); }
+    });
     savePatternLevels();
     window.lcPending={};
     renderLevelClassifier();
@@ -1808,9 +1827,9 @@ function renderLevelClassifier() {
   const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap'; tblWrap.style.cssText='overflow-x:auto;position:relative;width:100%;';
 
   function refreshDropdownLabels(){
-    tblWrap.querySelectorAll('[data-lv-pid][data-lv-mk]').forEach(btn=>{
-      const pid=btn.getAttribute('data-lv-pid'), mk=btn.getAttribute('data-lv-mk');
-      const curLvId=getLv(pid,mk);
+    tblWrap.querySelectorAll('[data-lv-pid]').forEach(btn=>{
+      const pid=btn.getAttribute('data-lv-pid');
+      const curLvId=getLv(pid);
       const lv=levelSettings.find(l=>l.id===curLvId);
       const c=getLvColor(curLvId);
       btn.textContent=(lv?lv.label:'—')+' ▾';
@@ -1831,11 +1850,9 @@ function renderLevelClassifier() {
     const thEmpty=document.createElement('th'); thEmpty.style.cssText='padding:7px 4px;border-bottom:2px solid var(--border);width:28px;';
     const thName=document.createElement('th'); thName.style.cssText='text-align:left;padding:7px 4px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.7rem;word-break:keep-all;'; thName.textContent='패턴';
     hRow.appendChild(thEmpty); hRow.appendChild(thName);
-    usedGroups.forEach(g=>{
-      const th=document.createElement('th');
-      th.style.cssText='padding:7px 2px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.7rem;text-align:center;width:54px;';
-      th.textContent=g.label; hRow.appendChild(th);
-    });
+    const thLevel=document.createElement('th');
+    thLevel.style.cssText='padding:7px 2px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.7rem;text-align:center;width:80px;';
+    thLevel.textContent='레벨'; hRow.appendChild(thLevel);
     const tbody=tbl.createTBody();
     allCheckboxes.length=0;
 
@@ -1848,7 +1865,7 @@ function renderLevelClassifier() {
 
       const chHdr=tbody.insertRow();
       chHdr.style.cssText=`background:${chapterColors[chi]};`;
-      const chTd=document.createElement('td'); chTd.colSpan=2+usedGroups.length;
+      const chTd=document.createElement('td'); chTd.colSpan=3;
       chTd.style.cssText=`padding:6px 6px;font-weight:700;font-size:0.72rem;color:var(--text);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px;`;
       chTd.textContent=ch.label; chHdr.appendChild(chTd);
 
@@ -1885,24 +1902,19 @@ function renderLevelClassifier() {
         const nameTd=document.createElement('td'); nameTd.style.cssText='padding:5px 4px;border-bottom:1px solid var(--border);word-break:keep-all;font-size:0.75rem;';
         nameTd.textContent=p.name; tr.appendChild(nameTd);
 
-        // 각 모드별 드롭다운
-        usedGroups.forEach(g=>{
-          const patModeKeys=getPatternModes(p).map(m=>m.key);
-          const matchedModes=g.keys.filter(k=>patModeKeys.includes(k));
+        // 패턴별 단일 레벨 드롭다운
+        {
           const td=document.createElement('td'); td.style.cssText='padding:5px 2px;border-bottom:1px solid var(--border);text-align:center;';
-          if(!matchedModes.length){
-            const dot=document.createElement('span'); dot.style.cssText='color:var(--text2);font-size:0.8rem;'; dot.textContent='—'; td.appendChild(dot); tr.appendChild(td); return;
-          }
-          const wrap=document.createElement('div'); wrap.style.cssText='position:relative;display:inline-block;';
-          const curLvId=getLv(p.id,matchedModes[0]);
+          const wrap=document.createElement('div'); wrap.style.cssText='position:relative;display:inline-block;width:100%;';
+          const curLvId=getLv(p.id);
           const lv=levelSettings.find(l=>l.id===curLvId);
           const c=getLvColor(curLvId);
           const btn=document.createElement('button');
-          btn.style.cssText=`font-size:0.68rem;padding:2px 4px;border-radius:6px;border:1px solid ${curLvId?c:'var(--border)'};background:transparent;color:${curLvId?c:'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${curLvId?'700':'400'};white-space:nowrap;width:100%;box-sizing:border-box;`;
+          btn.style.cssText=`font-size:0.72rem;padding:3px 6px;border-radius:6px;border:1px solid ${curLvId?c:'var(--border)'};background:transparent;color:${curLvId?c:'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${curLvId?'700':'400'};white-space:nowrap;width:100%;box-sizing:border-box;`;
           btn.textContent=(lv?lv.label:'—')+' ▾';
-          btn.setAttribute('data-lv-pid',p.id); btn.setAttribute('data-lv-mk',matchedModes[0]);
+          btn.setAttribute('data-lv-pid',p.id);
           const menu=document.createElement('div');
-          menu.style.cssText='display:none;position:absolute;top:110%;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:50;min-width:72px;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+          menu.style.cssText='display:none;position:absolute;top:110%;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:50;min-width:80px;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
 
           btn.onclick=(e)=>{
             e.stopPropagation();
@@ -1916,18 +1928,18 @@ function renderLevelClassifier() {
           clearOpt.textContent='초기화';
           clearOpt.onclick=(e)=>{
             e.stopPropagation();
-            matchedModes.forEach(k=>setLv(p.id,k,null));
+            setLv(p.id,null);
             menu.style.display='none'; menu.classList.remove('lv-menu-open');
             refreshDropdownLabels();
           };
           menu.appendChild(clearOpt);
-          levelSettings.forEach(lv=>{
-            const opt=document.createElement('button'); const isSel=lv.id===curLvId; const lc=getLvColor(lv.id);
+          levelSettings.forEach(lvOpt=>{
+            const opt=document.createElement('button'); const isSel=lvOpt.id===curLvId; const lc=getLvColor(lvOpt.id);
             opt.style.cssText=`display:block;width:100%;text-align:center;padding:5px 8px;border:none;border-radius:6px;background:${isSel?lc+'22':'transparent'};color:${isSel?lc:'var(--text)'};font-size:0.78rem;cursor:pointer;font-family:inherit;font-weight:${isSel?'700':'400'};`;
-            opt.textContent=(isSel?'✓ ':'')+lv.label;
+            opt.textContent=(isSel?'✓ ':'')+lvOpt.label;
             opt.onclick=(e)=>{
               e.stopPropagation();
-              matchedModes.forEach(k=>setLv(p.id,k,lv.id));
+              setLv(p.id,lvOpt.id);
               menu.style.display='none'; menu.classList.remove('lv-menu-open');
               refreshDropdownLabels();
             };
@@ -1935,7 +1947,7 @@ function renderLevelClassifier() {
           });
           wrap.appendChild(btn); wrap.appendChild(menu); td.appendChild(wrap);
           tr.appendChild(td);
-        });
+        }
       });
     });
 

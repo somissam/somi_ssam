@@ -153,7 +153,7 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 .adv-interval-grid{display:flex;flex-wrap:wrap;gap:6px;}
 .adv-int-btn{padding:6px 0;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.78rem;cursor:pointer;transition:all 0.15s;width:44px;text-align:center;flex-shrink:0;}
 .adv-int-btn:hover:not(:disabled){border-color:var(--accent3);color:var(--accent3);}
-.adv-int-btn.active{background:rgba(106,247,200,0.18);border-color:var(--accent3);color:var(--accent3);font-weight:700;}
+.adv-int-btn.active{background:rgba(106,247,200,0.32);border-color:var(--accent3);border-left:3px solid var(--accent3);color:var(--accent3);font-weight:700;box-shadow:inset 0 0 0 1px var(--accent3);}
 .adv-int-btn:disabled{cursor:not-allowed;opacity:0.35;}
 .adv-range-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .adv-key-btn{padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.72rem;cursor:pointer;transition:all 0.15s;}
@@ -483,7 +483,7 @@ const VOCAL_PATTERNS = [
     name: "Sung • 4beat (13531)",
     cardDesc: "썽 · 4분음표 · 도미솔미도",
     pracTitle: "Sung(썽) · 4beat (13531)",
-    baseTempo: 60,
+    baseTempo: 70,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['','','','',''],
     korLabels5: ['도','미','솔','미','도'],
@@ -823,12 +823,12 @@ const VOCAL_PATTERNS = [
     warmup2Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
   },
 
-  /* ── 패턴 25: Vibrato Ah 4beat ── */
+  /* ── 패턴 25: Vibrato — 카드 1개, 탭 3개(비브라토1=반음왕복 / 비브라토2=순간밴딩 / 비브라토3=밴딩없이 평타) ── */
   {
-    id: 'vocal_vibrato_ah_4beat',
-    name: "Vibrato • Ah • 4beat (도 무한)",
-    cardDesc: "비브라토 · 아 · 4분음표 · 도 무한 지속",
-    pracTitle: "Vibrato Ah · 4beat",
+    id: 'vocal_vibrato',
+    name: "Vibrato • 비브라토",
+    cardDesc: "비브라토 · 반음 왕복 / 순간 밴딩 · 느림→빠름",
+    pracTitle: "Vibrato · 비브라토",
     baseTempo: 60,
     pattern5:   [1,1],
     engLabels5: ['',''],
@@ -840,7 +840,9 @@ const VOCAL_PATTERNS = [
     display: 'label',
     labelTitle: 'Ah (아)',
     vibrato: true,
-    modeLabels: ['심화'],
+    startMidi: 60,         // 기본 시작음 C4 (60) — 60%12=0(C), 60/12-1=4 → C4
+    // vibType은 카드에 두지 않음 — 현재 선택된 탭(vib_activeTab)이 결정
+    modeLabels: ['비브라토1','비브라토2','비브라토3'],
   },
 
 ];
@@ -853,14 +855,24 @@ const MODE_PRACTICE   = 'MODE_PRACTICE';
 const MODE_WARMUP_1   = 'MODE_WARMUP_1';
 const MODE_WARMUP_2   = 'MODE_WARMUP_2';
 const MODE_ADVANCED_1 = 'MODE_ADVANCED_1';
+const MODE_VIBRATO    = 'MODE_VIBRATO';
 const LABEL_TO_MODE = {
   '기본':MODE_BASIC,'연습':MODE_PRACTICE,
   '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,
   '심화':MODE_ADVANCED_1,
+  '비브라토':MODE_VIBRATO,
+  '비브라토1':MODE_VIBRATO,'비브라토2':MODE_VIBRATO,'비브라토3':MODE_VIBRATO,
 };
 function isStaccatoPat(){return !!(currentPat()&&currentPat().staccato);}
 function isGlissandoPat(){return !!(currentPat()&&currentPat().glissando);}
 function isVibratoPat(){return !!(currentPat()&&currentPat().vibrato);}
+// 비브라토 타입: 현재 선택된 탭(vib_activeTab)이 결정. 'semitone'(비1) / 'bend'(비2) / 'plain'(비3)
+function vibType(){
+  if(typeof vib_activeTab==='undefined')return 'semitone';
+  if(vib_activeTab==='bend')return 'bend';
+  if(vib_activeTab==='plain')return 'plain';
+  return 'semitone';
+}
 
 /* ════════════════════════════════════════════════
    【 섹션 C 】 음계·코드네임·공용 유틸
@@ -914,6 +926,14 @@ function getActivePatternArray(){
 }
 function getActiveLabels(){
   const pat=currentPat();
+  // 비브라토1(반음 왕복): 라벨박스에 [도시도시] 4칸 표시
+  if(pat.vibrato&&TMODE===MODE_VIBRATO&&vibType()==='semitone'){
+    return {eng:['','','',''],kor:['도','시','도','시']};
+  }
+  // 비브라토2(순간 밴딩)/비브라토3(밴딩없이 평타): 한 음 유지 → 라벨박스에 [도도도도] 4칸 표시
+  if(pat.vibrato&&TMODE===MODE_VIBRATO&&(vibType()==='bend'||vibType()==='plain')){
+    return {eng:['','','',''],kor:['도','도','도','도']};
+  }
   if(TMODE===MODE_WARMUP_1)return{eng:pat.warmup1.engLabels,kor:pat.warmup1.korLabels};
   if(TMODE===MODE_WARMUP_2)return{eng:pat.warmup2.engLabels,kor:pat.warmup2.korLabels};
   return getModeScale(TMODE)===SCALE_7TONE?{eng:pat.engLabels7,kor:pat.korLabels7}:{eng:pat.engLabels5,kor:pat.korLabels5};
@@ -921,6 +941,7 @@ function getActiveLabels(){
 // noteDiv:8이면 패턴 박수는 4 (1박당 2음), noteDiv:16이면 패턴 박수는 4 (1박당 4음), 아니면 음수-1
 function getPatternBarBeats(){
   const pat=currentPat();
+  if(pat.vibrato)return 4;  // 비브라토: 4분음표 4박 (도·시·도·시)
   if((pat.noteDiv||4)===8)return 4;
   if((pat.noteDiv||4)===16)return 4;
   // offsets 직접 지정 패턴은 offsets.length-1
@@ -1321,6 +1342,10 @@ function _practiceStartGate(){
     if((!adv_intervalOrder||adv_intervalOrder.length===0)&&!adv_intervalRandom){ alert('① 음정 간격을 먼저 선택하세요. (숫자 또는 🎲무작위)'); return false; }
     if(!adv_dirChosen){ alert('② 진행 방향을 선택하세요. (기본 또는 왕복)'); return false; }
     if(!adv_rangeSelected){ alert('③ 음역 범위를 선택하세요. (시작음·끝음 차례로 클릭)'); return false; }
+    return true;
+  }
+  if(TMODE===MODE_VIBRATO){
+    if(!vib_selected){ alert('시작 음을 먼저 선택하세요.'); return false; }
     return true;
   }
   return true; // 기본·목풀기 등은 제한 없음
@@ -1983,56 +2008,320 @@ function _buildGlissandoUI(container){
 }
 
 /* ════════════════════════════════════════════════
-   【 비브라토 비주얼 헬퍼 】
+   【 섹션 E-VIBRATO 】 비브라토 모드 — 완전 독립
+   ※ 다른 모드와 변수/함수 공유 없음
+   ※ vibType:'semitone' = 시작음↔반음아래 왕복
+   ※ vibType:'bend'     = 한 음 유지 + 카운팅마다 위로 순간 밴딩
 ════════════════════════════════════════════════ */
-let _vibratoAnimId=null;
-let _vibratoStartTime=0;
+let vib_startMidi=60;     // 사용자가 선택한 시작음 (기본 C4=60)
+let vib_selected=false;   // 시작음 선택 완료 여부
+let vib_activeTab='semitone';  // 현재 선택된 탭: 'semitone'(비브라토1) / 'bend'(비브라토2)
+const VIB_PMIN=48,VIB_PMAX=92;  // C3(48)~G#6(92) 여성 음역
 
-function _applyVibratoVisual(vis){
-  if(vis.beatIdx===0){_startVibratoAnim();updateVocalLabelHighlight(0);}
+function vib_reset(){
+  const pat=currentPat();
+  vib_startMidi=(pat&&pat.startMidi)||60;
+  vib_selected=false;
 }
-function _startVibratoAnim(){
-  const wave=document.getElementById('vibrato-wave');if(!wave)return;
-  if(_vibratoAnimId){cancelAnimationFrame(_vibratoAnimId);_vibratoAnimId=null;}
-  _vibratoStartTime=performance.now();
-  function frame(now){
-    if(!isPlaying){_stopVibratoAnim();return;}
-    const t=(now-_vibratoStartTime)/1000;
-    const svg=wave.querySelector('svg');
-    if(svg){
-      const W=300,H=60,cy=H/2;
-      let d='M 0 '+cy;
-      for(let x=0;x<=W;x+=2){const y=cy+Math.sin((x/W)*Math.PI*8+t*5.5*Math.PI*2)*18;d+=' L '+x+' '+y;}
-      const path=svg.querySelector('path');if(path)path.setAttribute('d',d);
+function vib_getCurrentMidi(){return vib_startMidi;}
+function vib_getCurrentDir(){return 1;}
+function vib_isLastKey(){return false;}     // 무한 — 키 이동 없음
+function vib_advanceKey(){}                  // 시작음 고정, 이동 없음
+function vib_onEngineStart(){}
+function vib_getTotalLoops(){return '∞';}
+
+/* ── 비브라토 전용 스케줄러 ──
+   한 음을 길게 유지하면서, 카운팅 박마다 가이드를 준다.
+   - semitone: 시작음과 반음 아래(midi-1)를 한 박씩 번갈아 재생
+   - bend    : 시작음을 유지하되, 박마다 위로 살짝 휘었다 돌아오는 밴딩 곡선 */
+function vib_scheduleOneBeat(time){
+  if(activeBarType===BAR_TYPE_COUNTING){
+    // 비브라토 카운팅: 다른 발성과 동일하게 1박에 시작음을 한 번만 쳐서
+    // 4박까지 길게 이어준다(매 박 새로 치지 않음). 나머지 박은 메트로놈 클릭만.
+    const root=vib_getCurrentMidi();
+    const idx=seqStep;
+    const clickType=idx===0?'accent':'normal';
+    if(idx===0){
+      playPianoNote(midiToFreq(root),time,beatInterval*4.0);   // 4박 길이로 지속
     }
-    _vibratoAnimId=requestAnimationFrame(frame);
+    beatQueue.push({time,vis:{phase:'counting',idx,loop:loopCount,keyMidi:root,dirForDisplay:1}});
+    playClickAt(clickType,time);
+    seqStep++;
+    if(seqStep>=4){
+      activeBarType=BAR_TYPE_PATTERN;seqStep=0;patStep=0;
+      currentNoteInterval=beatInterval;
+      const firstMain=time+beatInterval;
+      if(mainStartWallTime===0)mainStartWallTime=Date.now()+(firstMain-audioCtx.currentTime)*1000;
+      prevRootMidi=root;loopCount++;
+    }
+  } else {
+    vib_schedulePattern(time);
   }
-  _vibratoAnimId=requestAnimationFrame(frame);
 }
-function _stopVibratoAnim(){
-  if(_vibratoAnimId){cancelAnimationFrame(_vibratoAnimId);_vibratoAnimId=null;}
-  const wave=document.getElementById('vibrato-wave');
-  if(wave){const path=wave.querySelector('path');if(path)path.setAttribute('d','M 0 30 L 300 30');}
+
+function vib_schedulePattern(time){
+  const root=vib_getCurrentMidi();
+  const barBeats=getPatternBarBeats();   // 비브라토=4
+  const step=patStep;                    // 0~3
+  const type=vibType();
+
+  if(type==='bend'){
+    // 비브라토2: 박마다 시작음을 치되 위로 살짝 휘었다 돌아오는 밴딩 가이드
+    vib_playBendTone(midiToFreq(root),time,beatInterval,beatInterval);
+  } else if(type==='plain'){
+    // 비브라토3: 밴딩 없이, 메트로놈에 맞춰 같은 음을 건반 치듯 박마다 새로 친다.
+    // 서스테인 페달 없이 자연 감쇠. 단, 너무 일찍 끊기지 않도록 다음 박 직전까지 끌어준다.
+    vib_playPlainTone(midiToFreq(root),time,beatInterval);
+  } else {
+    // 비브라토1: 박마다 도(짝수박)/시(홀수박)를 재생.
+    const m=(step%2===0)?root:(root-1);   // 0박=도,1박=시,2박=도,3박=시
+    // 빠를수록 음을 짧게. 60~300 구간은 천천히(1.85→1.5), 300~400 구간은
+    // 마저 줄여(1.5→1.1) 빠른 템포에서 또렷해지게 한다.
+    let durMul;
+    if(currentBPM<=300){
+      const t=Math.min(1,Math.max(0,(currentBPM-60)/(300-60)));
+      durMul=1.85+(1.5-1.85)*t;
+    }else{
+      const t=Math.min(1,Math.max(0,(currentBPM-300)/(400-300)));
+      durMul=1.5+(1.1-1.5)*t;
+    }
+    vib_playPianoNoteV1(midiToFreq(m),time,beatInterval*durMul);
+  }
+  beatQueue.push({time,vis:{phase:'pattern',beatIdx:step,noteIdx:0,keyMidi:root,noteMidi:root,dirForDisplay:1}});
+
+  patStep++;
+  if(patStep>=barBeats){
+    // 비브라토: 카운팅으로 돌아가지 않고 패턴만 무한 반복 (카운팅은 처음 1회만)
+    patStep=0;
+    loopCount++;
+  }
+  playClickAt('normal',time);   // 메트로놈 박자 클릭
 }
-function _buildVibratoUI(body){
-  const wrap=document.createElement('div');
-  wrap.style.cssText='width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:14px;margin:0 auto;';
-  const desc=document.createElement('div');
-  desc.style.cssText='font-size:0.72rem;color:var(--text2);letter-spacing:1px;font-weight:600;text-transform:uppercase;';
-  desc.textContent='비브라토 가이드';
-  wrap.appendChild(desc);
-  const hint=document.createElement('div');
-  hint.style.cssText='font-size:0.78rem;color:var(--text2);text-align:center;line-height:1.6;white-space:pre-line;';
-  hint.textContent='카운팅 후 "도" 음을 유지하며 떨림을 내세요.\n숨이 끊길 때까지 계속 연습합니다.';
-  wrap.appendChild(hint);
-  const waveWrap=document.createElement('div');waveWrap.id='vibrato-wave';waveWrap.style.cssText='width:100%;';
-  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('viewBox','0 0 300 60');svg.setAttribute('width','100%');svg.setAttribute('height','60');
-  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-  path.setAttribute('d','M 0 30 L 300 30');path.setAttribute('stroke','var(--accent2)');
-  path.setAttribute('stroke-width','2.5');path.setAttribute('fill','none');path.setAttribute('stroke-linecap','round');
-  svg.appendChild(path);waveWrap.appendChild(svg);wrap.appendChild(waveWrap);
-  body.appendChild(wrap);
+
+/* ── 비브라토2 오디오: 한 음을 평평하게 유지하다가 "박 타이밍에만" 순간 밴딩 ──
+   녹음 분석(청파동2가): 중심음을 평평하게 끌다가, 박마다 아래로 까딱 내려갔다
+   곧바로 원래 음으로 복귀. 느린 템포에선 또렷한 "까딱"이고, 템포가 빨라지면
+   까딱이 촘촘해져 자연스러운 비브라토처럼 들린다.
+   분석값: 밴딩 방향=아래 우세(-59~-97c), 평균 치우침 약 -11c.
+   설계: 한 박(beatInterval)을 [평평 구간 → 짧은 밴딩(아래로 갔다 복귀)] 으로 구성.
+   - 박 시작 직후 일정 시간은 평평(중심음 유지)
+   - 박 후반의 BEND_FRAC 구간 동안만 아래로 내려갔다 다시 중심으로 복귀
+   - 템포가 빠르면 beatInterval이 짧아져 평평 구간이 줄고 밴딩이 빽빽 → 비브라토화 */
+function vib_playBendTone(freq,startTime,duration,beatInterval){
+  if(!audioCtx)return;
+  try{
+    const out=pianoGain||masterGain;
+    const isPhone=_isPhoneMobile();
+    const baseScale=isPhone?0.28:0.24;
+    const DEPTH=70/1200;        // 밴딩 깊이: 중심에서 아래로 약 -70 cents (녹음 -59~-97c)
+    const dipRatio=Math.pow(2,-DEPTH);  // 최저점 주파수 비율
+    // 피치밴드 구조(상행형): 메트로놈(박 시작)과 동시에 "이미 내려가 있는 최저음"에서
+    // 출발해, 원음으로 빠르게 끌어올려(상행) 도달한 뒤 원음 평평을 유지한다.
+    // 박 머리에 원음이 들릴 여지를 없애 "메트로놈=밴딩 시작"이 또렷하게 들린다.
+    // 빠른 템포일수록 상행을 짧게 몰아 촘촘한 떨림(비브라토)처럼 들리게 한다.
+    const bi=beatInterval||duration;
+    let bendDur;   // 최저음→원음 상행에 걸리는 시간 (박 시작과 동시에 시작)
+    if(bi>=0.5){            // 느림: 상행 또렷, 이후 평평 길게
+      bendDur=Math.min(duration*0.45, 0.22);
+    }else if(bi>=0.25){     // 중간
+      bendDur=Math.min(duration*0.55, 0.16);
+    }else{                  // 빠름: 짧게 → 떨림처럼
+      bendDur=duration*0.70;
+    }
+    const upT=startTime+bendDur;              // 원음 도달 완료
+    [{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{
+      const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+      osc.type='sine';
+      const base=h.n*freq;
+      // 1) 박 시작과 동시에 최저음에서 출발 → 원음으로 상행(끌어올림)
+      osc.frequency.setValueAtTime(base*dipRatio,startTime);
+      osc.frequency.linearRampToValueAtTime(base,upT);
+      // 2) 도달 후 원음 평평 유지(박 끝까지)
+      osc.frequency.setValueAtTime(base,Math.max(upT+0.001,startTime+duration*0.9));
+      osc.connect(g);g.connect(out);
+      // 음색은 비브라토1/3과 동일한 피아노 톤. 단, 상행이 끝나기 전에 음량이
+      // 죽지 않도록 감쇠 꺾임점을 upT(원음 도달) 이후로 보장한다.
+      const v=baseScale*h.vol, dr=1+(h.n-1)*0.35;
+      const k1=Math.max(duration*0.36, upT-startTime+0.02);
+      const k2=Math.max(duration*0.62, upT-startTime+0.06);
+      // 실제 피아노 잔향: 박 끝에서 0으로 끊지 않고 tail 동안 자연 감쇠로 사라짐.
+      const tail=Math.max(0.18, duration*0.65);
+      g.gain.setValueAtTime(v,startTime);
+      g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);
+      g.gain.exponentialRampToValueAtTime(v*0.45,Math.min(k1,startTime+duration*0.7));
+      g.gain.exponentialRampToValueAtTime(v*0.18,Math.min(k2,startTime+duration*0.88));
+      g.gain.exponentialRampToValueAtTime(v*0.10,startTime+duration);
+      g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration+tail);
+      osc.start(startTime);osc.stop(startTime+duration+tail+0.05);
+    });
+  }catch(e){}
+}
+
+/* ── 비브라토3 오디오: 밴딩 없이 메트로놈에 맞춰 건반 치듯 같은 음을 박마다 새로 친다 ──
+   음색은 비브라토1(vib_playPianoNoteV1)과 동일한 피아노 톤(6배음 + 배음별 감쇠 dr).
+   밴딩(음높이 변동)만 없이 평평하게 한 음을 친다. 서스테인 없이 자연 감쇠하되
+   끝 꺾임점을 duration 비례로 둬서 너무 일찍 끊기지 않게 한다. */
+function vib_playPlainTone(freq,startTime,duration){
+  if(!audioCtx)return;
+  try{
+    const out=pianoGain||masterGain;
+    const isPhone=_isPhoneMobile();
+    const baseScale=isPhone?0.28:0.24;
+    const k1=duration*0.36, k2=duration*0.62;
+    // 실제 피아노처럼 건반을 떼도 공명 잔향이 남도록, 박 끝에서 0으로 끊지 않고
+    // 박 너머(tail)까지 음을 끌고 가 서서히 사라지게 한다. 다음 박 음이 그 위에
+    // 얹히며 자연스럽게 겹친다. tail은 박 길이의 약 65%(최소 0.18s).
+    const tail=Math.max(0.18, duration*0.65);
+    [{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{
+      const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+      osc.type='sine';osc.frequency.value=h.n*freq;   // 박 내내 고정(밴딩 없음)
+      osc.connect(g);g.connect(out);
+      const v=baseScale*h.vol, dr=1+(h.n-1)*0.35;
+      g.gain.setValueAtTime(v,startTime);
+      g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);
+      g.gain.exponentialRampToValueAtTime(v*0.40,startTime+Math.min(0.18/dr,k1));
+      g.gain.exponentialRampToValueAtTime(v*0.18,startTime+Math.min(0.50/dr,k2));
+      // 박 끝에서도 아직 울리는 수준(약 0.10) → 그 뒤 tail 동안 자연 감쇠로 사라짐
+      g.gain.exponentialRampToValueAtTime(v*0.10,startTime+duration);
+      g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration+tail);
+      osc.start(startTime);osc.stop(startTime+duration+tail+0.05);
+    });
+  }catch(e){}
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   【 NOTE: 피아노 끝소리(둔탁음) 분석 — 비브라토1 전용 】  (작업 기록 보존용)
+   ────────────────────────────────────────────────────────────────────
+   ▶ 증상: 비브라토1에서 "딱 ♩200 템포에서만" 음이 끝나기 직전 둔탁한
+     소리("퍽/툭")가 났다. ♩190이나 ♩210에서는 멀쩡했다.
+
+   ▶ 원인: 공용 playPianoNote()의 감쇠 envelope 꺾임점이 "절대시간 고정"이다.
+       g.gain.exponentialRampToValueAtTime(v*0.15, startTime + 0.50/dr);  // ← 0.50초 고정
+       g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration); // ← 끝점
+     기음(dr=1)의 마지막 꺾임점은 항상 startTime+0.50초에 박혀 있고 duration과 무관.
+     그런데 비브라토1은 음 길이를 duration = beatInterval * durMul 로 계산하는데,
+     템포별 실제 duration은:
+        ♩190 → 약 0.524초  (0.50초 꺾임점이 음 안쪽, 끝까지 24ms 여유 → 정상)
+        ♩200 → 약 0.494초  (0.50초 꺾임점과 끝점이 6ms 차이로 거의 겹침 → 문제!)
+        ♩210 → 약 0.466초  (0.50초 꺾임점에 도달 전 음이 끝남 → 정상)
+     ♩200에서만 "v*0.15로 향하던 ramp"와 "0.0001로 떨어지는 끝점"이 6ms 폭에서
+     충돌, exponential ramp가 극초단 시간에 큰 비율로 수직 강하 → 불연속 클릭/둔탁음.
+     즉 190은 여유 있고, 210은 꺾임점에 닿기 전 종료라 멀쩡, 200만 정확히 겹쳤던 것.
+
+   ▶ 해결: 비브라토1 전용 재생 함수(vib_playPianoNoteV1)를 따로 만들고,
+     마지막 두 꺾임점을 "절대시간 고정"이 아니라 "duration 비례"로 바꿈
+     (0.36*duration, 0.62*duration 지점). 음색·배음 구성은 playPianoNote와 100% 동일.
+     이렇게 하면 어떤 템포에서도 꺾임점이 끝점과 겹치지 않아 200 둔탁음이 사라짐.
+     ※ 이 처리는 비브라토1에만 적용됨. 다른 패턴(흐아 등)의 playPianoNote는 그대로 둠.
+
+   ▶ (다른 대화창에서 "피아노 끝소리/둔탁한 소리를 분석하라"는 요청이 오면 위 내용을 다시 설명할 것.)
+   ════════════════════════════════════════════════════════════════════ */
+function vib_playPianoNoteV1(freq,startTime,duration){if(!audioCtx)return;try{
+  const out=pianoGain||masterGain;
+  const isPhone=_isPhoneMobile();
+  const baseScale=isPhone?0.28:0.24;
+  // 끝 꺾임점을 duration 비례로 (절대시간 고정 대신) → 어떤 템포에서도 끝점과 안 겹침
+  const k1=duration*0.36, k2=duration*0.62;
+  [{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{
+    const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+    osc.type='sine';osc.frequency.value=h.n*freq;
+    osc.connect(g);g.connect(out);
+    const v=baseScale*h.vol, dr=1+(h.n-1)*0.35;
+    g.gain.setValueAtTime(v,startTime);
+    g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);
+    g.gain.exponentialRampToValueAtTime(v*0.40,startTime+Math.min(0.18/dr,k1));
+    g.gain.exponentialRampToValueAtTime(v*0.15,startTime+Math.min(0.50/dr,k2));
+    g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);
+    osc.start(startTime);osc.stop(startTime+duration+0.05);
+  });
+  const sub=audioCtx.createOscillator(),sg=audioCtx.createGain();
+  sub.type='sine';sub.frequency.value=freq;
+  sub.connect(sg);sg.connect(out);
+  sg.gain.setValueAtTime(isPhone?0.07:0.06,startTime);
+  sg.gain.exponentialRampToValueAtTime(isPhone?0.022:0.018,startTime+Math.min(0.25,k2));
+  sg.gain.exponentialRampToValueAtTime(0.0001,startTime+duration);
+  sub.start(startTime);sub.stop(startTime+duration+0.05);
+  if(!isPhone){
+    const atkLen=Math.floor(audioCtx.sampleRate*0.018);
+    const atkBuf=audioCtx.createBuffer(1,atkLen,audioCtx.sampleRate);
+    const ad=atkBuf.getChannelData(0);
+    for(let i=0;i<atkLen;i++)ad[i]=(Math.random()*2-1);
+    const aN=audioCtx.createBufferSource(),aG=audioCtx.createGain();
+    const bpf=audioCtx.createBiquadFilter();
+    bpf.type='bandpass';bpf.frequency.value=1200;bpf.Q.value=1.5;
+    aN.buffer=atkBuf;aN.connect(bpf);bpf.connect(aG);aG.connect(out);
+    aG.gain.setValueAtTime(0.02,startTime);
+    aG.gain.exponentialRampToValueAtTime(0.0001,startTime+0.015);
+    aN.start(startTime);aN.stop(startTime+0.02);
+  }
+}catch(e){}}
+
+function vib_applyVisual(vis){
+  if(!vis)return;
+  const pat=currentPat();
+  if(vis.phase==='counting'){
+    updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
+    if(pat.display==='label'){
+      if(loopCount===0)updateVocalLabelHighlight(-1);
+      else updateVocalLabelHighlight(0);
+    }
+    updateLoopCounter();
+  } else if(vis.phase==='pattern'){
+    updateVocalBeats(BAR_TYPE_PATTERN,vis.beatIdx);
+    if(pat.display==='label'){
+      // 비브라토1/3: 박마다 해당 칸에 불(비1=[도시도시], 비3=[도도도도]). 비2(bend)는 0번 고정.
+      if(vibType()==='semitone'||vibType()==='plain')updateVocalLabelHighlight(vis.beatIdx);
+      else updateVocalLabelHighlight(0);
+    }
+    updateLoopCounter();
+  }
+}
+function vib_onComplete(){_commonOnComplete();}
+
+/* ════════════════════════════════════════════════
+   【 비브라토 비주얼 헬퍼 】 — 핑크선 가이드 제거됨 (no-op 유지: 타 모드 호출 호환)
+════════════════════════════════════════════════ */
+function _applyVibratoVisual(vis){}
+/* 비브라토 가이드 이미지·바 애니메이션 전면 제거됨. no-op만 유지(타 호출 호환). */
+function _startVibratoAnim(){}
+function _stopVibratoAnim(){}
+function vib_loopIllustrationSVG(){return '';}
+function _buildVibratoUI(body){}
+
+/* ── 시작 음 선택 UI (비브라토 전용) ──
+   한 번 터치 = 그 음으로 시작 고정. 음역 범위 개념 없음. */
+function vib_buildStartNoteUI(body){
+  const PMIN=VIB_PMIN,PMAX=VIB_PMAX;
+  const COLS=9;
+  const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
+  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const lbl=document.createElement('div');lbl.className='key-grid-label';lbl.style.cssText='align-self:flex-start;';lbl.textContent='시작 음 선택';
+  inner.appendChild(lbl);
+  function render(){
+    while(inner.children.length>1)inner.removeChild(inner.lastChild);
+    const allBtns=[];
+    for(let midi=PMIN;midi<=PMAX;midi++){
+      const name=midiToName(midi,1);
+      const btn=document.createElement('button');
+      let cls='key-grid-btn'+(isSharpNote(midi)?' sharp':'');
+      if(vib_selected&&midi===vib_startMidi)cls+=' range-start';
+      btn.className=cls;btn.textContent=name;btn.setAttribute('data-midi',midi);
+      btn.onclick=()=>{
+        previewNote(midi);
+        vib_startMidi=midi;vib_selected=true;
+        _setEl('vocal-key-display',midiToName(midi,1));
+        stopExercise();render();
+      };
+      allBtns.push(btn);
+    }
+    for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
+      const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
+      allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+      inner.appendChild(row);
+    }
+  }
+  render();
+  outer.appendChild(inner);body.appendChild(outer);
 }
 
 /* ════════════════════════════════════════════════
@@ -2075,6 +2364,15 @@ function setupModeFunctions(){
     _fn_isLastKey=adv_isLastKey;
     _fn_onEngineStart=adv_onEngineStart;
     _fn_getTotalLoops=adv_getTotalLoops;
+  } else if(TMODE===MODE_VIBRATO){
+    _fn_scheduleOneBeat=vib_scheduleOneBeat;
+    _fn_applyVisual=vib_applyVisual;
+    _fn_onComplete=vib_onComplete;
+    _fn_getCurrentRootMidi=vib_getCurrentMidi;
+    _fn_advanceKey=vib_advanceKey;
+    _fn_isLastKey=vib_isLastKey;
+    _fn_onEngineStart=vib_onEngineStart;
+    _fn_getTotalLoops=vib_getTotalLoops;
   }
 }
 
@@ -2091,6 +2389,7 @@ function hardReset(){
   else if(TMODE===MODE_PRACTICE)prac_reset();
   else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)wu_reset();
   else if(TMODE===MODE_ADVANCED_1)adv_reset();
+  else if(TMODE===MODE_VIBRATO)vib_reset();
   setupModeFunctions();
   buildPracticeUI();
 }
@@ -2111,17 +2410,23 @@ function buildPracticeUI(){
   pat.modeLabels.forEach(label=>{
     const modeVal=LABEL_TO_MODE[label]||MODE_BASIC;
     const isAdvTab=modeVal===MODE_ADVANCED_1;
+    // 비브라토 카드: 라벨별 탭타입. 비1=semitone, 비2=bend, 비3=plain
+    const tabVibType=(label==='비브라토2')?'bend':(label==='비브라토3'?'plain':(label==='비브라토1'?'semitone':null));
+    // active 판정: 비브라토는 vib_activeTab 기준, 그 외는 TMODE 기준
+    const isActive=(tabVibType!=null)?(TMODE===MODE_VIBRATO&&vib_activeTab===tabVibType):(TMODE===modeVal);
     const b=document.createElement('button');
-    b.className='m-tab'+(isAdvTab?' adv':'')+(TMODE===modeVal?' active':'');
+    b.className='m-tab'+(isAdvTab?' adv':'')+(isActive?' active':'');
     b.textContent=label;
     b.onclick=()=>{
       TMODE=modeVal;
+      if(tabVibType!=null)vib_activeTab=tabVibType; // 비브라토 탭 타입 전환
       currentBPM=currentPat().baseTempo; // 모드 전환 시 패턴 기본 템포로 리셋
       mt.querySelectorAll('.m-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
       if(modeVal===MODE_BASIC)basic_reset();
       else if(modeVal===MODE_PRACTICE)prac_reset();
       else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2)wu_reset();
       else if(modeVal===MODE_ADVANCED_1)adv_reset();
+      else if(modeVal===MODE_VIBRATO)vib_reset();
       hardReset();
     };
     mt.appendChild(b);
@@ -2143,6 +2448,8 @@ function buildPracticeUI(){
   pSec.appendChild(pLbl);pSec.appendChild(pRow2);vwrap.appendChild(pSec);
   body.appendChild(vwrap);
 
+  /* ── 비브라토: 가이드 이미지 제거됨 (이미지 없이 라벨/소리만) ── */
+
   /* ── 라벨 박스 ── */
   if(pat.display==='label'){
     const vlb=document.createElement('div');vlb.className='vocal-label-box';vlb.id='vocal-label-box';
@@ -2150,6 +2457,11 @@ function buildPracticeUI(){
     if(isAdv){
       const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='adv-cur-key';kMid.textContent='\u00a0';kPan.appendChild(kMid);
       const nxt=document.createElement('div');nxt.className='vkp-next';nxt.id='adv-next-key';nxt.textContent='\u00a0';kPan.appendChild(nxt);
+    } else if(TMODE===MODE_VIBRATO){
+      // 비브라토: 시작음만 표시, 진행 방향 없음
+      const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='vocal-key-display';
+      kMid.textContent=midiToName(vib_getCurrentMidi(),1);
+      kPan.appendChild(kMid);
     } else {
       const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='vocal-key-display';
       // 목풀기: b표기, 기본/연습: 시작 방향 기준
@@ -2215,9 +2527,11 @@ function buildPracticeUI(){
     buildTempoUI(body);
   }
   if(TMODE===MODE_ADVANCED_1)buildAdvancedPanel(body);
-
-  /* ── 특수 패턴 전용 UI ── */
-  if(pat.vibrato)_buildVibratoUI(body);
+  if(TMODE===MODE_VIBRATO){
+    // 비브라토: 템포(재생 버튼 아래) → 시작 음 선택 순서
+    buildTempoUI(body);
+    vib_buildStartNoteUI(body);
+  }
 
   /* ── 볼륨 ── */
   const vw=document.createElement('div');vw.className='vol-wrap';
@@ -2283,11 +2597,11 @@ function buildPracticeKeyUI(body){
   const rangeLbl=document.createElement('div');rangeLbl.className='key-grid-label';rangeLbl.textContent='음역 범위 설정';hdr.appendChild(rangeLbl);
   const rangeInfo=document.createElement('div');rangeInfo.id='practice-range-info';
   rangeInfo.style.cssText='font-size:0.72rem;color:var(--text2);';
-  rangeInfo.innerHTML='첫 클릭 = 시작음 <span style="color:var(--accent);font-weight:700">■</span> 두번째 클릭 = 끝음 <span style="color:var(--accent2);font-weight:700">■</span> 실제 사용 범위 <span style="color:var(--accent3);font-weight:700;opacity:0.7">■</span>';
+  rangeInfo.innerHTML='첫 클릭=최저 시작음 <span style="color:var(--accent);font-weight:700;margin-left:4px">■</span><span style="display:inline-block;width:20px"></span>두번째 클릭=최고 시작음 <span style="color:var(--accent2);font-weight:700;margin-left:4px">■</span><span style="display:inline-block;width:20px"></span>실제 사용 음역 <span style="color:var(--accent3);font-weight:700;opacity:0.7;margin-left:4px">■</span>';
   hdr.appendChild(rangeInfo);inner.appendChild(hdr);
   let firstClickMidi=null;
   function renderPracticeGrid(){
-    while(inner.children.length>2)inner.removeChild(inner.lastChild);
+    while(inner.children.length>1)inner.removeChild(inner.lastChild);
     const dispDir=(firstClickMidi!==null)?1:prac_startDir;
     const maxOffset=getPatternMaxOffset();
     const allBtns=[];
@@ -2400,7 +2714,7 @@ function buildVowelSelector(body){
 }
 
 function buildTempoUI(body){
-  const maxBPM=currentPat()&&currentPat().vibrato?300:200;
+  const maxBPM=currentPat()&&currentPat().vibrato?400:200;
   const tDiv=document.createElement('div');tDiv.style.cssText='display:flex;align-items:center;justify-content:center;gap:10px;font-size:0.78rem;color:var(--text2);width:100%;';
   const tLabel=document.createElement('span');tLabel.textContent='템포';tDiv.appendChild(tLabel);
   const tWrap=document.createElement('div');tWrap.className='tempo-wrap';
@@ -2535,7 +2849,7 @@ function buildAdvancedPanel(body){
   const rngSecOuter=makeSecOuter();const rngSec=makeSecInner();rngSecOuter.appendChild(rngSec);ap.appendChild(rngSecOuter);
   const rngLbl=document.createElement('div');rngLbl.className='adv-section-label';rngLbl.textContent='음역 범위 설정';rngSec.appendChild(rngLbl);
   const rngInfo=document.createElement('div');rngInfo.id='adv-rng-info';rngInfo.style.cssText='font-size:0.72rem;color:var(--text2);margin-bottom:4px;';
-  function updateRngInfo(){rngInfo.innerHTML=adv_dir==='loop'?'첫 클릭 = 시작음 <span style="color:var(--accent);font-weight:700">■</span> 두번째 클릭 = 끝음 <span style="color:var(--accent2);font-weight:700">■</span> (도달 가능한 음만 표시)':'첫 클릭 = 시작음 <span style="color:var(--accent);font-weight:700">■</span> 두번째 클릭 = 끝음 <span style="color:var(--accent2);font-weight:700">■</span> 실제 사용 범위 <span style="color:var(--accent3);font-weight:700;opacity:0.7">■</span>';}
+  function updateRngInfo(){rngInfo.innerHTML=adv_dir==='loop'?'첫 클릭=최저 시작음 <span style="color:var(--accent);font-weight:700;margin-left:4px">■</span><span style="display:inline-block;width:20px"></span>두번째 클릭=최고 시작음 <span style="color:var(--accent2);font-weight:700;margin-left:4px">■</span><span style="display:inline-block;width:20px"></span>(도달 가능한 음만 표시)':'첫 클릭=최저 시작음 <span style="color:var(--accent);font-weight:700;margin-left:4px">■</span><span style="display:inline-block;width:20px"></span>두번째 클릭=최고 시작음 <span style="color:var(--accent2);font-weight:700;margin-left:4px">■</span><span style="display:inline-block;width:20px"></span>실제 사용 음역 <span style="color:var(--accent3);font-weight:700;opacity:0.7;margin-left:4px">■</span>';}
   updateRngInfo();rngSec.appendChild(rngInfo);
 
   const ADV_PMIN=48,ADV_PMAX=92; // G#6(midi 92)까지
@@ -2644,7 +2958,9 @@ function startExercise(id){
   EX_ID=id;
   const pat=currentPat();currentBPM=pat.baseTempo;
   const firstLabel=pat.modeLabels[0];TMODE=LABEL_TO_MODE[firstLabel]||MODE_BASIC;
-  basic_reset();prac_reset();wu_reset();adv_reset();
+  // 비브라토 카드: 첫 탭 라벨로 vibType 초기화 (비1=semitone/비2=bend/비3=plain)
+  if(TMODE===MODE_VIBRATO)vib_activeTab=(firstLabel==='비브라토2')?'bend':(firstLabel==='비브라토3'?'plain':'semitone');
+  basic_reset();prac_reset();wu_reset();adv_reset();vib_reset();
   setupModeFunctions();
   document.getElementById('prac-title').textContent=pat.pracTitle||pat.name;
   buildPracticeUI();
@@ -2821,9 +3137,12 @@ function _getRestDays(startDateStr){
 }
 function _isRestClass(){ return _getProfileClass()==='숨고르기'; }
 function _isEndedClass(){ return _getProfileClass()==='종료반'; }
+function _isTesterClass(){ return _getProfileClass()==='테스터'; }
 
 function _isLocked(patternId){
   if(!_currentProfileId) return false;
+  // 테스터 반: 모든 패턴 항상 활성화
+  if(_isTesterClass()) return false;
   try{
     const locks = JSON.parse(localStorage.getItem('somi_pattern_locks')||'{}');
     const pl = locks[_currentProfileId];
@@ -2848,14 +3167,15 @@ function _isLocked(patternId){
 // home.html의 modeLabel → modeKey 매핑 (getLvKey 기준)
 const _MODE_LABEL_TO_KEY={'기본':'basic','연습':'free','목풀기1':'warmup1','목풀기2':'warmup2','목풀기3':'warmup3','심화':'adv','심화1':'adv','심화2':'adv2'};
 
-// 패턴ID + modeLabels 기준으로 저장된 레벨 ID 조회
-// home.html 저장 키: "{patternId}__{modeKey}" (예: "vocal_ha_8beat_2__warmup1")
+// 패턴별 레벨 ID 조회 (신규: {patternId} 단일 키, 구버전: {patternId}__{modeKey} 폴백)
 function _getLvIdForPat(patternId){
   try{
     const lvs=JSON.parse(localStorage.getItem('somi_pattern_levels')||'{}');
+    // 1) 신규 단일 키 (패턴별 레벨 하나)
+    if(lvs[patternId]) return lvs[patternId];
+    // 2) 구버전 모드별 키 폴백 — 한 패턴 안에서는 값이 동일하므로 첫 발견값 사용
     const pat=VOCAL_PATTERNS.find(p=>p.id===patternId);
     const modeLabels=pat?pat.modeLabels:[];
-    // 1) 패턴의 modeLabels 순서대로 정확한 키 탐색
     for(const label of modeLabels){
       const mk=_MODE_LABEL_TO_KEY[label];
       if(mk){
@@ -2863,8 +3183,6 @@ function _getLvIdForPat(patternId){
         if(lvs[exactKey]) return lvs[exactKey];
       }
     }
-    // 2) pid 직접 키 (구버전 호환)
-    if(lvs[patternId]) return lvs[patternId];
     return null;
   }catch(e){return null;}
 }
