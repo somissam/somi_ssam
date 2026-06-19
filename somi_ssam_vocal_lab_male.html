@@ -315,11 +315,13 @@ const VOCAL_PATTERNS = [
     noteDiv: 8,
     display: 'label',
     labelTitle: 'H-a (흐아)',
-    modeLabels: ['목풀기1','심화'],
+    modeLabels: ['목풀기1','목풀기2','심화'],
     warmup1: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_ha_4beat',
@@ -345,11 +347,13 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['목풀기1','심화'],
+    modeLabels: ['목풀기1','목풀기2','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,3,5,3,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미','솔','미','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_ha_16beat',
@@ -366,11 +370,11 @@ const VOCAL_PATTERNS = [
     noteDiv: 16,
     display: 'label',
     labelTitle: 'H-a (흐아)',
-    modeLabels: ['목풀기1','심화'],
-    warmup1: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    modeLabels: ['목풀기2','심화'],
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_na_4beat_1',
@@ -404,11 +408,13 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Na (나)',
-    modeLabels: ['목풀기1','심화'],
+    modeLabels: ['목풀기1','목풀기2','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_ma_4beat_1',
@@ -442,11 +448,13 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ma (마)',
-    modeLabels: ['목풀기1','심화'],
+    modeLabels: ['목풀기1','목풀기2','심화'],
     warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_ieaou_4beat',
@@ -462,11 +470,11 @@ const VOCAL_PATTERNS = [
     korLabels7: ['이','에','아','오','우','으','어'],
     noteDiv: 4,
     display: 'label',
-    modeLabels: ['목풀기1','심화'],
-    warmup1: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
+    modeLabels: ['목풀기2','심화'],
     warmup2: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_ieaoueueo_4beat',
@@ -482,11 +490,11 @@ const VOCAL_PATTERNS = [
     korLabels7: ['이','에','아','오','우','으','어'],
     noteDiv: 4,
     display: 'label',
-    modeLabels: ['목풀기1','심화'],
-    warmup1: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
+    modeLabels: ['목풀기2','심화'],
     warmup2: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_sung_4beat',
@@ -503,11 +511,11 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Sung (썽)',
-    modeLabels: ['목풀기1','심화'],
-    warmup1: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    modeLabels: ['목풀기2','심화'],
     warmup2: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,3,5,3,1], engLabels:['','','','',''], korLabels:['도','미','솔','미','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_iaiaiai_4beat',
@@ -523,11 +531,11 @@ const VOCAL_PATTERNS = [
     korLabels7: ['이','아','이','아','이','아','이'],
     noteDiv: 4,
     display: 'label',
-    modeLabels: ['목풀기2','심화'],
-    warmup1: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
+    modeLabels: ['목풀기3','심화'],
     warmup2: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,3,5,8,5,3,1], engLabels:['i','a','i','a','i','a','i'], korLabels:['이','아','이','아','이','아','이'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_ha_8beat_minor',
@@ -545,11 +553,13 @@ const VOCAL_PATTERNS = [
     noteDiv: 8,
     display: 'label',
     labelTitle: 'Ah (아)',
-    modeLabels: ['기본','목풀기1','심화'],
+    modeLabels: ['기본','목풀기1','목풀기2','심화'],
     warmup1: { offsets:[0,2,3,5,7,5,3,2,0], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미b','파','솔','파','미b','레','도'] },
     warmup2: { offsets:[0,2,3,5,7,5,3,2,0], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미b','파','솔','파','미b','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { offsets:[0,2,3,5,7,5,3,2,0], engLabels:['흐','아','흐','아','흐','아','흐','아','흐'], korLabels:['도','레','미b','파','솔','파','미b','레','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_ha_4beat_minor',
@@ -576,11 +586,13 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기1','심화'],
+    modeLabels: ['기본','목풀기1','목풀기2','심화'],
     warmup1: { offsets:[0,3,7,3,0], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미b','솔','미b','도'] },
     warmup2: { offsets:[0,3,7,3,0], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미b','솔','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { offsets:[0,3,7,3,0], engLabels:['흐','아','흐','아','흐'], korLabels:['도','미b','솔','미b','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
     id: 'vocal_7th_major_4beat',
@@ -607,11 +619,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,4,7,11,12,11,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시','도','시','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,4,7,11,12,11,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시','도','시','솔','미','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
   {
     id: 'vocal_7th_dominant_4beat',
     name: "Dominant 7th • Sound Type • 4beat (135b7531)",
@@ -634,11 +646,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,4,7,10,12,10,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시b','도','시b','솔','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,4,7,10,12,10,7,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔','시b','도','시b','솔','미','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
   {
     id: 'vocal_7th_minor_4beat',
     name: "Minor 7th • Sound Type • 4beat (1b35b75b31)",
@@ -661,11 +673,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,3,7,10,12,10,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시b','도','시b','솔','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,3,7,10,12,10,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시b','도','시b','솔','미b','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
   {
     id: 'vocal_7th_minor_major_4beat',
     name: "Minor Major 7th • Sound Type • 4beat (1b3575b31)",
@@ -688,11 +700,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,3,7,11,12,11,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시','도','시','솔','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,3,7,11,12,11,7,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔','시','도','시','솔','미b','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
   {
     id: 'vocal_7th_half_diminished_4beat',
     name: "Half-diminished 7th • Sound Type • 4beat (1b3b5b7b5b31)",
@@ -715,11 +727,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,3,6,10,12,10,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','시b','도','시b','솔b','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,3,6,10,12,10,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','시b','도','시b','솔b','미b','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
   {
     id: 'vocal_7th_diminished_4beat',
     name: "Diminished 7th • Sound Type • 4beat (1b3b5bb7b5b31)",
@@ -742,11 +754,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,3,6,9,12,9,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','라','도','라','솔b','미b','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,3,6,9,12,9,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','라','도','라','솔b','미b','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
   {
     id: 'vocal_7th_augmented_4beat',
     name: "Augmented 7th • Sound Type • 4beat (13#5b7#531)",
@@ -769,11 +781,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,4,8,10,12,10,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시b','도','시b','솔#','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,4,8,10,12,10,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시b','도','시b','솔#','미','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
   {
     id: 'vocal_7th_augmented_major_4beat',
     name: "Augmented Major 7th • Sound Type • 4beat (13#57#531)",
@@ -796,11 +808,11 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},
       {label:'무작위', title:'무작위', random:true},
     ],
-    modeLabels: ['기본','목풀기2','심화'],
-    warmup2: { offsets:[0,4,8,11,12,11,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시','도','시','솔#','미','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
-  },
+    modeLabels: ['기본','목풀기3','심화'],
+    warmup3: { offsets:[0,4,8,11,12,11,8,4,0], engLabels:['','','','','','','','',''], korLabels:['도','미','솔#','시','도','시','솔#','미','도'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+},
 
   /* ── 패턴 23: Staccato Ah 8beat ── */
   {
@@ -819,11 +831,13 @@ const VOCAL_PATTERNS = [
     display: 'label',
     labelTitle: 'Ah (아)',
     staccato: true,
-    modeLabels: ['기본','목풀기1','심화'],
+    modeLabels: ['기본','목풀기1','목풀기2','심화'],
     warmup1: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['','','','','','','','',''], korLabels:['도','레','미','파','솔','파','미','레','도'] },
     warmup2: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['','','','','','','','',''], korLabels:['도','레','미','파','솔','파','미','레','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
-    warmup2Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+    warmup3: { pattern:[1,2,3,4,5,4,3,2,1], engLabels:['','','','','','','','',''], korLabels:['도','레','미','파','솔','파','미','레','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
 
   /* ── 패턴 24: Glissando H-a 4beat ── */
@@ -845,9 +859,11 @@ const VOCAL_PATTERNS = [
     display: 'label',
     labelTitle: 'H-a (흐아)',
     glissando: true,
-    modeLabels: ['기본','목풀기1','심화'],
+    modeLabels: ['기본','목풀기1','목풀기2','심화'],
     warmup1: { pattern:[1,5,1,5,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','솔','도','솔','도'] },
-    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup2: { pattern:[1,5,1,5,1], engLabels:['흐','아','흐','아','흐'], korLabels:['도','솔','도','솔','도'] },
+    warmup1Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55],
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
   },
 
   /* ── 패턴 25: Vibrato — 카드 1개, 탭 3개(비브라토1=반음왕복 / 비브라토2=순간밴딩 / 비브라토3=밴딩없이 평타) ── */
@@ -881,11 +897,12 @@ const MODE_BASIC      = 'MODE_BASIC';
 const MODE_PRACTICE   = 'MODE_PRACTICE';
 const MODE_WARMUP_1   = 'MODE_WARMUP_1';
 const MODE_WARMUP_2   = 'MODE_WARMUP_2';
+const MODE_WARMUP_3   = 'MODE_WARMUP_3';
 const MODE_ADVANCED_1 = 'MODE_ADVANCED_1';
 const MODE_VIBRATO    = 'MODE_VIBRATO';
 const LABEL_TO_MODE = {
   '기본':MODE_BASIC,'연습':MODE_PRACTICE,
-  '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,
+  '목풀기1':MODE_WARMUP_1,'목풀기2':MODE_WARMUP_2,'목풀기3':MODE_WARMUP_3,
   '심화':MODE_ADVANCED_1,
   '비브라토':MODE_VIBRATO,
   '비브라토1':MODE_VIBRATO,'비브라토2':MODE_VIBRATO,'비브라토3':MODE_VIBRATO,
@@ -913,7 +930,7 @@ function midiToName(midi,dir){const n=(dir<0)?NOTE_NAMES_FLAT:NOTE_NAMES_SHARP;r
 function isSharpNote(midi){return[1,3,6,8,10].includes(((midi%12)+12)%12);}
 const DEGREE_TO_SEMITONE={1:0,2:2,3:4,4:5,5:7,6:9,7:11,8:12};
 function degreeToSemitone(deg){const oct=Math.floor((deg-1)/7);const base=((deg-1)%7)+1;return(DEGREE_TO_SEMITONE[base]||0)+oct*12;}
-function getModeScale(mode){if(mode===MODE_WARMUP_2)return SCALE_7TONE;return SCALE_5TONE;}
+function getModeScale(mode){if(mode===MODE_WARMUP_3)return SCALE_7TONE;return SCALE_5TONE;}
 
 // korLabel에서 한글 뒤 b→위첨자b, #→위첨자# 변환
 function formatKorLabel(str){
@@ -930,12 +947,14 @@ function getPatternMaxOffset(){
   if(pat.offsets)allOffsets.push(...pat.offsets);
   if(pat.warmup1&&pat.warmup1.offsets)allOffsets.push(...pat.warmup1.offsets);
   if(pat.warmup2&&pat.warmup2.offsets)allOffsets.push(...pat.warmup2.offsets);
+  if(pat.warmup3&&pat.warmup3.offsets)allOffsets.push(...pat.warmup3.offsets);
   if(allOffsets.length>0)return Math.max(...allOffsets);
   const allPatterns=[];
   if(pat.pattern5)allPatterns.push(...pat.pattern5);
   if(pat.pattern7)allPatterns.push(...pat.pattern7);
   if(pat.warmup1&&pat.warmup1.pattern)allPatterns.push(...pat.warmup1.pattern);
   if(pat.warmup2&&pat.warmup2.pattern)allPatterns.push(...pat.warmup2.pattern);
+  if(pat.warmup3&&pat.warmup3.pattern)allPatterns.push(...pat.warmup3.pattern);
   const maxDeg=Math.max(...allPatterns);
   return degreeToSemitone(maxDeg);
 }
@@ -947,6 +966,7 @@ function getActivePatternArray(){
   const pat=currentPat();
   if(TMODE===MODE_WARMUP_1)return pat.warmup1.pattern;
   if(TMODE===MODE_WARMUP_2)return pat.warmup2.pattern;
+  if(TMODE===MODE_WARMUP_3)return pat.warmup3.pattern;
   return getModeScale(TMODE)===SCALE_7TONE?pat.pattern7:pat.pattern5;
 }
 function getActiveLabels(){
@@ -961,6 +981,7 @@ function getActiveLabels(){
   }
   if(TMODE===MODE_WARMUP_1)return{eng:pat.warmup1.engLabels,kor:pat.warmup1.korLabels};
   if(TMODE===MODE_WARMUP_2)return{eng:pat.warmup2.engLabels,kor:pat.warmup2.korLabels};
+  if(TMODE===MODE_WARMUP_3)return{eng:pat.warmup3.engLabels,kor:pat.warmup3.korLabels};
   return getModeScale(TMODE)===SCALE_7TONE?{eng:pat.engLabels7,kor:pat.korLabels7}:{eng:pat.engLabels5,kor:pat.korLabels5};
 }
 // noteDiv:8이면 패턴 박수는 4 (1박당 2음), noteDiv:16이면 패턴 박수는 4 (1박당 4음), 아니면 음수-1
@@ -985,6 +1006,7 @@ function getFullOffsets(){
   // offsets 직접 지정된 패턴 (마이너/코드톤 등) — warmup도 offsets 우선
   if(TMODE===MODE_WARMUP_1&&pat.warmup1&&pat.warmup1.offsets)return pat.warmup1.offsets;
   if(TMODE===MODE_WARMUP_2&&pat.warmup2&&pat.warmup2.offsets)return pat.warmup2.offsets;
+  if(TMODE===MODE_WARMUP_3&&pat.warmup3&&pat.warmup3.offsets)return pat.warmup3.offsets;
   if(pat.offsets)return pat.offsets;
   return getActivePatternArray().map(deg=>degreeToSemitone(deg));
 }
@@ -1216,8 +1238,7 @@ function playClickAt(type,time){if(!audioCtx)return;try{
   ng.gain.setValueAtTime(isAccent?0.19:0.14,time);
   ng.gain.exponentialRampToValueAtTime(0.001,time+0.025);
   ns.start(time);ns.stop(time+0.032);
-}catch(e){}}
-function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{
+}catch(e){}}function playPianoNote(freq,startTime,duration){if(!audioCtx)return;try{
   const out=pianoGain||masterGain;
   const isPhone=_isPhoneMobile();
   const baseScale=isPhone?0.28:0.24;
@@ -1378,7 +1399,7 @@ function _practiceStartGate(){
 }
 function togglePlay(){
   if(isPlaying){pauseEngine();return;}
-  if(!isPaused && !_practiceStartGate())return;
+  if(!isPaused && !_practiceStartGate())return; // 새 재생 시작 시에만 게이트, 일시정지 후 재개는 통과
   startEngine();
 }
 function startEngine(){
@@ -1427,7 +1448,7 @@ function logPractice(){
   const pat=currentPat(); if(!pat) return;
   const modeLabel={
     [MODE_BASIC]:'기본',[MODE_PRACTICE]:'연습',
-    [MODE_WARMUP_1]:'목풀기1',[MODE_WARMUP_2]:'목풀기2',
+    [MODE_WARMUP_1]:'목풀기1',[MODE_WARMUP_2]:'목풀기2',[MODE_WARMUP_3]:'목풀기3',
     [MODE_ADVANCED_1]:'심화'
   }[TMODE]||'기본';
   try{
@@ -1715,8 +1736,9 @@ let wu_keyIdx=0;
 
 function wu_getSeq(){
   const pat=currentPat();
-  if(TMODE===MODE_WARMUP_2)return pat.warmup2Seq;
-  return pat.warmup1Seq;
+  if(TMODE===MODE_WARMUP_1)return pat.warmup1Seq;
+  if(TMODE===MODE_WARMUP_3)return pat.warmup3Seq;
+  return pat.warmup2Seq;
 }
 function wu_getDirAt(idx){const seq=wu_getSeq();if(idx+1>=seq.length)return -1;return seq[idx+1]>=seq[idx]?1:-1;}
 function wu_getCurrentMidi(){const seq=wu_getSeq();return seq[Math.min(wu_keyIdx,seq.length-1)];}
@@ -1724,7 +1746,7 @@ function wu_getNextMidi()   {const seq=wu_getSeq();return seq[Math.min(wu_keyIdx
 function wu_isLastKey()     {return wu_keyIdx>=wu_getSeq().length-1;}
 function wu_advanceKey()    {wu_keyIdx=Math.min(wu_keyIdx+1,wu_getSeq().length-1);}
 function wu_onEngineStart() {}
-function wu_getTotalLoops() {const pat=currentPat();if(TMODE===MODE_WARMUP_2)return pat.warmup2Seq.length;return pat.warmup1Seq.length;}
+function wu_getTotalLoops() {const pat=currentPat();if(TMODE===MODE_WARMUP_1)return pat.warmup1Seq.length;if(TMODE===MODE_WARMUP_3)return pat.warmup3Seq.length;return pat.warmup2Seq.length;}
 function wu_reset()         {wu_keyIdx=0;}
 // 목풀기는 항상 b 표기
 function wu_getCurrentDir() {return wu_getDirAt(wu_keyIdx);}
@@ -2102,6 +2124,7 @@ function vib_schedulePattern(time){
     vib_playBendTone(midiToFreq(root),time,beatInterval,beatInterval);
   } else if(type==='plain'){
     // 비브라토3: 밴딩 없이, 메트로놈에 맞춰 같은 음을 건반 치듯 박마다 새로 친다.
+    // 서스테인 페달 없이 자연 감쇠. 단, 너무 일찍 끊기지 않도록 다음 박 직전까지 끌어준다.
     vib_playPlainTone(midiToFreq(root),time,beatInterval);
   } else {
     // 비브라토1: 박마다 도(짝수박)/시(홀수박)를 재생.
@@ -2129,7 +2152,15 @@ function vib_schedulePattern(time){
   playClickAt('normal',time);   // 메트로놈 박자 클릭
 }
 
-/* ── 비브라토2 오디오: 메트로놈 순간 최저음에서 출발해 원음으로 상행(피치밴드) ── */
+/* ── 비브라토2 오디오: 한 음을 평평하게 유지하다가 "박 타이밍에만" 순간 밴딩 ──
+   녹음 분석(청파동2가): 중심음을 평평하게 끌다가, 박마다 아래로 까딱 내려갔다
+   곧바로 원래 음으로 복귀. 느린 템포에선 또렷한 "까딱"이고, 템포가 빨라지면
+   까딱이 촘촘해져 자연스러운 비브라토처럼 들린다.
+   분석값: 밴딩 방향=아래 우세(-59~-97c), 평균 치우침 약 -11c.
+   설계: 한 박(beatInterval)을 [평평 구간 → 짧은 밴딩(아래로 갔다 복귀)] 으로 구성.
+   - 박 시작 직후 일정 시간은 평평(중심음 유지)
+   - 박 후반의 BEND_FRAC 구간 동안만 아래로 내려갔다 다시 중심으로 복귀
+   - 템포가 빠르면 beatInterval이 짧아져 평평 구간이 줄고 밴딩이 빽빽 → 비브라토화 */
 function vib_playBendTone(freq,startTime,duration,beatInterval){
   if(!audioCtx)return;
   try{
@@ -2182,8 +2213,8 @@ function vib_playBendTone(freq,startTime,duration,beatInterval){
 
 /* ── 비브라토3 오디오: 밴딩 없이 메트로놈에 맞춰 건반 치듯 같은 음을 박마다 새로 친다 ──
    음색은 비브라토1(vib_playPianoNoteV1)과 동일한 피아노 톤(6배음 + 배음별 감쇠 dr).
-   밴딩(음높이 변동)만 없이 평평하게 한 음을 친다. 실제 피아노처럼 박 끝에서 끊지 않고
-   잔향 꼬리(tail)를 박 너머까지 남겨 자연 감쇠시킨다. */
+   밴딩(음높이 변동)만 없이 평평하게 한 음을 친다. 서스테인 없이 자연 감쇠하되
+   끝 꺾임점을 duration 비례로 둬서 너무 일찍 끊기지 않게 한다. */
 function vib_playPlainTone(freq,startTime,duration){
   if(!audioCtx)return;
   try{
@@ -2191,6 +2222,9 @@ function vib_playPlainTone(freq,startTime,duration){
     const isPhone=_isPhoneMobile();
     const baseScale=isPhone?0.28:0.24;
     const k1=duration*0.36, k2=duration*0.62;
+    // 실제 피아노처럼 건반을 떼도 공명 잔향이 남도록, 박 끝에서 0으로 끊지 않고
+    // 박 너머(tail)까지 음을 끌고 가 서서히 사라지게 한다. 다음 박 음이 그 위에
+    // 얹히며 자연스럽게 겹친다. tail은 박 길이의 약 65%(최소 0.18s).
     const tail=Math.max(0.18, duration*0.65);
     [{n:1,vol:0.50},{n:2,vol:0.22},{n:3,vol:0.12},{n:4,vol:0.06},{n:5,vol:0.03},{n:6,vol:0.015}].forEach(h=>{
       const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
@@ -2201,6 +2235,7 @@ function vib_playPlainTone(freq,startTime,duration){
       g.gain.exponentialRampToValueAtTime(v*0.70,startTime+0.05);
       g.gain.exponentialRampToValueAtTime(v*0.40,startTime+Math.min(0.18/dr,k1));
       g.gain.exponentialRampToValueAtTime(v*0.18,startTime+Math.min(0.50/dr,k2));
+      // 박 끝에서도 아직 울리는 수준(약 0.10) → 그 뒤 tail 동안 자연 감쇠로 사라짐
       g.gain.exponentialRampToValueAtTime(v*0.10,startTime+duration);
       g.gain.exponentialRampToValueAtTime(0.0001,startTime+duration+tail);
       osc.start(startTime);osc.stop(startTime+duration+tail+0.05);
@@ -2307,7 +2342,8 @@ function _stopVibratoAnim(){}
 function vib_loopIllustrationSVG(){return '';}
 function _buildVibratoUI(body){}
 
-/* ── 시작 음 선택 UI (비브라토 전용) ── */
+/* ── 시작 음 선택 UI (비브라토 전용) ──
+   한 번 터치 = 그 음으로 시작 고정. 음역 범위 개념 없음. */
 function vib_buildStartNoteUI(body){
   const PMIN=VIB_PMIN,PMAX=VIB_PMAX;
   const COLS=9;
@@ -2364,7 +2400,7 @@ function setupModeFunctions(){
     _fn_isLastKey=prac_isLastKey;
     _fn_onEngineStart=prac_onEngineStart;
     _fn_getTotalLoops=prac_getTotalLoops;
-  } else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2){
+  } else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3){
     _fn_scheduleOneBeat=wu_scheduleOneBeat;
     _fn_applyVisual=wu_applyVisual;
     _fn_onComplete=wu_onComplete;
@@ -2405,7 +2441,7 @@ function hardReset(){
   stopEngine();elapsedSeconds=0;isPaused=false;pausedElapsed=0;
   if(TMODE===MODE_BASIC)basic_reset();
   else if(TMODE===MODE_PRACTICE)prac_reset();
-  else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)wu_reset();
+  else if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)wu_reset();
   else if(TMODE===MODE_ADVANCED_1)adv_reset();
   else if(TMODE===MODE_VIBRATO)vib_reset();
   setupModeFunctions();
@@ -2428,7 +2464,7 @@ function buildPracticeUI(){
   pat.modeLabels.forEach(label=>{
     const modeVal=LABEL_TO_MODE[label]||MODE_BASIC;
     const isAdvTab=modeVal===MODE_ADVANCED_1;
-    // 비브라토 카드: 라벨별 탭타입. 비브라토1=semitone, 비브라토2=bend
+    // 비브라토 카드: 라벨별 탭타입. 비1=semitone, 비2=bend, 비3=plain
     const tabVibType=(label==='비브라토2')?'bend':(label==='비브라토3'?'plain':(label==='비브라토1'?'semitone':null));
     // active 판정: 비브라토는 vib_activeTab 기준, 그 외는 TMODE 기준
     const isActive=(tabVibType!=null)?(TMODE===MODE_VIBRATO&&vib_activeTab===tabVibType):(TMODE===modeVal);
@@ -2442,7 +2478,7 @@ function buildPracticeUI(){
       mt.querySelectorAll('.m-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
       if(modeVal===MODE_BASIC)basic_reset();
       else if(modeVal===MODE_PRACTICE)prac_reset();
-      else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2)wu_reset();
+      else if(modeVal===MODE_WARMUP_1||modeVal===MODE_WARMUP_2||modeVal===MODE_WARMUP_3)wu_reset();
       else if(modeVal===MODE_ADVANCED_1)adv_reset();
       else if(modeVal===MODE_VIBRATO)vib_reset();
       hardReset();
@@ -2466,6 +2502,8 @@ function buildPracticeUI(){
   pSec.appendChild(pLbl);pSec.appendChild(pRow2);vwrap.appendChild(pSec);
   body.appendChild(vwrap);
 
+  /* ── 비브라토: 가이드 이미지 제거됨 (이미지 없이 라벨/소리만) ── */
+
   /* ── 라벨 박스 ── */
   if(pat.display==='label'){
     const vlb=document.createElement('div');vlb.className='vocal-label-box';vlb.id='vocal-label-box';
@@ -2481,11 +2519,11 @@ function buildPracticeUI(){
     } else {
       const kMid=document.createElement('div');kMid.className='vkp-midi';kMid.id='vocal-key-display';
       // 목풀기: b표기, 기본/연습: 시작 방향 기준
-      const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
+      const initDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)?-1:(TMODE===MODE_PRACTICE?prac_startDir:basic_getCurrentDir());
       kMid.textContent=midiToName(_fn_getCurrentRootMidi(),initDir);
       kPan.appendChild(kMid);
       const dEl=document.createElement('div');dEl.className='vkp-dir';dEl.id='vocal-dir-display';
-      const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2)?wu_getDirAt(wu_keyIdx):initDir;
+      const initMoveDir=(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3)?wu_getDirAt(wu_keyIdx):initDir;
       dEl.textContent=initMoveDir>=0?'▲ 상행':'▼ 하행';
       kPan.appendChild(dEl);
     }
@@ -2531,20 +2569,13 @@ function buildPracticeUI(){
 
   /* ── 컨트롤 ── */
   const ctrl=document.createElement('div');ctrl.className='controls';
-  ctrl.innerHTML='<button class="ctrl-btn reset" id="reset-btn">↺</button><button class="ctrl-btn play" id="play-btn">▶</button><button class="ctrl-btn stop" id="stop-btn">■</button>';
+  ctrl.innerHTML='<button class="ctrl-btn reset" onclick="hardReset()">↺</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶</button><button class="ctrl-btn stop" onclick="stopExercise()">■</button>';
   body.appendChild(ctrl);
-  // Safari: onclick 대신 touchend+click 둘 다 — 터치 이벤트 안에서 AudioContext 동작 보장
-  const _addBtn=(id,fn)=>{const b=document.getElementById(id);if(!b)return;
-    b.addEventListener('touchend',function(e){e.preventDefault();fn();},{passive:false});
-    b.addEventListener('click',fn);};
-  _addBtn('play-btn',togglePlay);
-  _addBtn('reset-btn',hardReset);
-  _addBtn('stop-btn',stopExercise);
 
   /* ── 모드별 키 UI ── */
   if(TMODE===MODE_BASIC){buildVowelSelector(body);buildBasicKeyUI(body);buildTempoUI(body);}
   if(TMODE===MODE_PRACTICE)buildPracticeKeyUI(body); // 내부에서 buildTempoUI 호출
-  if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2){
+  if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3){
     buildVowelSelector(body);
     buildSeqGridUI(body,wu_getSeq(),wu_keyIdx,(idx)=>{wu_keyIdx=idx;});
     buildTempoUI(body);
@@ -2673,11 +2704,12 @@ function buildPracticeKeyUI(body){
 
 /* ── 목풀기 시퀀스 UI ── */
 function buildSeqGridUI(body,seq,selectedIdx,onSelect){
-  const COLS=9;
+  const COLS=(seq.length===21)?7:9;
+  const btnW=(COLS===7)?'42px':'36px';
   const btns=[];
   seq.forEach((midi,i)=>{
     const name=midiToName(midi,-1);
-    const btn=document.createElement('button');btn.className='seq-btn';btn.style.cssText='width:36px;min-width:36px;padding:6px 0;';btn.textContent=name;btn.setAttribute('data-idx',i);
+    const btn=document.createElement('button');btn.className='seq-btn';btn.style.cssText='width:'+btnW+';min-width:'+btnW+';padding:6px 0;';btn.textContent=name;btn.setAttribute('data-idx',i);
     btn.onclick=()=>{
       previewNote(midi);onSelect(i);btns.forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');
       _setEl('vocal-key-display',midiToName(midi,-1));
@@ -3048,6 +3080,7 @@ function _initPracGenderBtn(patId){
   btn.style.color='var(--accent2)';
 }
 function switchVocalGender(){
+  // 현재 패턴 ID 저장 → 남성 파일에서 자동 진입
   if(EX_ID)sessionStorage.setItem('somi_vocal_open_pat',EX_ID);
   sessionStorage.setItem('somi_vocal_scroll','0');
   localStorage.setItem('somi_vocal_preview_gender','female');
@@ -3055,11 +3088,12 @@ function switchVocalGender(){
 }
 
 function startExercise(id){
+  // 스크롤 위치 저장 (뒤로 갔을 때 복원용)
   sessionStorage.setItem('somi_vocal_scroll', String(window.scrollY));
   EX_ID=id;
   const pat=currentPat();currentBPM=pat.baseTempo;
   const firstLabel=pat.modeLabels[0];TMODE=LABEL_TO_MODE[firstLabel]||MODE_BASIC;
-  // 비브라토 카드: 첫 탭 라벨로 vibType 초기화 (비브라토1=semitone)
+  // 비브라토 카드: 첫 탭 라벨로 vibType 초기화 (비1=semitone/비2=bend/비3=plain)
   if(TMODE===MODE_VIBRATO)vib_activeTab=(firstLabel==='비브라토2')?'bend':(firstLabel==='비브라토3'?'plain':'semitone');
   basic_reset();prac_reset();wu_reset();adv_reset();vib_reset();
   setupModeFunctions();
@@ -3068,7 +3102,7 @@ function startExercise(id){
   _initPracGenderBtn(id);
   document.getElementById('pattern-select').style.display='none';
   document.getElementById('practice-screen').style.display='flex';
-  setTimeout(_applyLandscape,50);
+  setTimeout(_applyLandscape,50); // 렌더 후 가로모드 적용
 }
 
 function closePractice(){
@@ -3077,7 +3111,7 @@ function closePractice(){
   document.getElementById('practice-screen').style.display='none';
   document.getElementById('pattern-select').style.display='block';
   renderPatternCards();
-  _maybeShowRestStagePopup();
+  // 뒤로가기 시 스크롤 위치 복원
   const savedY=sessionStorage.getItem('somi_vocal_scroll');
   if(savedY)requestAnimationFrame(()=>window.scrollTo(0,parseInt(savedY)||0));
 }
@@ -3130,9 +3164,11 @@ function _mergeLogs(local, remote){
 let _fsDb = null, _fsDoc = null, _fsGetDoc = null; // Firebase 핸들 (첫 동기화 때 보관)
 let _lastSyncTs = 0;          // 마지막으로 반영한 잠금/레벨 변경 시각
 let _resyncPending = false;   // 연습 중 보류된 재동기화 요청
+// localStorage의 동기화 메타에서 변경 시각(ts) 읽기
 function _readSyncTs(){
   try{ return (JSON.parse(localStorage.getItem('somi_sync_meta')||'{}').ts)||0; }catch(e){ return 0; }
 }
+// 접속기록 저장 (당일 첫 활동이면 추가, 이후엔 시각만 갱신) — student.html과 동일 규칙
 async function labRefresh() {
   somiShowLoading('최신 데이터 불러오는 중...');
   try {
@@ -3172,6 +3208,7 @@ function _recordAccess(){
     if(window._fsSet) window._fsSet('somi_access_log',j);
   }catch(e){}
 }
+// 복귀 시: 서버 메타만 가볍게 확인 → 변경됐을 때만 잠금/레벨 받아와 카드 갱신
 async function _checkAndResync(){
   if(!_fsDb||!_fsGetDoc||!_fsDoc) return;
   try{
@@ -3180,6 +3217,7 @@ async function _checkAndResync(){
     localStorage.setItem('somi_sync_meta', snap.data().value);
     const serverTs=_readSyncTs();
     if(serverTs<=_lastSyncTs) return; // 변경 없음 → 아무것도 안 함
+    // 변경 있음 → 잠금/레벨/반설정/휴식진입일 받아와 반영
     const KEYS=['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates'];
     await Promise.all(KEYS.map(async k=>{
       try{ const s=await _fsGetDoc(_fsDoc(_fsDb,'somi_data',k)); if(s.exists()) localStorage.setItem(k,s.data().value); }catch(e){}
@@ -3234,9 +3272,12 @@ function _getRestDays(startDateStr){
 }
 function _isRestClass(){ return _getProfileClass()==='숨고르기'; }
 function _isEndedClass(){ return _getProfileClass()==='종료반'; }
+function _isTesterClass(){ return _getProfileClass()==='테스터'; }
 
 function _isLocked(patternId){
   if(!_currentProfileId) return false;
+  // 테스터 반: 모든 패턴 항상 활성화
+  if(_isTesterClass()) return false;
   try{
     const locks = JSON.parse(localStorage.getItem('somi_pattern_locks')||'{}');
     const pl = locks[_currentProfileId];
@@ -3253,22 +3294,23 @@ function _isLocked(patternId){
       return !(baseOpen && allowed.includes(patternId));
     }
 
-    if(!pl) return true; // 잠금 데이터 없으면 기본 잠금 (가입직후/유실 = 잠김)
-    return pl[patternId] !== true; // 명시적으로 열림(true)이 아니면 잠김 (신규/미지정 = 잠김)
+    if(!pl) return true;
+    return pl[patternId] !== true;
   }catch(e){ return true; }
 }
 
 // home.html의 modeLabel → modeKey 매핑 (getLvKey 기준)
-const _MODE_LABEL_TO_KEY={'기본':'basic','연습':'free','목풀기1':'warmup1','목풀기2':'warmup2','목풀기3':'warmup3','심화':'adv','심화1':'adv','심화2':'adv2'};
+const _MODE_LABEL_TO_KEY={'기본':'basic','연습':'free','목풀기1':'warmup2','목풀기2':'warmup3','목풀기3':'warmup3','심화':'adv','심화1':'adv','심화2':'adv2'};
 
-// 패턴ID + modeLabels 기준으로 저장된 레벨 ID 조회
-// home.html 저장 키: "{patternId}__{modeKey}" (예: "vocal_ha_8beat_2__warmup1")
+// 패턴별 레벨 ID 조회 (신규: {patternId} 단일 키, 구버전: {patternId}__{modeKey} 폴백)
 function _getLvIdForPat(patternId){
   try{
     const lvs=JSON.parse(localStorage.getItem('somi_pattern_levels')||'{}');
+    // 1) 신규 단일 키 (패턴별 레벨 하나)
+    if(lvs[patternId]) return lvs[patternId];
+    // 2) 구버전 모드별 키 폴백 — 한 패턴 안에서는 값이 동일하므로 첫 발견값 사용
     const pat=VOCAL_PATTERNS.find(p=>p.id===patternId);
-    const modeLabels=pat?pat.modeLabels:[];
-    // 1) 패턴의 modeLabels 순서대로 정확한 키 탐색
+    const modeLabels=pat?pat.modeLabels: [];
     for(const label of modeLabels){
       const mk=_MODE_LABEL_TO_KEY[label];
       if(mk){
@@ -3276,8 +3318,6 @@ function _getLvIdForPat(patternId){
         if(lvs[exactKey]) return lvs[exactKey];
       }
     }
-    // 2) pid 직접 키 (구버전 호환)
-    if(lvs[patternId]) return lvs[patternId];
     return null;
   }catch(e){return null;}
 }
@@ -3359,7 +3399,7 @@ function renderPatternCards(){
   const container=document.getElementById('pattern-cards');container.innerHTML='';
   // 이전 렌더의 안개 래퍼/점 정리 (중복 방지)
   _clearEndedFog();
-  // 휴식 디데이 배지
+  // 휴식 디데이 배지(동그라미 자리, 짧은 버전)
   _renderRestDday();
   const ended=_isEndedClass();
   // 활성화 패턴 상단, 비활성화(잠금) 패턴 하단 — 기본 순서 유지
