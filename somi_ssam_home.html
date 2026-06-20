@@ -386,7 +386,7 @@ function loadData(k, d) {
   try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; }
 }
 // 연습 페이지가 "변경됐을 때만" 재동기화할 수 있도록, 잠금/레벨 변경 시각을 함께 기록
-const _SYNC_WATCH_KEYS = ['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates'];
+const _SYNC_WATCH_KEYS = ['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates','somi_teacher_stamps'];
 function saveData(k, v) {
   try {
     const json = JSON.stringify(v);
@@ -757,7 +757,7 @@ async function teacherRefresh() {
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_teacher_checks','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
     await Promise.all(KEYS.map(async k=>{
       const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
     }));
@@ -1158,7 +1158,9 @@ function renderDetailContent(p) {
   const dayKeys=Object.keys(byDay).sort().reverse();
   dayKeys.forEach(day=>{
     const dayTotal=byDay[day].reduce((a,l)=>a+(l.duration||0),0);
-    html+=`<div style="margin-bottom:16px"><div style="font-size:0.82rem;color:var(--text2);margin-bottom:8px;font-weight:600">${day}</div><table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>`;
+    const _dc=(teacherStamps[p.id+'_'+day]||{}).comment||'';
+    const _dcHtml=_dc.trim()?`<span style="font-weight:400;color:var(--accent2)">💬 ${_dc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`:'';
+    html+=`<div style="margin-bottom:16px"><div style="font-size:0.82rem;color:var(--text2);margin-bottom:8px;font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><span>${day}</span>${_dcHtml}</div><table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>`;
     html+=`<tr style="background:var(--surface2)"><td colspan="3" style="font-size:0.78rem;color:var(--text2);font-weight:600">📋 당일 총 연습</td><td style="font-weight:700;color:var(--accent)">${formatDur(dayTotal)}</td></tr>`;
     byDay[day].forEach(l=>{
       const pc=l.chapter==='breath'?'b':l.chapter==='vocal'?'v':'r';
@@ -1194,11 +1196,32 @@ function renderTeacherCalendar(pid) {
     const div=document.createElement('div'); div.className='t-cal-day'+(has?' has-practice':'')+(ds===selectedTeacherDate?' selected':'');
     const tk=pid+'_'+ds;
 
-    // 선생님 도장
+    // 선생님 도장 — 도장을 직접 클릭하면 삭제 모달(코멘트 표시)
     if(teacherStamps[tk]){
       const ts2=document.createElement('div');
-      ts2.style.cssText='position:absolute;top:-2px;left:-2px;width:28px;height:28px;z-index:3;pointer-events:none;';
+      ts2.style.cssText='position:absolute;top:-2px;left:-2px;width:28px;height:28px;z-index:5;cursor:pointer;';
+      ts2.title='도장/코멘트 보기·삭제';
       ts2.innerHTML=getTeacherStampSVG(teacherStamps[tk].stamp, 28);
+      ts2.onclick=(e)=>{
+        e.stopPropagation();   // 날짜 셀 클릭으로 전파되지 않게
+        showStampDeleteModal(ds, ()=>{
+          delete teacherStamps[tk];
+          saveTeacherStamps();
+          renderTeacherCalendar(pid);
+          renderUncheckedPanel();
+        }, teacherStamps[tk].comment||'', ()=>{
+          // 수정: 그 날짜 선택 + 입력창에 기존 코멘트/도장종류 채우고 포커스
+          selectedTeacherDate=ds;
+          const lbl=document.getElementById('selected-date-label'); if(lbl) lbl.textContent=ds;
+          selectTeacherStampType((teacherStamps[tk].stamp)||'star');
+          const ta=document.getElementById('teacher-comment');
+          if(ta){ ta.value=teacherStamps[tk].comment||''; }
+          renderTeacherCalendar(pid);
+          const cb=document.querySelector('.comment-box');
+          if(cb) cb.scrollIntoView({behavior:'smooth',block:'center'});
+          if(ta) ta.focus();
+        });
+      };
       div.appendChild(ts2);
     }
     // 학생 도장 (연습한 날)
@@ -1218,18 +1241,9 @@ function renderTeacherCalendar(pid) {
 
     const dn=document.createElement('span'); dn.className='date-num'; dn.textContent=d; div.appendChild(dn);
     div.onclick=()=>{
-      if(teacherStamps[tk]){
-        showStampDeleteModal(ds, ()=>{
-          delete teacherStamps[tk];
-          saveTeacherStamps();
-          renderTeacherCalendar(pid);
-          renderUncheckedPanel();
-        });
-      } else {
-        selectedTeacherDate=ds;
-        document.getElementById('selected-date-label').textContent=ds;
-        renderTeacherCalendar(pid);
-      }
+      selectedTeacherDate=ds;
+      document.getElementById('selected-date-label').textContent=ds;
+      renderTeacherCalendar(pid);
     };
     grid.appendChild(div);
   }
@@ -1260,7 +1274,7 @@ function checkTeacherDate(){
 }
 
 /* ── 커스텀 도장 삭제 모달 ── */
-function showStampDeleteModal(dateStr, onConfirm) {
+function showStampDeleteModal(dateStr, onConfirm, comment, onEdit) {
   let modal = document.getElementById('stamp-delete-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -1269,20 +1283,32 @@ function showStampDeleteModal(dateStr, onConfirm) {
     modal.innerHTML = `
       <div id="stamp-delete-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);"></div>
       <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px 28px;width:calc(100% - 40px);max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.5);z-index:1;">
+        <div id="stamp-delete-comment" style="display:none;font-size:0.9rem;line-height:1.5;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:16px;white-space:pre-wrap;word-break:break-word;"></div>
         <div id="stamp-delete-msg" style="font-size:0.95rem;font-weight:600;text-align:center;margin-bottom:20px;color:var(--text)"></div>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:8px;">
           <button id="stamp-delete-cancel" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;">취소</button>
+          <button id="stamp-delete-edit" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;">수정</button>
           <button id="stamp-delete-confirm" style="flex:1;padding:12px;border-radius:12px;border:none;background:#f76a6a;color:white;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;">삭제</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
   }
-  document.getElementById('stamp-delete-msg').textContent = `${dateStr} 도장을 삭제할까요?`;
+  // 내가 보낸 코멘트 표시 (있을 때만)
+  const cbox = document.getElementById('stamp-delete-comment');
+  if (comment && comment.trim()) {
+    cbox.textContent = '💬 ' + comment;
+    cbox.style.display = 'block';
+  } else {
+    cbox.textContent = '';
+    cbox.style.display = 'none';
+  }
+  document.getElementById('stamp-delete-msg').textContent = `${dateStr} 도장`;
   modal.style.display = 'flex';
   const close = () => { modal.style.display = 'none'; };
   document.getElementById('stamp-delete-backdrop').onclick = close;
   document.getElementById('stamp-delete-cancel').onclick = close;
   document.getElementById('stamp-delete-confirm').onclick = () => { close(); onConfirm(); };
+  document.getElementById('stamp-delete-edit').onclick = () => { close(); if(onEdit) onEdit(); };
 }
 
 /* ════════════════════════════════════════════════
@@ -2407,7 +2433,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
       const fsDb=getFirestore(fbApp);
       window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-      const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_teacher_checks','somi_class_settings','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+      const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
       await Promise.all(KEYS.map(async k=>{
         const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
       }));

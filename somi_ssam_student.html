@@ -67,6 +67,13 @@ button{font-family:inherit;cursor:pointer;}
 .cal-day.other-month{opacity:0.3;}
 .date-num{position:relative;z-index:2;font-size:1rem;font-weight:500;line-height:1;}
 .teacher-stamp{position:absolute;top:-2px;left:-2px;width:28px;height:28px;z-index:3;pointer-events:none;}
+/* 선생님 메시지 포스트잇 — 앱 기본 톤과 다르게, 손으로 붙인 쪽지처럼 */
+.teacher-note{position:relative;display:flex;flex-direction:column;gap:3px;width:fit-content;max-width:100%;margin:4px 0 14px auto;padding:10px 13px 9px 34px;background:#fff8c4;background-image:linear-gradient(135deg,#fff8c4 0%,#fdf0a8 100%);border-radius:3px;box-shadow:2px 4px 10px rgba(0,0,0,0.18),0 1px 2px rgba(0,0,0,0.1);transform:rotate(-1deg);}
+.teacher-note::before{content:'';position:absolute;top:-9px;left:50%;width:64px;height:20px;transform:translateX(-50%) rotate(2deg);background:rgba(255,255,255,0.45);box-shadow:0 1px 3px rgba(0,0,0,0.12);}
+.teacher-note-stamp{position:absolute;top:9px;left:10px;line-height:0;}
+.teacher-note-stamp svg,.teacher-note-stamp img{filter:drop-shadow(0 1px 1px rgba(0,0,0,0.15));}
+.teacher-note-text{font-size:0.82rem;line-height:1.4;color:#3d3010;word-break:break-word;white-space:normal;text-align:right;}
+.teacher-note-sign{font-size:0.82rem;line-height:1.4;color:#3d3010;text-align:right;}
 .student-stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none;}
 .student-stamp svg{width:72%;height:72%;opacity:0.55;}
 .practice-bar-wrap{position:absolute;bottom:2px;left:2px;right:2px;height:3px;display:flex;gap:1px;border-radius:2px;overflow:hidden;z-index:1;}
@@ -632,6 +639,14 @@ function showDayLog(dateStr){
   let box=document.getElementById('inline-day-log');
   if(!box){box=document.createElement('div');box.id='inline-day-log';box.style.cssText='margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;';document.getElementById('stab-home').appendChild(box);}
   const pc=c=>c==='breath'?'b':c==='vocal'?'v':'r',cn=c=>c==='breath'?'호흡':c==='vocal'?'발성':'리듬';
+  // ── 선생님 메시지(포스트잇) — 도장에 코멘트가 있는 날만 ──
+  let teacherNoteHtml='';
+  const _ts=teacherStamps[currentProfile.id+'_'+dateStr];
+  if(_ts && _ts.comment && _ts.comment.trim()){
+    // 코멘트 안전 처리: HTML 특수문자 이스케이프 + 줄바꿈 유지
+    const _safe=_ts.comment.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    teacherNoteHtml=`<div class="teacher-note"><span class="teacher-note-stamp">${getTeacherStampSVG(_ts.stamp,18)}</span><span class="teacher-note-text">${_safe}</span><span class="teacher-note-sign">- 소미쌤</span></div>`;
+  }
   // 연습 기록이 있는 날만 도장 선택 UI 노출
   let stampHtml='';
   if(logs.length){
@@ -639,7 +654,7 @@ function showDayLog(dateStr){
     const opts=Object.keys(STAMPS).map(key=>`<div class="stamp-opt${cur===key?' active':''}" data-stamp="${key}" onclick="selectDayStamp('${dateStr}','${key}',this)">${getStampSVG(key)}</div>`).join('');
     stampHtml=`<div class="stamp-picker" style="margin-top:16px"><h4>이 날의 도장 선택</h4><div class="stamp-options">${opts}</div></div>`;
   }
-  box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1rem;font-weight:700">${dateStr} 연습 기록</h3><button onclick="document.getElementById('inline-day-log').remove()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button></div>`+(logs.length?`<table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${l.time||''}</td><td><span class="pill ${pc(l.chapter)}">${cn(l.chapter)}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text2);text-align:center;padding:16px">연습 기록이 없어요</p>')+stampHtml;
+  box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1rem;font-weight:700">${dateStr} 연습 기록</h3><button onclick="document.getElementById('inline-day-log').remove()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button></div>`+teacherNoteHtml+(logs.length?`<table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${l.time||''}</td><td><span class="pill ${pc(l.chapter)}">${cn(l.chapter)}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text2);text-align:center;padding:16px">연습 기록이 없어요</p>')+stampHtml;
   box.scrollIntoView({behavior:'smooth'});
 }
 
@@ -813,6 +828,43 @@ document.addEventListener('DOMContentLoaded',async function(){
    }
   }
 });
+
+/* ════════════════════════════════════════════════
+   화면 복귀 시 가벼운 재동기화 (학생 홈 독립 적용)
+   - 학생이 앱을 켜둔 채 다른 앱/탭에 갔다 돌아오면, 선생님이 그 사이 보낸
+     도장·코멘트(somi_teacher_stamps) 등을 다시 받아 홈을 재렌더한다.
+   - 초기 로딩 루프와 분리된 독립 함수. _fbHandle(보관된 Firebase 핸들) 사용.
+   - 받는 키는 "자주 바뀌고 학생이 꼭 봐야 하는" 묶음만. 무거운 잠금/레벨은 제외.
+════════════════════════════════════════════════ */
+let _studentResyncing=false;
+async function _studentLightResync(){
+  if(_studentResyncing) return;            // 중복 실행 방지
+  if(!_fbHandle||!currentProfile) return;  // 핸들/프로필 없으면 skip
+  _studentResyncing=true;
+  try{
+    const {db,doc,getDoc}=_fbHandle;
+    const LIVE_KEYS=['somi_teacher_stamps','somi_logs','somi_student_day_stamps','somi_profiles'];
+    await Promise.all(LIVE_KEYS.map(async k=>{
+      try{ const s=await getDoc(doc(db,'somi_data',k)); if(s.exists()) localStorage.setItem(k,s.data().value); }catch(e){}
+    }));
+    // 메모리 갱신
+    teacherStamps=loadData('somi_teacher_stamps',{});
+    practiceLogs=loadData('somi_logs',{});
+    studentDayStamps=loadData('somi_student_day_stamps',{});
+    profiles=loadData('somi_profiles',[]);
+    const r=profiles.find(p=>p.id===currentProfile.id);
+    if(r) currentProfile=r;
+    // 도장 SVG 재주입 후 홈 재렌더 (카드/달력 다시 그림)
+    _reinjectStampSVGs();
+    renderStudentHome();
+    if(typeof renderCalendar==='function') renderCalendar();
+  }catch(e){ /* 조용히 무시 — 다음 복귀 때 다시 시도 */ }
+  finally{ _studentResyncing=false; }
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible') _studentLightResync();
+});
+window.addEventListener('focus',()=>{ _studentLightResync(); });
 </script>
 </body>
 </html>

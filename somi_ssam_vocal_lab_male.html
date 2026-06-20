@@ -199,6 +199,12 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
   .pattern-card{padding:14px 14px;}
   .timer-main{font-size:1.8rem!important;}
 }
+@media (max-width: 420px) {
+  .key-grid-btn{width:27px;font-size:0.6rem;padding:4px 0;}
+  .basic-key-btn{min-width:25px;font-size:0.6rem;}
+  #adv-range-grid > div{gap:4px!important;}
+  #adv-rng-info{font-size:0.68rem;}
+}
 @media (min-width:601px) and (max-width:1024px) {
   .prac-body{padding:20px 18px 52px;gap:18px;}
   .ctrl-btn{width:56px;height:56px;}
@@ -457,10 +463,10 @@ const VOCAL_PATTERNS = [
     warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
-    id: 'vocal_ieaou_4beat',
-    name: "ieaou • 4beat (11111)",
+    id: 'vocal_ieaou_4beat_1',
+    name: "ieaou • 4beat (11111) (1)",
     cardDesc: "이에아오우 · 4분음표 · 도도도도도",
-    pracTitle: "ieaou(이에아오우) · 4beat (11111)",
+    pracTitle: "ieaou(이에아오우) · 4beat (1)",
     baseTempo: 70,
     pattern5:   [1,1,1,1,1],
     engLabels5: ['i','e','a','o','u'],
@@ -477,10 +483,50 @@ const VOCAL_PATTERNS = [
     warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
   },
   {
-    id: 'vocal_ieaoueueo_4beat',
-    name: "ieaou+eueo • 4beat (1111111)",
+    id: 'vocal_ieaou_4beat_2',
+    name: "ieaou • 4beat (11111) (2)",
+    cardDesc: "이에아오우 · 4분음표 · 도도도도도",
+    pracTitle: "ieaou(이에아오우) · 4beat (2)",
+    baseTempo: 70,
+    pattern5:   [1,1,1,1,1],
+    engLabels5: ['i','e','a','o','u'],
+    korLabels5: ['이','에','아','오','우'],
+    pattern7:   [1,1,1,1,1,1,1],
+    engLabels7: ['i','e','a','o','u','eu','eo'],
+    korLabels7: ['이','에','아','오','우','으','어'],
+    noteDiv: 4,
+    display: 'label',
+    modeLabels: ['목풀기2','심화'],
+    warmup2: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
+    warmup3: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+  },
+  {
+    id: 'vocal_ieaoueueo_4beat_1',
+    name: "ieaou+eueo • 4beat (1111111) (1)",
     cardDesc: "이에아오우으어 · 4분음표 · 도도도도도도도",
-    pracTitle: "ieaou+eueo(이에아오우으어) · 4beat (1111111)",
+    pracTitle: "ieaou+eueo(이에아오우으어) · 4beat (1)",
+    baseTempo: 70,
+    pattern5:   [1,1,1,1,1],
+    engLabels5: ['i','e','a','o','u'],
+    korLabels5: ['이','에','아','오','우'],
+    pattern7:   [1,1,1,1,1,1,1],
+    engLabels7: ['i','e','a','o','u','eu','eo'],
+    korLabels7: ['이','에','아','오','우','으','어'],
+    noteDiv: 4,
+    display: 'label',
+    modeLabels: ['목풀기2','심화'],
+    warmup2: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
+    warmup3: { pattern:[1,1,1,1,1,1,1], engLabels:['i','e','a','o','u','eu','eo'], korLabels:['이','에','아','오','우','으','어'] },
+    warmup2Seq: [53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54,59,57,55,60,58,56,61,59,58],
+    warmup3Seq: [50,48,46,51,49,47,52,50,48,53,51,49,54,52,50,55,53,51,56,54,52,57,55,53,58,56,54],
+  },
+  {
+    id: 'vocal_ieaoueueo_4beat_2',
+    name: "ieaou+eueo • 4beat (1111111) (2)",
+    cardDesc: "이에아오우으어 · 4분음표 · 도도도도도도도",
+    pracTitle: "ieaou+eueo(이에아오우으어) · 4beat (2)",
     baseTempo: 70,
     pattern5:   [1,1,1,1,1],
     engLabels5: ['i','e','a','o','u'],
@@ -2650,8 +2696,15 @@ function buildPracticeKeyUI(body){
   const hdr=document.createElement('div');hdr.style.cssText='display:flex;flex-direction:column;gap:3px;align-self:flex-start;';
   const rangeLbl=document.createElement('div');rangeLbl.className='key-grid-label';rangeLbl.textContent='음역 범위 설정';hdr.appendChild(rangeLbl);
   const rangeInfo=document.createElement('div');rangeInfo.id='practice-range-info';
-  rangeInfo.style.cssText='font-size:0.72rem;color:var(--text2);';
-  rangeInfo.innerHTML='첫 클릭=최저 시작음<span style="color:var(--accent);font-weight:700">■</span><span style="display:inline-block;width:20px"></span>두번째 클릭=최고 시작음<span style="color:var(--accent2);font-weight:700">■</span><span style="display:inline-block;width:20px"></span>실제 사용 음역<span style="color:var(--accent3);font-weight:700;opacity:0.7">■</span>';
+  rangeInfo.style.cssText='font-size:0.72rem;color:var(--text2);line-height:1.5;max-width:100%;';
+  rangeInfo.innerHTML='<span style="display:inline-flex;flex-wrap:wrap;gap:4px 14px;align-items:center;">'
+    +'<span>-첫 클릭<span style="color:var(--accent);font-weight:700">■</span></span>'
+    +'<span>두번째 클릭<span style="color:var(--accent2);font-weight:700">■</span></span>'
+    +'<span>실제 사용 음역<span style="color:var(--accent3);font-weight:700">■</span></span></span>'
+    +'<div style="margin-top:5px;">*클릭 순서로 진행 방향이 정해져요</div>'
+    +'<div style="opacity:0.85;">· 저음 → 고음 순으로 누르면 <b>상행</b></div>'
+    +'<div style="opacity:0.85;">· 고음 → 저음 순으로 누르면 <b>하행</b>으로 시작합니다</div>'
+    +'<div style="opacity:0.7;font-size:0.68rem;margin-top:2px;">(첫 클릭이 시작 첫음, 두번째 클릭이 도착 첫음)</div>';
   hdr.appendChild(rangeInfo);inner.appendChild(hdr);
   let firstClickMidi=null;
   function renderPracticeGrid(){
@@ -2983,8 +3036,22 @@ function buildAdvancedPanel(body){
   /* 3. 음역 범위 */
   const rngSecOuter=makeSecOuter();const rngSec=makeSecInner();rngSecOuter.appendChild(rngSec);ap.appendChild(rngSecOuter);
   const rngLbl=document.createElement('div');rngLbl.className='adv-section-label';rngLbl.textContent='음역 범위 설정';rngSec.appendChild(rngLbl);
-  const rngInfo=document.createElement('div');rngInfo.id='adv-rng-info';rngInfo.style.cssText='font-size:0.72rem;color:var(--text2);margin-bottom:4px;';
-  function updateRngInfo(){rngInfo.innerHTML=adv_dir==='loop'?'첫 클릭=최저 시작음<span style="color:var(--accent);font-weight:700">■</span><span style="display:inline-block;width:20px"></span>두번째 클릭=최고 시작음<span style="color:var(--accent2);font-weight:700">■</span><span style="display:inline-block;width:20px"></span>(도달 가능한 음만 표시)':'첫 클릭=최저 시작음<span style="color:var(--accent);font-weight:700">■</span><span style="display:inline-block;width:20px"></span>두번째 클릭=최고 시작음<span style="color:var(--accent2);font-weight:700">■</span><span style="display:inline-block;width:20px"></span>실제 사용 음역<span style="color:var(--accent3);font-weight:700;opacity:0.7">■</span>';}
+  const rngInfo=document.createElement('div');rngInfo.id='adv-rng-info';rngInfo.style.cssText='font-size:0.72rem;color:var(--text2);margin-bottom:4px;line-height:1.5;max-width:100%;';
+  function updateRngInfo(){
+    const chip=(c)=>'<span style="color:'+c+';font-weight:700">■</span>';
+    const legendCommon='<span style="display:inline-flex;flex-wrap:wrap;gap:4px 14px;align-items:center;">'
+      +'<span>-첫 클릭'+chip('var(--accent)')+'</span>'
+      +'<span>두번째 클릭'+chip('var(--accent2)')+'</span>';
+    if(adv_dir==='loop'){
+      rngInfo.innerHTML=legendCommon+'<span>(도달 가능한 음만 표시)</span></span>';
+    } else {
+      rngInfo.innerHTML=legendCommon+'<span>실제 사용 음역'+chip('var(--accent3)')+'</span></span>'
+        +'<div style="margin-top:5px;">*클릭 순서로 진행 방향이 정해져요</div>'
+        +'<div style="opacity:0.85;">· 저음 → 고음 순으로 누르면 <b>상행</b></div>'
+        +'<div style="opacity:0.85;">· 고음 → 저음 순으로 누르면 <b>하행</b>으로 시작합니다</div>'
+        +'<div style="opacity:0.7;font-size:0.68rem;margin-top:2px;">(첫 클릭이 시작 첫음, 두번째 클릭이 도착 첫음)</div>';
+    }
+  }
   updateRngInfo();rngSec.appendChild(rngInfo);
 
   const ADV_PMIN=41,ADV_PMAX=85; // F2(41)~C#6(85) 남성 음역
@@ -2996,6 +3063,17 @@ function buildAdvancedPanel(body){
   function calcLoopReachable(startMidi,iv){
     const r=new Set();let m=startMidi+iv;while(m<=ADV_PMAX){r.add(m);m+=iv;}m=startMidi-iv;while(m>=ADV_PMIN){r.add(m);m-=iv;}return r;
   }
+  // 기본 모드: 시작음에서 선택 간격(들)의 배수에 걸리는 음 합집합 (무작위 ON이면 null=흐림 없음)
+  function calcBasicReachable(startMidi){
+    if(adv_intervalRandom)return null;            // 무작위 → 흐림 없음
+    if(!adv_intervalOrder||adv_intervalOrder.length===0)return null; // 간격 0 → 흐림 없음
+    const r=new Set();
+    adv_intervalOrder.forEach(iv=>{
+      let m=startMidi+iv;while(m<=ADV_PMAX){r.add(m);m+=iv;}
+      m=startMidi-iv;while(m>=ADV_PMIN){r.add(m);m-=iv;}
+    });
+    return r;
+  }
 
   function renderAdvRangeGrid(){
     rngGridInner.innerHTML='';
@@ -3004,6 +3082,8 @@ function buildAdvancedPanel(body){
     const dispDir=(adv_rangeFirstMidi!==null)?1:adv_rangeStartDir;
     const maxOffset=getPatternMaxOffset();
     const reachable=(isLoop&&adv_rangeFirstMidi!==null&&iv>0)?calcLoopReachable(adv_rangeFirstMidi,iv):null;
+    // 기본 모드 흐림용: 시작음 1개 찍힌 상태에서만 계산
+    const basicReach=(!isLoop&&adv_rangeFirstMidi!==null)?calcBasicReachable(adv_rangeFirstMidi):null;
     const allBtns=[];
 
     for(let midi=ADV_PMIN;midi<=ADV_PMAX;midi++){
@@ -3013,7 +3093,11 @@ function buildAdvancedPanel(body){
       if(isLoop&&adv_rangeFirstMidi!==null&&reachable!==null){
         if(midi===adv_rangeFirstMidi)cls+=' range-start';
         else if(!reachable.has(midi)){btn.disabled=true;btn.style.opacity='0.2';btn.style.cursor='not-allowed';}
-      } else if(adv_rangeFirstMidi!==null){if(midi===adv_rangeFirstMidi)cls+=' range-start';}
+      } else if(adv_rangeFirstMidi!==null){
+        if(midi===adv_rangeFirstMidi)cls+=' range-start';
+        // 기본 모드: 간격에 안 걸리는 음은 살짝만 흐림(클릭 가능함을 직관적으로)
+        else if(basicReach!==null&&!basicReach.has(midi)){btn.style.opacity='0.6';}
+      }
       else if(adv_rangeSelected){
         if(isLoop){
           if(midi===Math.min(adv_loopStart,adv_loopEnd))cls+=' range-start';
@@ -3055,7 +3139,7 @@ function buildAdvancedPanel(body){
       rngGridInner.appendChild(row);
     }
   }
-  renderAdvRangeGrid();rngSec.appendChild(rngGridInner);
+  renderAdvRangeGrid();rngSec.appendChild(rngGridOuter);
 
   buildTempoUI(ap);
   const apWrap=document.createElement('div');apWrap.style.cssText='width:100%;display:flex;justify-content:center;';
