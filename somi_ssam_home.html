@@ -218,6 +218,7 @@ button{font-family:inherit;cursor:pointer;}
 .somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;font-family:inherit;cursor:pointer;}
 </style>
 <script src="stamps.js"></script>
+<script src="common_core.js"></script>
 </head>
 <body>
 
@@ -447,7 +448,6 @@ function renameLevel(id,l) { const lv=levelSettings.find(x=>x.id===id); if(lv){l
 
 function isLocked(pid, patternId)       { if(!patternLocks[pid]) return true; return patternLocks[pid][patternId]!==true; }
 function setLock(pid, patternId, locked){ if(!patternLocks[pid]) patternLocks[pid]={}; patternLocks[pid][patternId]=!locked; savePatternLocks(); }
-function getPatternLevel(patternId)     { return patternLevelOverrides[patternId]||(patternData.find(p=>p.id===patternId)||{}).level; }
 function getAdvSettings(patternId)      { if(!advancedSettings[patternId]) advancedSettings[patternId]={enabled:false,intervals:[1,2],random:false}; return advancedSettings[patternId]; }
 function getClassInfo(pid)              { return classSettings[pid]||{voClass:null,extras:[]}; }
 function getDaysSinceLesson(pid)        { const s=lessonStarts[pid]; if(!s) return null; return Math.floor((new Date()-new Date(s))/(1000*60*60*24))+1; }
@@ -610,7 +610,7 @@ const CLASS_MAP = {
   '전문반':{ cssClass:'cls-pro',  color:'#6af7a0', label:'전문' },
   '취미반':{ cssClass:'cls-hobby',color:'#6ac8f7', label:'취미' },
   '단기반':{ cssClass:'cls-short',color:'#c49a6c', label:'단기' },
-  '숨고르기':{ cssClass:'cls-breath',color:'#7e8aa3', label:'휴식' },
+  '숨고르기':{ cssClass:'cls-breath',color:'#7e8aa3', label:'숨고르기' },
   '종료반':{ cssClass:'cls-ended', color:'#6b6b72', label:'종료' },
   '테스터':{ cssClass:'cls-tester',color:'#a98cf5', label:'테스터' },
 };
@@ -618,7 +618,7 @@ const CLASS_MAP = {
 const EXCLUDED_FROM_TOTAL = ['종료반','테스터'];
 // 괄호로 따로 세는 반 + 표기 라벨
 const COUNT_ASIDE = [
-  { cls:'숨고르기', label:'휴식' },
+  { cls:'숨고르기', label:'숨고르기' },
   { cls:'테스터',  label:'테스터' },
 ];
 
@@ -1442,14 +1442,14 @@ function renderPatternManager() {
 
   const cancelBtn=document.createElement('button');
   cancelBtn.id='pm-cancel-btn';
-  cancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;';
+  cancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;align-items:center;justify-content:center;';
   cancelBtn.textContent='취소';
   cancelBtn.onclick=()=>{ pmPendingInit(); renderPatternTable(); updatePmSaveBtnState(); };
 
   const saveBtn=document.createElement('button');
   saveBtn.id='pm-save-btn';
   saveBtn.disabled=true;
-  saveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;';
+  saveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;display:flex;align-items:center;justify-content:center;';
   saveBtn.textContent='저장';
   saveBtn.onclick=()=>{
     if(!pmDirty) return;
@@ -1817,12 +1817,12 @@ function renderLevelClassifier() {
   const lcSaveWrap=document.createElement('div'); lcSaveWrap.id='lc-save-wrap';
   lcSaveWrap.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:100px;';
   const lcCancelBtn=document.createElement('button'); lcCancelBtn.id='lc-cancel-btn';
-  lcCancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;';
+  lcCancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;align-items:center;justify-content:center;';
   lcCancelBtn.textContent='취소';
   lcCancelBtn.onclick=()=>{ window.lcPending={}; renderLevelClassifier(); };
   const lcSaveBtn=document.createElement('button'); lcSaveBtn.id='lc-save-btn';
   lcSaveBtn.disabled=true;
-  lcSaveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;';
+  lcSaveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;display:flex;align-items:center;justify-content:center;';
   lcSaveBtn.textContent='저장';
   lcSaveBtn.onclick=()=>{
     const modeKeyMap={'기본':'basic','연습':'free','심화':'adv','심화1':'adv','심화2':'adv2','목풀기1':'warmup1','목풀기2':'warmup2','목풀기3':'warmup3'};
@@ -1844,13 +1844,14 @@ function renderLevelClassifier() {
   };
   lcSaveWrap.appendChild(lcCancelBtn); lcSaveWrap.appendChild(lcSaveBtn);
 
+  // 저장 묶음 + 레벨 일괄지정 버튼 한 줄
   const lcSaveRow=document.createElement('div');
   lcSaveRow.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;';
   lcSaveRow.appendChild(lcSaveWrap);
   lcSaveRow.appendChild(topBar);
   container.appendChild(lcSaveRow);
 
-  const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap'; tblWrap.style.cssText='overflow-x:auto;position:relative;width:100%;';
+  const tblWrap=document.createElement('div'); tblWrap.id='lc-table-wrap'; tblWrap.style.cssText='overflow:visible;position:relative;width:100%;';
 
   function refreshDropdownLabels(){
     tblWrap.querySelectorAll('[data-lv-pid]').forEach(btn=>{
@@ -1877,7 +1878,7 @@ function renderLevelClassifier() {
     const thName=document.createElement('th'); thName.style.cssText='text-align:left;padding:7px 4px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.7rem;word-break:keep-all;'; thName.textContent='패턴';
     hRow.appendChild(thEmpty); hRow.appendChild(thName);
     const thLevel=document.createElement('th');
-    thLevel.style.cssText='padding:7px 2px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.7rem;text-align:center;width:80px;';
+    thLevel.style.cssText='padding:7px 2px;border-bottom:2px solid var(--border);color:var(--text2);font-size:0.7rem;text-align:center;width:92px;';
     thLevel.textContent='레벨'; hRow.appendChild(thLevel);
     const tbody=tbl.createTBody();
     allCheckboxes.length=0;
@@ -1936,11 +1937,11 @@ function renderLevelClassifier() {
           const lv=levelSettings.find(l=>l.id===curLvId);
           const c=getLvColor(curLvId);
           const btn=document.createElement('button');
-          btn.style.cssText=`font-size:0.72rem;padding:3px 6px;border-radius:6px;border:1px solid ${curLvId?c:'var(--border)'};background:transparent;color:${curLvId?c:'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${curLvId?'700':'400'};white-space:nowrap;width:100%;box-sizing:border-box;`;
+          btn.style.cssText=`font-size:0.75rem;padding:4px 10px;border-radius:8px;border:1px solid ${curLvId?c:'var(--border)'};background:transparent;color:${curLvId?c:'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;width:100%;box-sizing:border-box;transition:all 0.15s;`;
           btn.textContent=(lv?lv.label:'—')+' ▾';
           btn.setAttribute('data-lv-pid',p.id);
           const menu=document.createElement('div');
-          menu.style.cssText='display:none;position:absolute;top:110%;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:50;min-width:80px;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+          menu.style.cssText='display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:200;min-width:80px;box-shadow:0 4px 16px rgba(0,0,0,0.4);';
 
           btn.onclick=(e)=>{
             e.stopPropagation();
@@ -1998,19 +1999,19 @@ function renderProfileManage() {
   const pm=document.getElementById('t-profile-manage'); pm.innerHTML='';
   let pending=JSON.parse(JSON.stringify(classSettings));
   const origSnapshot=JSON.parse(JSON.stringify(classSettings));
+  // 레슨시작일도 저장 버튼으로 함께 확정 (즉시저장 X)
+  let pendingLessons=JSON.parse(JSON.stringify(lessonStarts));
+  const origLessons=JSON.parse(JSON.stringify(lessonStarts));
   let pmSortAsc=true, pmClassFilter=null;
 
   const filterBar=document.createElement('div'); filterBar.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center;';
-  const sortBtn=document.createElement('button'); sortBtn.style.cssText='padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:0.78rem;cursor:pointer;'; sortBtn.textContent='가나다 ↑';
-  sortBtn.onclick=()=>{ pmSortAsc=!pmSortAsc; sortBtn.textContent='가나다 '+(pmSortAsc?'↑':'↓'); rebuildRows(); };
-  filterBar.appendChild(sortBtn);
 
   // ── [2번] 반 필터 버튼에 색상 배지 반영 ──
   ['취미반','전문반','입시반','단기반','숨고르기','테스터','종료반'].forEach(cls=>{
     const clsColor = getClassColor(cls);
     const b=document.createElement('button');
     b.style.cssText=`padding:4px 10px;border-radius:20px;border:1px solid ${clsColor||'var(--border)'};background:${clsColor?clsColor+'22':'var(--surface2)'};color:${clsColor||'var(--text2)'};font-size:0.78rem;cursor:pointer;transition:all 0.15s;font-weight:600;`;
-    b.textContent=cls; b.setAttribute('data-cls',cls);
+    b.textContent=cls.replace(/반$/,''); b.setAttribute('data-cls',cls);
     b.onclick=()=>{
       pmClassFilter=pmClassFilter===cls?null:cls;
       filterBar.querySelectorAll('[data-cls]').forEach(x=>{
@@ -2026,30 +2027,31 @@ function renderProfileManage() {
     };
     filterBar.appendChild(b);
   });
-  pm.appendChild(filterBar);
 
-  // 저장/취소 버튼 행
+  // 저장/취소 묶음 (패턴 활성화 버튼과 동일 디자인: 고정폭 분할, 레이아웃 불변)
   const pmBtnRow=document.createElement('div');
-  pmBtnRow.style.cssText='display:flex;gap:8px;margin-top:14px;';
+  pmBtnRow.style.cssText='display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;width:100px;margin-right:4px;';
 
   const pmCancelBtn=document.createElement('button');
   pmCancelBtn.id='pm-profile-cancel-btn';
-  pmCancelBtn.style.cssText='display:none;flex:1;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;';
+  pmCancelBtn.style.cssText='display:none;flex:1;padding:6px 0;border:none;border-right:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;align-items:center;justify-content:center;';
   pmCancelBtn.textContent='취소';
   pmCancelBtn.onclick=()=>{
     pending=JSON.parse(JSON.stringify(origSnapshot));
+    pendingLessons=JSON.parse(JSON.stringify(origLessons));
     rebuildRows();
   };
 
   const saveBtn=document.createElement('button');
   saveBtn.id='pm-profile-save-btn';
   saveBtn.disabled=true;
-  saveBtn.style.cssText='flex:1;padding:12px;border-radius:10px;border:none;background:var(--accent);color:white;font-family:inherit;font-size:0.9rem;font-weight:600;cursor:not-allowed;opacity:0.4;transition:all 0.2s;margin-top:0;';
-  saveBtn.textContent='반 설정 저장';
+  saveBtn.style.cssText='flex:1;padding:6px 0;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:not-allowed;opacity:0.5;display:flex;align-items:center;justify-content:center;';
+  saveBtn.textContent='저장';
   saveBtn.onclick=()=>{
     if(saveBtn.disabled) return;
     const prevSettings=JSON.parse(JSON.stringify(classSettings));
     classSettings=pending; saveClassSettings();
+    lessonStarts=JSON.parse(JSON.stringify(pendingLessons)); saveLessonStarts();
     const allPatterns=[
       ...JSON.parse(localStorage.getItem('somi_vocal_patterns')||'[]'),
       ...JSON.parse(localStorage.getItem('somi_breath_patterns')||'[]'),
@@ -2127,7 +2129,7 @@ function renderProfileManage() {
     patternLocks=locks; savePatternLocks();
     saveRestStartDates();
     localStorage.setItem('somi_pattern_locks_backup',JSON.stringify(backups));
-    saveBtn.textContent='✓ 저장됐어요!';
+    saveBtn.textContent='✓ 저장됨';
     saveBtn.style.background='var(--accent3)';
     saveBtn.style.color='#1a1000';
     setTimeout(()=>{ alert('저장됐어요!'); renderTeacher(); },300);
@@ -2136,89 +2138,104 @@ function renderProfileManage() {
   pmBtnRow.appendChild(pmCancelBtn);
   pmBtnRow.appendChild(saveBtn);
 
-  // ── [4번] 저장 버튼: 실제 변경 시에만 활성화 ──
   function updateProfileSaveBtnState(){
-    const changed=JSON.stringify(pending)!==JSON.stringify(origSnapshot);
+    const changed=JSON.stringify(pending)!==JSON.stringify(origSnapshot)
+      || JSON.stringify(pendingLessons)!==JSON.stringify(origLessons);
     saveBtn.disabled=!changed;
-    // ── [4번] 활성/비활성 스타일 ──
     if(changed){
+      pmCancelBtn.style.display='flex';
       saveBtn.style.opacity='1';
       saveBtn.style.cursor='pointer';
       saveBtn.style.background='var(--counting)';
       saveBtn.style.color='#1a1000';
+      pmBtnRow.style.borderColor='var(--counting)';
     } else {
-      saveBtn.style.opacity='0.4';
+      pmCancelBtn.style.display='none';
+      saveBtn.style.opacity='0.45';
       saveBtn.style.cursor='not-allowed';
-      saveBtn.style.background='var(--accent)';
-      saveBtn.style.color='white';
+      saveBtn.style.background='var(--surface2)';
+      saveBtn.style.color='var(--text2)';
+      pmBtnRow.style.borderColor='var(--border)';
     }
-    pmCancelBtn.style.display=changed?'flex':'none';
+  }
+
+  // ── 저장 완료 판정: 저장된 값(classSettings/lessonStarts) 기준 ──
+  // 완료 조건: 반 + 레슨시작일 (+ 계좌칸이 뜨는 반이면 계좌까지). 숨고르기는 계좌 불필요.
+  function isProfileComplete(pid){
+    const ci=classSettings[pid]||{};
+    if(!ci.voClass) return false;
+    if(!lessonStarts[pid]) return false;
+    if(ci.voClass!=='숨고르기' && !ci.account) return false;
+    return true;
   }
 
   function rebuildRows(){
     pm.querySelectorAll('.profile-row').forEach(r=>r.remove());
     if(pmBtnRow.parentNode) pmBtnRow.remove();
+    if(filterBar.parentNode) filterBar.remove();
+    // 저장/취소 묶음을 반 필터 줄 맨 앞에 넣어 한 줄로
+    if(filterBar.firstChild!==pmBtnRow) filterBar.insertBefore(pmBtnRow, filterBar.firstChild);
+    pm.appendChild(filterBar);
 
-    // ── [6번] 프로필 관리 하단은 가나다순만 (단, 반 미배정은 최상단) ──
+    // ── [6번] 프로필 관리 하단은 가나다순 (단, 저장 완료 전 미설정은 최상단) ──
     let list=[...profiles];
     if(pmClassFilter) list=list.filter(p=>(pending[p.id]||{}).voClass===pmClassFilter);
     list.sort((a,b)=>{
-      const aHas=!!(pending[a.id]||{}).voClass;
-      const bHas=!!(pending[b.id]||{}).voClass;
-      if(!aHas && bHas) return -1;
-      if(aHas && !bHas) return 1;
-      return pmSortAsc?a.name.localeCompare(b.name,'ko'):b.name.localeCompare(a.name,'ko');
+      // 저장 완료(classSettings) 기준으로 미설정 판정 → 저장 전엔 임시 선택해도 위치 안 바뀜
+      const aDone=isProfileComplete(a.id);
+      const bDone=isProfileComplete(b.id);
+      if(!aDone && bDone) return -1;
+      if(aDone && !bDone) return 1;
+      return a.name.localeCompare(b.name,'ko');
     });
 
     list.forEach(p=>{
       const ci=pending[p.id]||{voClass:null,extras:[],account:null};
-      const isUnassigned=!ci.voClass;
+      const isUnassigned=!isProfileComplete(p.id);
       const row=document.createElement('div'); row.className='profile-row';
       row.style.cssText=isUnassigned
         ? 'padding:12px 8px;border-bottom:none;background:rgba(220,60,60,0.07);border:4px solid #dc3c3c;border-radius:8px;margin-bottom:6px;'
         : 'padding:12px 0;border-bottom:1px solid var(--border);';
 
       const line1=document.createElement('div');
-      line1.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;';
+      line1.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;width:100%;';
+      const line2=document.createElement('div');
+      line2.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:nowrap;';
 
-      // 이름
+      // 이름 (볼드) + 성별/나이 (기본 두께)
       const nameSpan=document.createElement('span');
       nameSpan.style.cssText='font-size:0.9rem;font-weight:700;min-width:60px;';
-      nameSpan.textContent=p.name+' ('+(p.gender==='female'?'여':'남')+(p.birth?', '+calcAge(p.birth):'')+')';
+      nameSpan.textContent=p.name;
       line1.appendChild(nameSpan);
+      const metaSpan=document.createElement('span');
+      metaSpan.style.cssText='font-size:0.82rem;font-weight:400;color:var(--text2);';
+      metaSpan.textContent='('+(p.gender==='female'?'여':'남')+') '+(p.birth?formatBirthAge(p.birth):'');
+      line1.appendChild(metaSpan);
 
-      // 비밀번호 표시
-      const pwWrap=document.createElement('div');
-      pwWrap.style.cssText='display:flex;align-items:center;gap:4px;';
+      // 생년월일 미등록 표시
+      if(!p.birth){
+        const birthFlag=document.createElement('span');
+        birthFlag.style.cssText='font-size:0.68rem;font-weight:700;color:#f76a6a;background:rgba(247,106,106,0.12);border:1px solid #f76a6a55;border-radius:10px;padding:1px 7px;white-space:nowrap;';
+        birthFlag.textContent='생일 미등록';
+        line1.appendChild(birthFlag);
+      }
+
+      // 비밀번호 표시 (평소 숨김 — ··· 메뉴의 '비밀번호 보기'로 토글)
       const pwDisplay=document.createElement('span');
-      pwDisplay.style.cssText='font-size:0.78rem;color:var(--text2);font-family:"DM Mono",monospace;letter-spacing:2px;min-width:50px;';
-      pwDisplay.textContent='••••';
+      pwDisplay.style.cssText='display:none;font-size:0.78rem;color:var(--counting);font-family:"DM Mono",monospace;letter-spacing:1px;';
+      pwDisplay.textContent=p.password||'(없음)';
       let pwVisible=false;
-      const eyeBtn=document.createElement('button');
-      eyeBtn.style.cssText='background:none;border:none;color:var(--text2);cursor:pointer;font-size:0.9rem;padding:2px 4px;line-height:1;transition:color 0.15s;';
-      eyeBtn.textContent='👁';
-      eyeBtn.title='비밀번호 보기';
-      eyeBtn.onclick=(e)=>{
-        e.stopPropagation();
-        pwVisible=!pwVisible;
-        pwDisplay.textContent=pwVisible?(p.password||''):'••••';
-        pwDisplay.style.color=pwVisible?'var(--counting)':'var(--text2)';
-        pwDisplay.style.letterSpacing=pwVisible?'1px':'2px';
-        eyeBtn.style.color=pwVisible?'var(--counting)':'var(--text2)';
-      };
-      pwWrap.appendChild(pwDisplay);
-      pwWrap.appendChild(eyeBtn);
-      line1.appendChild(pwWrap);
+      line1.appendChild(pwDisplay);
 
       // ── [2번] 반 선택 드롭다운 (색상 배지 포함) ──
-      const classWrap=document.createElement('div'); classWrap.style.cssText='position:relative;';
+      const classWrap=document.createElement('div'); classWrap.style.cssText='position:relative;width:96px;flex-shrink:0;';
       const hasClass=!!ci.voClass;
       const curClsColor = getClassColor(ci.voClass);
       const classBtn=document.createElement('button');
       if(hasClass && curClsColor){
-        classBtn.style.cssText=`font-size:0.82rem;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid ${curClsColor};background:${curClsColor}22;color:${curClsColor};cursor:pointer;font-family:inherit;`;
+        classBtn.style.cssText=`font-size:0.8rem;font-weight:800;padding:4px 12px;border-radius:20px;border:none;background:${curClsColor};color:#1a1a00;cursor:pointer;font-family:inherit;width:100%;`;
       } else {
-        classBtn.style.cssText=`font-size:0.82rem;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit;`;
+        classBtn.style.cssText=`font-size:0.8rem;font-weight:700;padding:4px 12px;border-radius:20px;border:1.5px dashed #dc3c3c;background:rgba(220,60,60,0.08);color:#dc3c3c;cursor:pointer;font-family:inherit;width:100%;`;
       }
       classBtn.textContent=(ci.voClass||'반 선택')+' ▾';
       const classDd=document.createElement('div');
@@ -2244,20 +2261,23 @@ function renderProfileManage() {
           e.stopPropagation();
           if(!pending[p.id]) pending[p.id]={voClass:null,extras:[],account:null};
           pending[p.id].voClass=cls;
-          if(!pending[p.id]._accountManual)
-            pending[p.id].account=cls==='입시반'?'B':(cls&&cls!=='숨고르기'?'A':null);
+          // 계좌: 수동지정 안 했고 아직 계좌 없을 때만 기본 배정. 기존 계좌는 어떤 반으로 옮겨도 유지.
+          if(!pending[p.id]._accountManual && !pending[p.id].account)
+            pending[p.id].account=cls==='입시반'?'B':(cls?'A':null);
           classDd.style.display='none'; rebuildRows();
         };
         classDd.appendChild(opt);
       });
-      classWrap.appendChild(classBtn); classWrap.appendChild(classDd); line1.appendChild(classWrap);
+      classWrap.appendChild(classBtn); classWrap.appendChild(classDd); line2.appendChild(classWrap);
 
       // 리베 / 시창
       const extras=ci.extras||[];
       ['리베','시창'].forEach(tag=>{
         const on=extras.includes(tag);
         const tb=document.createElement('button');
-        tb.style.cssText=`font-size:0.78rem;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid ${on?'var(--accent3)':'var(--border)'};background:${on?'rgba(106,247,200,0.15)':'var(--surface2)'};color:${on?'var(--accent3)':'var(--text2)'};cursor:pointer;font-family:inherit;transition:all 0.15s;`;
+        tb.style.cssText=on
+          ? `font-size:0.78rem;font-weight:800;width:52px;flex-shrink:0;padding:4px 0;border-radius:20px;border:none;background:var(--accent3);color:#0a2e22;cursor:pointer;font-family:inherit;transition:all 0.15s;`
+          : `font-size:0.78rem;font-weight:600;width:52px;flex-shrink:0;padding:4px 0;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all 0.15s;`;
         tb.textContent=tag;
         tb.onclick=()=>{
           if(!pending[p.id]) pending[p.id]={voClass:null,extras:[]};
@@ -2266,7 +2286,7 @@ function renderProfileManage() {
           if(idx>=0) pending[p.id].extras.splice(idx,1); else pending[p.id].extras.push(tag);
           rebuildRows();
         };
-        line1.appendChild(tb);
+        line2.appendChild(tb);
       });
 
       // ··· 메뉴
@@ -2275,10 +2295,35 @@ function renderProfileManage() {
       menuBtn.style.cssText='background:none;border:none;color:var(--text2);font-size:1.1rem;cursor:pointer;padding:2px 8px;border-radius:6px;letter-spacing:1px;';
       menuBtn.textContent='···';
       const menuDd=document.createElement('div');
-      menuDd.style.cssText='display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:60;min-width:90px;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+      menuDd.style.cssText='display:none;position:absolute;top:110%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:60;min-width:148px;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
       menuDd.className='pm-dropdown';
+
+      // 🔑 비밀번호 보기 (이름 옆 토글)
+      const pwOpt=document.createElement('button');
+      pwOpt.style.cssText='display:block;width:100%;text-align:left;padding:7px 12px;border:none;border-radius:6px;white-space:nowrap;background:transparent;color:var(--text);font-size:0.85rem;cursor:pointer;font-family:inherit;';
+      pwOpt.textContent='🔑 비밀번호 보기';
+      pwOpt.onclick=(e)=>{
+        e.stopPropagation();
+        pwVisible=!pwVisible;
+        pwDisplay.style.display=pwVisible?'inline':'none';
+        pwOpt.textContent=pwVisible?'🙈 비밀번호 숨기기':'🔑 비밀번호 보기';
+        menuDd.style.display='none';
+      };
+      menuDd.appendChild(pwOpt);
+
+      // 🎂 생년월일 등록/수정 (그 줄에 날짜칸 펼침)
+      const birthOpt=document.createElement('button');
+      birthOpt.style.cssText='display:block;width:100%;text-align:left;padding:7px 12px;border:none;border-radius:6px;white-space:nowrap;background:transparent;color:var(--text);font-size:0.85rem;cursor:pointer;font-family:inherit;';
+      birthOpt.textContent=(p.birth?'🎂 생년월일 수정':'🎂 생년월일 등록');
+      birthOpt.onclick=(e)=>{
+        e.stopPropagation();
+        menuDd.style.display='none';
+        birthEditWrap.style.display=birthEditWrap.style.display==='none'?'flex':'none';
+      };
+      menuDd.appendChild(birthOpt);
+
       const delOpt=document.createElement('button');
-      delOpt.style.cssText='display:block;width:100%;text-align:left;padding:7px 12px;border:none;border-radius:6px;background:transparent;color:#f76a6a;font-size:0.85rem;cursor:pointer;font-family:inherit;';
+      delOpt.style.cssText='display:block;width:100%;text-align:left;padding:7px 12px;border:none;border-radius:6px;white-space:nowrap;background:transparent;color:#f76a6a;font-size:0.85rem;cursor:pointer;font-family:inherit;';
       delOpt.textContent='🗑 삭제';
       delOpt.onclick=(e)=>{ e.stopPropagation(); if(confirm(p.name+'을 삭제할까요?')) deleteProfile(profiles.indexOf(p)); };
       menuDd.appendChild(delOpt);
@@ -2290,31 +2335,53 @@ function renderProfileManage() {
         document.querySelectorAll('.pm-dropdown').forEach(d=>d.style.display='none');
         if(!isOpen) menuDd.style.display='block';
       };
-      menuWrap.appendChild(menuBtn); menuWrap.appendChild(menuDd); line1.appendChild(menuWrap);
-      row.appendChild(line1);
-
-      const line2=document.createElement('div');
-      line2.style.cssText='display:flex;align-items:center;gap:12px;flex-wrap:wrap;';
-      const dateWrap=document.createElement('div'); dateWrap.style.cssText='display:flex;align-items:center;gap:6px;';
+      menuWrap.appendChild(menuBtn); menuWrap.appendChild(menuDd);
+      // 레슨 시작일 (2줄로 이동)
+      const dateWrap=document.createElement('div'); dateWrap.style.cssText='display:flex;align-items:center;gap:6px;margin-left:auto;';
       const dateLabel=document.createElement('span'); dateLabel.style.cssText='font-size:0.75rem;color:var(--text2);white-space:nowrap;'; dateLabel.textContent='레슨 시작일';
       const dateInp=document.createElement('input'); dateInp.type='date';
-      dateInp.value=lessonStarts[p.id]||'';
+      dateInp.value=pendingLessons[p.id]||'';
       dateInp.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.78rem;cursor:pointer;';
-      dateInp.onchange=()=>{ lessonStarts[p.id]=dateInp.value; saveLessonStarts(); };
-      dateWrap.appendChild(dateLabel); dateWrap.appendChild(dateInp); line2.appendChild(dateWrap);
+      dateInp.onchange=()=>{ pendingLessons[p.id]=dateInp.value; updateProfileSaveBtnState(); };
+      dateWrap.appendChild(dateLabel); dateWrap.appendChild(dateInp);
 
-      if(ci.voClass&&ci.voClass!=='숨고르기'){
+      // ··· 메뉴 (1줄 맨 오른쪽)
+      menuWrap.style.marginLeft='auto';
+      line1.appendChild(menuWrap);
+      row.appendChild(line1);
+
+      // 🎂 생년월일 수정 펼침칸 (··· 메뉴에서 토글) — 2줄 아래에 펼침
+      const birthEditWrap=document.createElement('div');
+      birthEditWrap.style.cssText='display:none;align-items:center;gap:6px;width:100%;margin-top:4px;';
+      const birthLabel=document.createElement('span'); birthLabel.style.cssText='font-size:0.75rem;color:var(--text2);white-space:nowrap;'; birthLabel.textContent='생년월일';
+      const birthInp=document.createElement('input'); birthInp.type='date';
+      birthInp.value=p.birth||'';
+      birthInp.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.78rem;cursor:pointer;';
+      const birthSave=document.createElement('button');
+      birthSave.style.cssText='font-size:0.75rem;font-weight:600;padding:4px 10px;border-radius:8px;border:none;background:var(--accent);color:white;cursor:pointer;font-family:inherit;';
+      birthSave.textContent='저장';
+      birthSave.onclick=()=>{
+        p.birth=birthInp.value||'';
+        saveProfiles();
+        rebuildRows();
+      };
+      birthEditWrap.appendChild(birthLabel); birthEditWrap.appendChild(birthInp); birthEditWrap.appendChild(birthSave);
+
+      if(ci.voClass){
         const curAcc=(ci.account)||(ci.voClass==='입시반'?'B':'A');
-        const accWrap=document.createElement('div'); accWrap.style.cssText='position:relative;';
+        // 계좌 파스텔톤: A=파스텔 주황, B=파스텔 블루
+        const accBg=(a)=>a==='B'?'#cfe3ff':'#ffe6c2';
+        const accInk=(a)=>a==='B'?'#1e4e8c':'#8a5a12';
+        const accWrap=document.createElement('div'); accWrap.style.cssText='position:relative;width:82px;flex-shrink:0;';
         const accBtn=document.createElement('button');
-        accBtn.style.cssText=`font-size:0.78rem;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--counting);background:rgba(247,194,106,0.15);color:var(--counting);cursor:pointer;font-family:inherit;`;
+        accBtn.style.cssText=`font-size:0.78rem;font-weight:800;padding:4px 0;border-radius:20px;border:none;background:${accBg(curAcc)};color:${accInk(curAcc)};cursor:pointer;font-family:inherit;width:100%;`;
         accBtn.textContent='계좌 '+curAcc+' ▾';
         const accDd=document.createElement('div');
         accDd.style.cssText='display:none;position:absolute;top:110%;left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:50;min-width:90px;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
         accDd.className='pm-dropdown';
         ['A','B'].forEach(acc=>{
           const opt=document.createElement('button'); const isSel=curAcc===acc;
-          opt.style.cssText=`display:block;width:100%;text-align:left;padding:6px 10px;border:none;border-radius:6px;background:${isSel?'rgba(247,194,106,0.18)':'transparent'};color:${isSel?'var(--counting)':'var(--text)'};font-size:0.83rem;cursor:pointer;font-family:inherit;`;
+          opt.style.cssText=`display:block;width:100%;text-align:left;padding:6px 10px;border:none;border-radius:6px;background:${isSel?accBg(acc):'transparent'};color:${isSel?accInk(acc):'var(--text)'};font-size:0.83rem;font-weight:${isSel?'800':'400'};cursor:pointer;font-family:inherit;`;
           opt.textContent=(isSel?'✓ ':'')+'계좌 '+acc;
           opt.onclick=(e)=>{
             e.stopPropagation();
@@ -2333,11 +2400,12 @@ function renderProfileManage() {
         };
         accWrap.appendChild(accBtn); accWrap.appendChild(accDd); line2.appendChild(accWrap);
       }
+      line2.appendChild(dateWrap);
 
       row.appendChild(line2);
+      row.appendChild(birthEditWrap);
       pm.appendChild(row);
     });
-    pm.appendChild(pmBtnRow);
     updateProfileSaveBtnState();
   }
   rebuildRows();
