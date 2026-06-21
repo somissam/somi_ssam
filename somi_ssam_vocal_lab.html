@@ -92,7 +92,7 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 .vbn.active-cnt{color:var(--counting);text-shadow:0 0 24px rgba(247,194,106,0.8),0 0 48px rgba(247,194,106,0.4);transform:scale(1.15);}
 .vbn.active-pat{color:var(--accent2);text-shadow:0 0 24px rgba(247,106,200,0.8),0 0 48px rgba(247,106,200,0.4);transform:scale(1.15);}
 .vocal-label-box{background:var(--surface2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:364px;display:flex;flex-direction:row;align-items:center;padding:22px 16px;gap:14px;}
-.vlabel-key-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;width:64px;min-height:48px;overflow:hidden;}
+.vlabel-key-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;width:64px;height:48px;min-height:48px;max-height:48px;overflow:hidden;}
 .vlabel-key-panel .vkp-midi{font-family:'DM Mono',monospace;font-size:1.7rem;font-weight:700;color:var(--accent3);line-height:1;width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .vlabel-key-panel .vkp-dir{font-size:0.65rem;color:var(--text2);white-space:nowrap;min-height:1em;text-align:center;width:100%;overflow:hidden;text-overflow:ellipsis;}
 .vlabel-labels-area{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:0;flex:1;min-width:0;}
@@ -101,6 +101,12 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 .vlabel-item.eng{font-family:'DM Mono',monospace;font-size:1.7rem;line-height:1.1;}
 .vlabel-item.kor{font-size:1.15rem;}
 .vlabel-item.lit{color:var(--accent2);text-shadow:0 0 8px var(--accent2);}
+/* 으어2(7글자) 전용: 글자 폰트 고정(78%) — 목풀기2/심화, 발음B on/off, 렌더 경로 무관 항상 동일 크기 */
+#vb-lbls-row-7 .vlabel-item.eng{font-size:1.326rem;}
+#vb-lbls-row-7 .vlabel-item.kor{font-size:0.897rem;}
+#vb-lbls-row-7th .vlabel-item.kor{font-size:1.05rem;}
+#vb-lbls-row-chroma .vlabel-item.kor{font-size:1.05rem;}
+#vb-lbls-row-chroma .vlabel-item.eng{font-size:1.1rem;letter-spacing:-0.02em;}
 .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;text-align:center;width:100%;max-width:440px;min-height:96px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;}
 .info-box.vocal-mode{min-height:125px;height:auto;padding:16px 24px;}
 .info-action{font-size:2.1rem;font-weight:700;transition:all 0.2s;line-height:1.2;}
@@ -467,7 +473,7 @@ const VOCAL_PATTERNS = [
     name: "ieaou • 4beat (11111) (1)",
     cardDesc: "이에아오우 · 4분음표 · 도도도도도",
     pracTitle: "ieaou(이에아오우) · 4beat (1)",
-    baseTempo: 70,
+    baseTempo: 60,
     pattern5:   [1,1,1,1,1],
     engLabels5: ['i','e','a','o','u'],
     korLabels5: ['이','에','아','오','우'],
@@ -487,7 +493,7 @@ const VOCAL_PATTERNS = [
     name: "ieaou • 4beat (11111) (2)",
     cardDesc: "이에아오우 · 4분음표 · 도도도도도",
     pracTitle: "ieaou(이에아오우) · 4beat (2)",
-    baseTempo: 70,
+    baseTempo: 60,
     pattern5:   [1,1,1,1,1],
     engLabels5: ['i','e','a','o','u'],
     korLabels5: ['이','에','아','오','우'],
@@ -496,6 +502,21 @@ const VOCAL_PATTERNS = [
     korLabels7: ['이','에','아','오','우','으','어'],
     noteDiv: 4,
     display: 'label',
+    /* ── 발음 선택 B (음 하나당 글자 / 패턴 1회 단위 셔플) — 기존 vowelOptions(A)와 완전 독립 ──
+       버튼 라벨과 실제 라벨박스 발음을 분리. 5음/7음 각각 독립 글자배열. */
+    vowelB: {
+      sets: [
+        { key:'ieaou',  label:'ieaou',
+          eng5:['i','e','a','o','u'],            kor5:['이','에','아','오','우'],
+          eng7:['i','e','a','o','u','eu','eo'],  kor7:['이','에','아','오','우','으','어'] },
+        { key:'m_ieaou', label:'M+ieaou',
+          eng5:['ma','mi','mu','me','mo'],              kor5:['마','미','무','메','모'],
+          eng7:['ma','mi','mu','me','mo','meu','meo'],  kor7:['마','미','무','메','모','므','머'] },
+        { key:'n_ieaou', label:'N+ieaou',
+          eng5:['na','ni','nu','ne','no'],              kor5:['나','니','누','네','노'],
+          eng7:['na','ni','nu','ne','no','neu','neo'],  kor7:['나','니','누','네','노','느','너'] },
+      ],
+    },
     modeLabels: ['목풀기2','심화'],
     warmup2: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
     warmup3: { pattern:[1,1,1,1,1], engLabels:['i','e','a','o','u'], korLabels:['이','에','아','오','우'] },
@@ -534,6 +555,19 @@ const VOCAL_PATTERNS = [
     pattern7:   [1,1,1,1,1,1,1],
     engLabels7: ['i','e','a','o','u','eu','eo'],
     korLabels7: ['이','에','아','오','우','으','어'],
+    vowelB: {
+      sets: [
+        { key:'ieaou',  label:'ieaou',
+          eng5:['i','e','a','o','u'],            kor5:['이','에','아','오','우'],
+          eng7:['i','e','a','o','u','eu','eo'],  kor7:['이','에','아','오','우','으','어'] },
+        { key:'m_ieaou', label:'M+ieaou',
+          eng5:['ma','mi','mu','me','mo'],              kor5:['마','미','무','메','모'],
+          eng7:['ma','mi','mu','me','mo','meu','meo'],  kor7:['마','미','무','메','모','므','머'] },
+        { key:'n_ieaou', label:'N+ieaou',
+          eng5:['na','ni','nu','ne','no'],              kor5:['나','니','누','네','노'],
+          eng7:['na','ni','nu','ne','no','neu','neo'],  kor7:['나','니','누','네','노','느','너'] },
+      ],
+    },
     noteDiv: 4,
     display: 'label',
     modeLabels: ['목풀기2','심화'],
@@ -642,7 +676,7 @@ const VOCAL_PATTERNS = [
   },
   {
     id: 'vocal_7th_major_4beat',
-    name: "Major 7th • Sound Type • 4beat (135787531)",
+    name: "Major 7th • 4beat (135787531)",
     cardDesc: "메이저 7화음 · 발음 선택 · 4분음표 · 도미솔시도시솔미도",
     pracTitle: "Major 7th(메이저 세븐) · 4beat (135787531)",
     baseTempo: 70,
@@ -672,7 +706,7 @@ const VOCAL_PATTERNS = [
   },
   {
     id: 'vocal_7th_dominant_4beat',
-    name: "Dominant 7th • Sound Type • 4beat (135b7531)",
+    name: "Dominant 7th • 4beat (135b7531)",
     cardDesc: "도미넌트 7화음 · 발음 선택 · 4분음표 · 도미솔시b도시b솔미도",
     pracTitle: "Dominant 7th(도미넌트 세븐) · 4beat",
     baseTempo: 70,
@@ -698,7 +732,7 @@ const VOCAL_PATTERNS = [
   },
   {
     id: 'vocal_7th_minor_4beat',
-    name: "Minor 7th • Sound Type • 4beat (1b35b75b31)",
+    name: "Minor 7th • 4beat (1b35b75b31)",
     cardDesc: "마이너 7화음 · 발음 선택 · 4분음표 · 도미b솔시b도시b솔미b도",
     pracTitle: "Minor 7th(마이너 세븐) · 4beat",
     baseTempo: 70,
@@ -724,7 +758,7 @@ const VOCAL_PATTERNS = [
   },
   {
     id: 'vocal_7th_minor_major_4beat',
-    name: "Minor Major 7th • Sound Type • 4beat (1b3575b31)",
+    name: "Minor Major 7th • 4beat (1b3575b31)",
     cardDesc: "마이너 메이저 7화음 · 발음 선택 · 4분음표 · 도미b솔시도시솔미b도",
     pracTitle: "Minor Major 7th(마이너 메이저 세븐) · 4beat",
     baseTempo: 70,
@@ -750,7 +784,7 @@ const VOCAL_PATTERNS = [
   },
   {
     id: 'vocal_7th_half_diminished_4beat',
-    name: "Half-diminished 7th • Sound Type • 4beat (1b3b5b7b5b31)",
+    name: "Half-diminished 7th • 4beat (1b3b5b7b5b31)",
     cardDesc: "하프 디미니쉬드 7화음 · 발음 선택 · 4분음표 · 도미b솔b시b도시b솔b미b도",
     pracTitle: "Half-diminished 7th(하프 디미니쉬드 세븐) · 4beat",
     baseTempo: 70,
@@ -776,17 +810,17 @@ const VOCAL_PATTERNS = [
   },
   {
     id: 'vocal_7th_diminished_4beat',
-    name: "Diminished 7th • Sound Type • 4beat (1b3b5bb7b5b31)",
-    cardDesc: "디미니쉬드 7화음 · 발음 선택 · 4분음표 · 도미b솔b라도라솔b미b도",
+    name: "Diminished 7th • 4beat (1b3b5bb7b5b31)",
+    cardDesc: "디미니쉬드 7화음 · 발음 선택 · 4분음표 · 도미b솔b시bb도시bb솔b미b도",
     pracTitle: "Diminished 7th(디미니쉬드 세븐) · 4beat",
     baseTempo: 70,
     offsets: [0,3,6,9,12,9,6,3,0],
     pattern5:   [1,3,5,7,8,7,5,3,1],
     engLabels5: ['','','','','','','','',''],
-    korLabels5: ['도','미b','솔b','라','도','라','솔b','미b','도'],
+    korLabels5: ['도','미b','솔b','시bb','도','시bb','솔b','미b','도'],
     pattern7:   [1,3,5,7,8,7,5,3,1],
     engLabels7: ['','','','','','','','',''],
-    korLabels7: ['도','미b','솔b','라','도','라','솔b','미b','도'],
+    korLabels7: ['도','미b','솔b','시bb','도','시bb','솔b','미b','도'],
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
@@ -796,13 +830,13 @@ const VOCAL_PATTERNS = [
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
     ],
     modeLabels: ['기본','목풀기3','심화'],
-    warmup3: { offsets:[0,3,6,9,12,9,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','라','도','라','솔b','미b','도'] },
+    warmup3: { offsets:[0,3,6,9,12,9,6,3,0], engLabels:['','','','','','','','',''], korLabels:['도','미b','솔b','시bb','도','시bb','솔b','미b','도'] },
     warmup2Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62,67,65,63,68,66,65],
     warmup3Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
   },
   {
     id: 'vocal_7th_augmented_4beat',
-    name: "Augmented 7th • Sound Type • 4beat (13#5b7#531)",
+    name: "Augmented 7th • 4beat (13#5b7#531)",
     cardDesc: "어그먼티드 7화음 · 발음 선택 · 4분음표 · 도미솔#시b도시b솔#미도",
     pracTitle: "Augmented 7th(어그먼티드 세븐) · 4beat",
     baseTempo: 70,
@@ -828,7 +862,7 @@ const VOCAL_PATTERNS = [
   },
   {
     id: 'vocal_7th_augmented_major_4beat',
-    name: "Augmented Major 7th • Sound Type • 4beat (13#57#531)",
+    name: "Augmented Major 7th • 4beat (13#57#531)",
     cardDesc: "어그먼티드 메이저 7화음 · 발음 선택 · 4분음표 · 도미솔#시도시솔#미도",
     pracTitle: "Augmented Major 7th(어그먼티드 메이저 세븐) · 4beat",
     baseTempo: 70,
@@ -858,7 +892,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_staccato_ah_8beat',
     name: "Staccato • Ah • 8beat (123454321)",
     cardDesc: "스타카토 · 아 · 8분음표 · 도레미파솔파미레도",
-    pracTitle: "Staccato Ah · 8beat (123454321)",
+    pracTitle: "Staccato · Ah(아) · 8beat",
     baseTempo: 60,
     pattern5:   [1,2,3,4,5,4,3,2,1],
     engLabels5: ['','','','','','','','',''],
@@ -879,6 +913,60 @@ const VOCAL_PATTERNS = [
     warmup3Seq: [57,55,53,58,56,54,59,57,55,60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61],
   },
 
+  /* ── 패턴 23-C: Chromatic 8beat (도디레리미파피솔 / 솔피파미리레디도) ──
+     ★ 전용 구조: barBeats=8 (1박당 1음, 8박 안에 딱 끝남 — 다음 카운팅으로 안 물림)
+     ★ offsets 16음: 상행 0..7(반음), 하행 7..0(반음)
+     ★ 라벨박스 8칸 고정(음높이 기준) + 하이라이트 왕복(상행 왼→오, 하행 오→왼)
+     ★ 발음B 하행세트: 5~8박에 글자판 교체 (도레레메미파셀솔 / 도레b레미b미파솔b솔) */
+  {
+    id: 'vocal_chromatic_8beat',
+    name: "Chromatic • 8beat (DoDiReRiMiFaFiSol)",
+    cardDesc: "크로매틱 · 8분음표 · 도디레리미파피솔 / 솔피파미리레디도",
+    pracTitle: "Chromatic · 8beat",
+    baseTempo: 60,
+    chromatic16: true,
+    // 상행 8 + 하행 8 = 16음(반음). 라벨박스는 8칸(음높이 고정) 2줄 표시.
+    offsets: [0,1,2,3,4,5,6,7, 7,6,5,4,3,2,1,0],
+    pattern5: [0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0],
+    pattern7: [0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0],
+    noteDiv: 8,
+    display: 'label',
+    // labelTitle 없음 → 라벨박스 2줄(위=발음, 아래=계이름) 표시
+    // 발음 선택 B: 버튼A(#↑#↓)=하행 글자판 동일, 버튼B(#↑b↓)=하행 글자판 교체.
+    // 각 세트는 pron(발음줄=vle)·name(계이름줄=vlk)의 up/down을 독립 보유.
+    vowelB: {
+      chroma: true,
+      sets: [
+        // 버튼A: 상행/하행 글자판 동일(하이라이트만 왕복)
+        { key:'sharp', label:'#↑#↓',
+          pronUp:  ['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'],
+          pronDown:['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'],
+          nameUp:  ['도','도#','레','레#','미','파','파#','솔'],
+          nameDown:['도','도#','레','레#','미','파','파#','솔'] },
+        // 버튼B: 하행 글자판 교체(발음·계이름 둘 다). 칸은 음높이 고정(낮→높) 순.
+        { key:'flat', label:'#↑b↓',
+          pronUp:  ['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'],
+          pronDown:['Do','Re','Re','Me','Mi','Fa','Sel','Sol'],
+          nameUp:  ['도','도#','레','레#','미','파','파#','솔'],
+          nameDown:['도','레b','레','미b','미','파','솔b','솔'] },
+      ],
+    },
+    // 발음B 비활성(기본 표시)일 때 기본 글자판 = 버튼A와 동일
+    chromaDefault: {
+      pronUp:  ['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'],
+      pronDown:['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'],
+      nameUp:  ['도','도#','레','레#','미','파','파#','솔'],
+      nameDown:['도','도#','레','레#','미','파','파#','솔'],
+    },
+    engLabels5: ['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'],
+    korLabels5: ['도','도#','레','레#','미','파','파#','솔'],
+    engLabels7: ['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'],
+    korLabels7: ['도','도#','레','레#','미','파','파#','솔'],
+    modeLabels: ['기본','목풀기1','심화'],
+    warmup1: { pattern:[0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0], engLabels:['Do','Di','Re','Ri','Mi','Fa','Fi','Sol'], korLabels:['도','도#','레','레#','미','파','파#','솔'] },
+    warmup1Seq: [60,58,56,61,59,57,62,60,58,63,61,59,64,62,60,65,63,61,66,64,62],
+  },
+
   /* ── 패턴 24: Glissando H-a 4beat ── */
   /* 도솔도솔도 — 4분음표 4박+카운팅1 (barBeats=4)
      슬라이더: 1박=좌→우(도→솔), 2박=우→좌(솔→도), 3박=좌→우, 4박=우→좌, 카운팅=왼쪽 찍으며 끝 */
@@ -886,7 +974,7 @@ const VOCAL_PATTERNS = [
     id: 'vocal_glissando_ha_4beat',
     name: "Glissando • H-a • 4beat (15151)",
     cardDesc: "글리산도 · 흐아 · 4분음표 · 도솔도솔도 (왕복 슬라이딩)",
-    pracTitle: "Glissando H-a · 4beat (15151)",
+    pracTitle: "Glissando · H-a(흐아) · 4beat",
     baseTempo: 60,
     pattern5:   [1,5,1,5,1],
     engLabels5: ['흐','아','흐','아','흐'],
@@ -908,9 +996,9 @@ const VOCAL_PATTERNS = [
   /* ── 패턴 25: Vibrato — 카드 1개, 탭 3개(비브라토1=반음왕복 / 비브라토2=순간밴딩 / 비브라토3=밴딩없이 평타) ── */
   {
     id: 'vocal_vibrato',
-    name: "Vibrato • 비브라토",
-    cardDesc: "비브라토 · 반음 왕복 / 순간 밴딩 · 느림→빠름",
-    pracTitle: "Vibrato · 비브라토",
+    name: "Vibrato • Ah • 4beat (11111...)",
+    cardDesc: "비브라토 · 아 · 4분음표 · 반음 왕복 / 순간 밴딩 · 느림→빠름",
+    pracTitle: "Vibrato · Ah(아) · 4beat",
     baseTempo: 60,
     pattern5:   [1,1],
     engLabels5: ['',''],
@@ -969,12 +1057,24 @@ function midiToName(midi,dir){const n=(dir<0)?NOTE_NAMES_FLAT:NOTE_NAMES_SHARP;r
 function isSharpNote(midi){return[1,3,6,8,10].includes(((midi%12)+12)%12);}
 const DEGREE_TO_SEMITONE={1:0,2:2,3:4,4:5,5:7,6:9,7:11,8:12};
 function degreeToSemitone(deg){const oct=Math.floor((deg-1)/7);const base=((deg-1)%7)+1;return(DEGREE_TO_SEMITONE[base]||0)+oct*12;}
-function getModeScale(mode){if(mode===MODE_WARMUP_3)return SCALE_7TONE;return SCALE_5TONE;}
+function getModeScale(mode){
+  if(mode===MODE_WARMUP_3)return SCALE_7TONE;
+  // 으어2(이에아오우으어)는 목풀기2·심화 등 모든 모드에서 항상 7음(7글자) 유지
+  {const p=currentPat();if(p&&/ieaoueueo/.test(p.id))return SCALE_7TONE;}
+  return SCALE_5TONE;
+}
 
 // korLabel에서 한글 뒤 b→위첨자b, #→위첨자# 변환
 function formatKorLabel(str){
   return str.replace(/([가-힣])([b#])/g,(_,note,acc)=>{
     return '<span style="position:relative;display:inline-block;">'+note+'<span style="position:absolute;top:0;right:-0.6em;font-size:0.75em;line-height:1;">'+acc+'</span></span>';
+  });
+}
+// 크로매틱/7th 전용: 임시표를 글자 오른쪽 위에 작게 absolute로 붙임(어그먼티드 표기 방식).
+// 칸은 균등폭(flex:1)이고 임시표가 폭을 밀지 않으므로 글자 간격이 일정.
+function formatChromaLabel(str){
+  return str.replace(/([가-힣])(bb|##|[b#])/g,(_,note,acc)=>{
+    return '<span style="position:relative;display:inline-block;">'+note+'<span style="position:absolute;top:-0.15em;right:-0.55em;font-size:0.62em;line-height:1;white-space:nowrap;">'+acc+'</span></span>';
   });
 }
 
@@ -1010,6 +1110,25 @@ function getActivePatternArray(){
 }
 function getActiveLabels(){
   const pat=currentPat();
+  // 크로매틱: 8칸 고정. _chromaPhase(0=상행/1=하행)에 따라 글자판 교체.
+  // 발음B 활성 시 선택된 세트의 up/down, 비활성 시 chromaLabels.up/down, 음이름은 발음B 세트2.
+  if(pat&&pat.chromatic16){
+    const phaseDown=(typeof _chromaPhase!=='undefined'&&_chromaPhase===1);
+    let src;
+    if(pat.vowelB&&typeof _vbActive==='function'&&_vbActive()){
+      const setIdx=(typeof _vbSetIdx!=='undefined')?_vbSetIdx:0;
+      src=pat.vowelB.sets[setIdx]||pat.vowelB.sets[0];
+    } else {
+      src=pat.chromaDefault;
+    }
+    const eng=phaseDown?src.pronDown:src.pronUp;   // 위 줄 = 발음
+    const kor=phaseDown?src.nameDown:src.nameUp;   // 아래 줄 = 계이름
+    return {eng:eng.slice(),kor:kor.slice()};
+  }
+  // 발음 선택 B: 현재 적용 중(세트선택/셔플 반영) 배열 우선
+  if(pat&&pat.vowelB&&_vbCurrentArr&&typeof _vbActive==='function'&&_vbActive()){
+    return {eng:_vbCurrentArr.eng.slice(),kor:_vbCurrentArr.kor.slice()};
+  }
   // 비브라토1(반음 왕복): 라벨박스에 [도시도시] 4칸 표시
   if(pat.vibrato&&TMODE===MODE_VIBRATO&&vibType()==='semitone'){
     return {eng:['','','',''],kor:['도','시','도','시']};
@@ -1027,6 +1146,7 @@ function getActiveLabels(){
 function getPatternBarBeats(){
   const pat=currentPat();
   if(pat.vibrato)return 4;  // 비브라토: 4분음표 4박 (도·시·도·시)
+  if(pat.chromatic16)return 8;  // 크로매틱: 1박당 1음, 8박 안에 딱 끝남
   if((pat.noteDiv||4)===8)return 4;
   if((pat.noteDiv||4)===16)return 4;
   // offsets 직접 지정 패턴은 offsets.length-1
@@ -1369,6 +1489,7 @@ let _glissState={active:false};
 let currentBPM=70;
 let beatInterval=1,nextBeatTime=0,beatQueue=[],schedulerTimer=null;
 let loopCount=0,seqStep=0,patStep=0;
+let _chromaPhase=0;  // 크로매틱: 0=상행(1~4박), 1=하행(5~8박)
 let stopScheduled=false,stopAudioTime=0;
 let isPlaying=false,isPaused=false,pausedElapsed=0;
 let mainStartWallTime=0,elapsedSeconds=0,timerRafId=null;
@@ -1398,7 +1519,7 @@ function schedulerTick(){
 function timerFrame(){
   if(!audioCtx){timerRafId=requestAnimationFrame(timerFrame);return;}
   const now=audioCtx.currentTime;
-  while(beatQueue.length&&beatQueue[0].time<=now+0.050){const _b=beatQueue.shift();if(_fn_applyVisual){_fn_applyVisual(_b.vis);_applyRandomVowelCounting(_b.vis);}}
+  while(beatQueue.length&&beatQueue[0].time<=now+0.050){const _b=beatQueue.shift();if(_fn_applyVisual){_fn_applyVisual(_b.vis);_applyRandomVowelCounting(_b.vis);_vbApplyRandomCounting(_b.vis);}}
   if(stopScheduled&&now>=stopAudioTime-0.01){
     stopScheduled=false;
     while(beatQueue.length){if(_fn_applyVisual)_fn_applyVisual(beatQueue.shift().vis);else beatQueue.shift();}
@@ -1474,6 +1595,11 @@ function startEngine(){
     const tEl=document.getElementById('vowel-title-display');
     if(tEl)tEl.textContent=VOWEL_RANDOM_PREP_TEXT;
   }
+  // 발음 선택 B 무작위: 셔플백 리셋 + 커튼 닫음(1~2박 발음 가림, 3박에 첫 순서 노출)
+  if(typeof _vbActive==='function'&&_vbActive()&&_vbRandomOn){
+    _vbResetRandom();
+    _vbCurtainSet(true);
+  }
   nextBeatTime=audioCtx.currentTime+0.05;
   _awaitClock=(audioCtx.currentTime<=0); // 클럭이 아직 0이면 첫 틱에서 재앵커
   schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
@@ -1519,15 +1645,16 @@ function _commonScheduleCounting(time, getRoot, getNextRoot, getNextRootDir, onF
   if(loopCount===0){
     if(idx===0){const r=getRoot();playPianoNote(midiToFreq(r),time,beatInterval*4.0);vis.keyMidi=r;if(onFirstBeat)onFirstBeat(vis,r);}
   } else if(stopScheduled){
-    if(idx===0){const offsets=getFullOffsets();const last=prevRootMidi+offsets[offsets.length-1];playPianoNote(midiToFreq(last),time,beatInterval*4.0);vis.keyMidi=last;vis.noteIdx=getActiveLabels().eng.length-1;if(onFirstBeat)onFirstBeat(vis,last);}
+    if(idx===0&&!currentPat().chromatic16){const offsets=getFullOffsets();const last=prevRootMidi+offsets[offsets.length-1];playPianoNote(midiToFreq(last),time,beatInterval*4.0);vis.keyMidi=last;vis.noteIdx=getActiveLabels().eng.length-1;if(onFirstBeat)onFirstBeat(vis,last);}
   } else {
-    if(idx===0){const offsets=getFullOffsets();const last=prevRootMidi+offsets[offsets.length-1];playPianoNote(midiToFreq(last),time,beatInterval*2.0);vis.keyMidi=last;vis.noteIdx=getActiveLabels().eng.length-1;if(onFirstBeat)onFirstBeat(vis,last);}
+    if(idx===0&&!currentPat().chromatic16){const offsets=getFullOffsets();const last=prevRootMidi+offsets[offsets.length-1];playPianoNote(midiToFreq(last),time,beatInterval*2.0);vis.keyMidi=last;vis.noteIdx=getActiveLabels().eng.length-1;if(onFirstBeat)onFirstBeat(vis,last);}
     if(idx===2){const nxt=getNextRoot();playPianoNote(midiToFreq(nxt),time,beatInterval*2.0);vis.newRootMidi=nxt;vis.nextDir=getNextRootDir(nxt);if(onThirdBeat)onThirdBeat(vis,nxt);}
   }
   seqStep++;
   if(seqStep>=4){
     if(stopScheduled){playClickAt(clickType,time);beatQueue.push({time,vis});return;}
     activeBarType=BAR_TYPE_PATTERN;seqStep=0;patStep=0;
+    if(currentPat().chromatic16){_chromaPhase=0;_chromaRelabel();}
     currentNoteInterval=beatInterval; // 패턴도 4박 기준이므로 beatInterval 그대로
     const firstMain=time+beatInterval;
     if(mainStartWallTime===0)mainStartWallTime=Date.now()+(firstMain-audioCtx.currentTime)*1000;
@@ -1544,7 +1671,24 @@ function _commonSchedulePattern(time, getRoot, getCurrentDir){
   const glissando=!!pat.glissando;
   const vibrato=!!pat.vibrato;
 
-  if(is16){
+  if(pat.chromatic16){
+    // 크로매틱: 8beat(1박당 2음), 총 8박 16음. 다음 카운팅으로 안 물림.
+    // step 0~3=상행(음0~7), step 4~7=하행(음8~15). 5박 진입 시 글자판 down으로 교체.
+    const noteIdx1=step*2;const noteIdx2=step*2+1;
+    const noteMidi1=rootMidi+offsets[Math.min(noteIdx1,offsets.length-1)];
+    const noteMidi2=rootMidi+offsets[Math.min(noteIdx2,offsets.length-1)];
+    const halfBeat=beatInterval*0.5;
+    const dur=halfBeat*1.8;
+    // phase 결정: step<4 상행(0), step>=4 하행(1). 5박(step===4) 진입 시 라벨판 교체.
+    const newPhase=step<4?0:1;
+    if(newPhase!==_chromaPhase){_chromaPhase=newPhase;_chromaRelabel();}
+    // 라벨 칸 매핑(음높이 고정 8칸): 상행 음 0..7→칸 0..7, 하행 음 8..15→칸 7..0
+    const cell=(ni)=>ni<8?ni:15-ni;
+    playPianoNote(midiToFreq(noteMidi1),time,dur);
+    playPianoNote(midiToFreq(noteMidi2),time+halfBeat,dur);
+    beatQueue.push({time,vis:{phase:'pattern',beatIdx:step,noteIdx:cell(noteIdx1),keyMidi:rootMidi,noteMidi:noteMidi1,dirForDisplay:getCurrentDir()}});
+    beatQueue.push({time:time+halfBeat,vis:{phase:'pattern',beatIdx:step,noteIdx:cell(noteIdx2),keyMidi:rootMidi,noteMidi:noteMidi2,dirForDisplay:getCurrentDir()}});
+  } else if(is16){
     const quarterBeat=beatInterval*0.25;
     const labelCount=getActiveLabels().eng.length;
     for(let q=0;q<4;q++){
@@ -1598,7 +1742,38 @@ function _commonSchedulePattern(time, getRoot, getCurrentDir){
 // 공용 비주얼 헬퍼
 function updateVocalBeats(barType,beatIdx){for(let i=0;i<4;i++){const el=document.getElementById('vcnt-'+i);if(el)el.className='vbn'+(barType===BAR_TYPE_COUNTING&&i===beatIdx?' active-cnt':' dim');}const bb=getPatternBarBeats();for(let i=0;i<bb;i++){const el=document.getElementById('vpat-'+i);if(el)el.className='vbn'+(barType===BAR_TYPE_PATTERN&&i===beatIdx?' active-pat':' dim');}}
 function clearVocalBeats(){for(let i=0;i<4;i++){const el=document.getElementById('vcnt-'+i);if(el)el.className='vbn dim';}for(let i=0;i<12;i++){const el=document.getElementById('vpat-'+i);if(el)el.className='vbn dim';}}
+// 박자 숫자 행 폭 맞춤: 라벨박스(364px)를 넘지 않도록 gap을 동적 분배, 그래도 넘치면 폰트 축소.
+// (7th코드 등 9칸짜리 패턴이 박스를 넘는 문제 해결 — breath의 fitBeatRow와 동일 원리)
+function _fitVocalBeatRow(rowEl,n){
+  if(!rowEl||!n)return;
+  const AVAIL=364;     // 라벨박스 max-width와 동일
+  const GLYPH=42;      // vbn min-width(2.8rem 숫자 1칸 폭)
+  const GAP_MAX=12;    // 기본 간격(칸 적을 때 상한)
+  const GAP_MIN=2;
+  let gap=n>1?(AVAIL-n*GLYPH)/(n-1):GAP_MAX;
+  gap=Math.max(GAP_MIN,Math.min(GAP_MAX,gap));
+  rowEl.style.gap=gap+'px';
+  // 최소 간격으로도 넘치면 폰트 축소(2.8rem → 하한 1.6rem)
+  const needed=n*GLYPH+(n-1)*gap;
+  if(needed>AVAIL){
+    let fontRem=2.8;
+    const scale=(AVAIL-(n-1)*gap)/(n*GLYPH);
+    fontRem=Math.max(1.6,2.8*scale);
+    const minW=Math.max(20,GLYPH*scale);
+    rowEl.querySelectorAll('.vbn').forEach(s=>{s.style.fontSize=fontRem.toFixed(2)+'rem';s.style.minWidth=minW.toFixed(0)+'px';});
+  }
+}
 let _staccatoTimer=null;
+// 크로매틱: phase 전환 시 라벨박스 8칸 글자만 교체(칸 위치 고정, 하이라이트는 별도)
+function _chromaRelabel(){
+  const lbls=getActiveLabels();
+  for(let i=0;i<lbls.kor.length;i++){
+    const e=document.getElementById('vle-'+i);
+    if(e)e.innerHTML=formatChromaLabel(lbls.eng[i]||'');
+    const k=document.getElementById('vlk-'+i);
+    if(k)k.innerHTML=formatChromaLabel(lbls.kor[i]||'');
+  }
+}
 function updateVocalLabelHighlight(noteIdx,staccatoOffMs){
   if(_staccatoTimer){clearTimeout(_staccatoTimer);_staccatoTimer=null;}
   const total=getActiveLabels().eng.length;
@@ -1657,7 +1832,8 @@ function basic_applyVisual(vis){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
     if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
-      if(loopCount===0)updateVocalLabelHighlight(-1);
+      if(pat.chromatic16)updateVocalLabelHighlight(-1); // 크로매틱: 카운팅엔 음 없음 → 라벨 끔
+      else if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else updateVocalLabelHighlight(-1);
@@ -1741,7 +1917,8 @@ function prac_applyVisual(vis){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
     if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
-      if(loopCount===0)updateVocalLabelHighlight(-1);
+      if(pat.chromatic16)updateVocalLabelHighlight(-1); // 크로매틱: 카운팅엔 음 없음 → 라벨 끔
+      else if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else updateVocalLabelHighlight(-1);
@@ -1810,7 +1987,8 @@ function wu_applyVisual(vis){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
     if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
-      if(loopCount===0)updateVocalLabelHighlight(-1);
+      if(pat.chromatic16)updateVocalLabelHighlight(-1); // 크로매틱: 카운팅엔 음 없음 → 라벨 끔
+      else if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else updateVocalLabelHighlight(-1);
@@ -1941,7 +2119,8 @@ function adv_applyVisual(vis){
     updateVocalBeats(BAR_TYPE_COUNTING,vis.idx);
     if(pat.glissando&&vis.idx===0&&loopCount>0)_resetGlissandoSlider();
     if(pat.display==='label'){
-      if(loopCount===0)updateVocalLabelHighlight(-1);
+      if(pat.chromatic16)updateVocalLabelHighlight(-1); // 크로매틱: 카운팅엔 음 없음 → 라벨 끔
+      else if(loopCount===0)updateVocalLabelHighlight(-1);
       else if(stopScheduled)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else if(vis.idx===0)updateVocalLabelHighlight(getActiveLabels().eng.length-1);
       else updateVocalLabelHighlight(-1);
@@ -2531,12 +2710,14 @@ function buildPracticeUI(){
   const cLbl=document.createElement('div');cLbl.className='vocal-beat-label';cLbl.textContent='카운팅';
   const cRow=document.createElement('div');cRow.className='vocal-beat-row';
   for(let i=0;i<4;i++){const s=document.createElement('span');s.className='vbn dim';s.id='vcnt-'+i;s.textContent=i+1;cRow.appendChild(s);}
+  _fitVocalBeatRow(cRow,4);
   cSec.appendChild(cLbl);cSec.appendChild(cRow);vwrap.appendChild(cSec);
   const pSec=document.createElement('div');pSec.className='vocal-beat-section';
   const pLbl=document.createElement('div');pLbl.className='vocal-beat-label';
   pLbl.textContent='패턴';
   const pRow2=document.createElement('div');pRow2.className='vocal-beat-row';
   for(let i=0;i<barBeats;i++){const s=document.createElement('span');s.className='vbn dim';s.id='vpat-'+i;s.textContent=i+1;pRow2.appendChild(s);}
+  _fitVocalBeatRow(pRow2,barBeats);
   pSec.appendChild(pLbl);pSec.appendChild(pRow2);vwrap.appendChild(pSec);
   body.appendChild(vwrap);
 
@@ -2568,7 +2749,7 @@ function buildPracticeUI(){
     vlb.appendChild(kPan);
     const labArea=document.createElement('div');labArea.className='vlabel-labels-area';
     labArea.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:0;';
-    // labelTitle이 있으면 윗줄에 표시
+    // labelTitle이 있으면 윗줄에 표시 (흐아 등 기존 패턴 — flow 유지)
     if(pat.labelTitle){
       const titleEl=document.createElement('div');
       titleEl.id='vowel-title-display';
@@ -2577,22 +2758,70 @@ function buildPracticeUI(){
       labArea.appendChild(titleEl);
     }
     const is4beat=(pat.noteDiv||4)===4;
-    const lblsRow=document.createElement('div');lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:wrap;';
+    // ── 발음B 글자정렬: 두 패턴 완전 독립 ──
+    // 이에아오우2(5글자): gap 방식 — 전용 id 'vb-lbls-row-5'
+    // 으어2(7글자): 고정폭 균등배치(7칸 1/7) 방식 — 전용 id 'vb-lbls-row-7', 모드/발음B 무관 항상 동일 폭
+    const _vbIeaou5=(pat.id==='vocal_ieaou_4beat_2');
+    const _vbSpread=(pat.id==='vocal_ieaoueueo_4beat_2');
+    const _chromaRow=!!pat.chromatic16;
+    const _is7th=/^vocal_7th_/.test(pat.id);  // 7th 코드 패턴: 임시표 inline + 균등폭
+    const lblsRow=document.createElement('div');
+    if(_chromaRow){
+      lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;width:100%;max-width:364px;flex-wrap:nowrap;';
+      lblsRow.id='vb-lbls-row-chroma';
+    } else if(_is7th){
+      lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;width:100%;max-width:364px;flex-wrap:nowrap;';
+      lblsRow.id='vb-lbls-row-7th';
+    } else if(_vbSpread){
+      lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;width:300px;max-width:100%;flex-wrap:nowrap;';
+      lblsRow.id='vb-lbls-row-7';
+    } else if(_vbIeaou5){
+      lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:nowrap;';
+      lblsRow.id='vb-lbls-row-5';
+    } else {
+      lblsRow.style.cssText='display:flex;flex-direction:row;align-items:center;justify-content:center;gap:'+(is4beat?'16px':'0')+';flex-wrap:wrap;';
+    }
     const lbls=getActiveLabels();
     lbls.kor.forEach((kor,i2)=>{
       const col=document.createElement('div');col.className='vlabel-col';
+      if(_chromaRow)col.style.cssText='flex:1 1 0;min-width:0;width:0;';
+      else if(_is7th)col.style.cssText='flex:1 1 0;min-width:0;width:0;';
+      else if(_vbSpread)col.style.cssText='flex:1 1 0;min-width:0;width:0;';
       // eng는 숨기고 kor만 표시 (labelTitle 패턴)
-      if(!pat.labelTitle){
+      if(pat.chromatic16){
+        // 크로매틱: 위 줄 = 발음(한글), 아래 줄 = 계이름. 둘 다 보이게.
+        // 임시표는 inline(superscript)로 — 글자묶음 전체가 칸 중앙에 오게.
+        const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;
+        eS.style.cssText='font-family:inherit;';
+        eS.innerHTML=formatChromaLabel(lbls.eng[i2]||'');
+        col.appendChild(eS);
+      } else if(!pat.labelTitle){
         const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.textContent=lbls.eng[i2]||'';
         col.appendChild(eS);
       } else {
         // eng span도 만들되 숨김 (하이라이트 로직 호환)
         const eS=document.createElement('span');eS.className='vlabel-item eng';eS.id='vle-'+i2;eS.style.display='none';col.appendChild(eS);
       }
-      const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.innerHTML=formatKorLabel(kor||'');
+      const kS=document.createElement('span');kS.className='vlabel-item kor';kS.id='vlk-'+i2;kS.innerHTML=((pat.chromatic16||_is7th)?formatChromaLabel(kor||''):formatKorLabel(kor||''));
       col.appendChild(kS);lblsRow.appendChild(col);
     });
-    labArea.appendChild(lblsRow);
+    const vbCurtain=(pat.vowelB&&typeof _vbActive==='function'&&_vbActive());
+    if(vbCurtain){
+      // 발음B: 흐아4beat와 동일한 방식.
+      // 글자줄 위에 타이틀 줄(vb-prep-title)을 두고, 무작위 1~2박엔 글자를 숨기고
+      // 타이틀에 '무작위 준비'만 표시. 3박부터 글자 복원 + 하이라이트 시작.
+      // (커튼 오버레이 없음 — 줄 자체를 토글하므로 흐아와 동일한 느낌)
+      const prepTitle=document.createElement('div');
+      prepTitle.id='vb-prep-title';
+      prepTitle.style.cssText='font-size:1.7rem;font-weight:700;color:var(--text);letter-spacing:0.5px;display:none;';
+      prepTitle.textContent=VB_PREP_TEXT;
+      labArea.appendChild(prepTitle);
+      labArea.appendChild(lblsRow);
+      // 무작위 ON 상태로 진입 시: 글자줄 숨기고 준비 타이틀만
+      if(_vbRandomOn){ prepTitle.style.display='block'; lblsRow.style.display='none'; }
+    } else {
+      labArea.appendChild(lblsRow);
+    }
     vlb.appendChild(labArea);body.appendChild(vlb);
   }
 
@@ -2611,14 +2840,15 @@ function buildPracticeUI(){
   body.appendChild(ctrl);
 
   /* ── 모드별 키 UI ── */
-  if(TMODE===MODE_BASIC){buildVowelSelector(body);buildBasicKeyUI(body);buildTempoUI(body);}
+  if(TMODE===MODE_BASIC){buildVowelSelector(body);if(_vbActive())buildVowelSelectorB(body);buildBasicKeyUI(body);buildTempoUI(body);}
   if(TMODE===MODE_PRACTICE)buildPracticeKeyUI(body); // 내부에서 buildTempoUI 호출
   if(TMODE===MODE_WARMUP_1||TMODE===MODE_WARMUP_2||TMODE===MODE_WARMUP_3){
     buildVowelSelector(body);
+    if(_vbActive())buildVowelSelectorB(body);
     buildSeqGridUI(body,wu_getSeq(),wu_keyIdx,(idx)=>{wu_keyIdx=idx;});
     buildTempoUI(body);
   }
-  if(TMODE===MODE_ADVANCED_1)buildAdvancedPanel(body);
+  if(TMODE===MODE_ADVANCED_1){buildAdvancedPanel(body);}
   if(TMODE===MODE_VIBRATO){
     // 비브라토: 템포(재생 버튼 아래) → 시작 음 선택 순서
     buildTempoUI(body);
@@ -2778,7 +3008,239 @@ function buildSeqGridUI(body,seq,selectedIdx,onSelect){
   body.appendChild(wrap);return wrap;
 }
 
-/* ── 발음 선택기 UI (vowelOptions 있는 패턴에만 사용) ── */
+/* ════════════════════════════════════════════════
+   【 발음 선택 B 】 음 하나당 글자 / 패턴 1회 단위 셔플
+   ※ 기존 발음 선택 A(_vowel*, vowelOptions)와 완전 독립
+   ※ 진입점: getActiveLabels() 를 가로채 _vbCurrentArr 반환
+   ───────────────────────────────────────────────
+   _vbSetIdx      = 버튼으로 고른 세트 인덱스 (0:이에아오우 / 1:M / 2:N)
+   _vbSetSelected = 일반 버튼으로 계열을 골랐는지 (false면 무작위 단독 — 매 패턴 계열도 랜덤)
+   _vbRandomOn    = 무작위 모드 여부
+   _vbCurrentArr  = {eng,kor} 현재 라벨박스에 그려질(셔플 반영된) 배열
+   _vbBag         = 셔플백 — 인덱스 순열을 한 바퀴 다 쓰고 다시 채움(바퀴 내 중복 없음)
+   _vbPending     = 카운팅 3박에 미리 정해둔 "다음 패턴에 쓸" 순열
+════════════════════════════════════════════════ */
+let _vbSetIdx=0;
+let _vbSetSelected=false;
+let _vbRandomOn=false;
+let _vbCurrentArr=null;
+let _vbBag=[];
+let _vbPending=null;
+// [발음B 글자줄 gap 조정] 현재 표시 계열에 맞춰 글자줄 간격 조정.
+//   자음 계열(M/N, 2글자) → gap 좁힘 / 이에아오우(1글자) → gap 늘림 (글자 폭 균형)
+//   패턴별 전용 값으로 분리(이에아오우2 / 이에아오우으어2 독립).
+const _VB_GAP={
+  'vocal_ieaou_4beat_2':     { vowel:'27px', cons:'11px' },              // 5음 (gap 방식, 전용 id vb-lbls-row-5)
+  'vocal_ieaoueueo_4beat_2': { spread:true },                            // 7음 (균등폭 방식, 전용 id vb-lbls-row-7 — gap 조정 불필요)
+};
+function _vbAdjustGap(setIdx){
+  const p=currentPat();
+  if(!p)return;
+  const conf=_VB_GAP[p.id];
+  if(!conf)return;
+  // 으어2(spread): col 균등폭 + 폰트 고정이 글자 생성 시점에 이미 적용됨 → 추가 조정 없음
+  if(conf.spread)return;
+  // 이에아오우2(gap 방식): 전용 id의 글자줄만 계열별 gap 조정
+  const row=document.getElementById('vb-lbls-row-5');
+  if(!row||!p.vowelB||!p.vowelB.sets)return;
+  const s=p.vowelB.sets[setIdx]||p.vowelB.sets[0];
+  const isVowelOnly=(s.key==='ieaou');
+  row.style.gap=isVowelOnly?conf.vowel:conf.cons;
+}
+const VB_PREP_TEXT='무작위 준비';
+// 현재 패턴이 발음B를 쓰는지
+function _vbActive(){const p=currentPat();return !!(p&&p.vowelB&&p.vowelB.sets&&p.vowelB.sets.length);}
+// 특정 세트 인덱스의 모드별 기준 글자배열(정순)
+function _vbBaseArrForSet(idx){
+  const p=currentPat();
+  if(!_vbActive())return null;
+  const s=p.vowelB.sets[idx]||p.vowelB.sets[0];
+  const is7=getModeScale(TMODE)===SCALE_7TONE;
+  return is7?{eng:s.eng7.slice(),kor:s.kor7.slice()}:{eng:s.eng5.slice(),kor:s.kor5.slice()};
+}
+// 현재 선택 세트의 기준 글자배열(정순)
+function _vbBaseArr(){return _vbBaseArrForSet(_vbSetIdx);}
+// 셔플백에서 다음 "순열(인덱스 배열)" 하나 — 비면 새 순열 채움
+function _vbDrawOrder(n){
+  if(_vbBag.length===0){
+    const ord=Array.from({length:n},(_,i)=>i);
+    for(let i=ord.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ord[i],ord[j]]=[ord[j],ord[i]];}
+    _vbBag=[ord];
+  }
+  return _vbBag.shift();
+}
+// 무작위 상태 초기화 (재생 시작/세트변경 시)
+function _vbResetRandom(){_vbBag=[];_vbPending=null;}
+// base 배열을 order(인덱스 순열)대로 재배치
+function _vbApplyOrder(base,order){
+  if(!base)return base;
+  if(!order)return {eng:base.eng.slice(),kor:base.kor.slice()};
+  return {eng:order.map(i=>base.eng[i]), kor:order.map(i=>base.kor[i])};
+}
+// 흐아식 표시 제어: show=true면 '무작위 준비' 타이틀만 보이고 글자줄 숨김,
+// false면 타이틀 숨기고 글자줄(하이라이트 대상) 노출.
+function _vbCurtainSet(show){
+  const t=document.getElementById('vb-prep-title');
+  if(t)t.style.display=show?'block':'none';
+  // 글자줄: prep-title의 다음 형제(글자 row)
+  if(t&&t.nextElementSibling)t.nextElementSibling.style.display=show?'none':'flex';
+}
+// (구버전 호환) 타이틀=커튼 표시로 매핑
+function _vbSetTitle(text,show){ _vbCurtainSet(show); }
+// 라벨박스 글자 텍스트만 다시 써넣기 (DOM 재생성 X — 하이라이트 lit 클래스 유지 구조와 호환)
+function _vbRepaintLabels(arr){
+  if(!arr)return;
+  for(let i=0;i<arr.kor.length;i++){
+    const k=document.getElementById('vlk-'+i);
+    if(k)k.innerHTML=formatKorLabel(arr.kor[i]||'');
+    const e=document.getElementById('vle-'+i);
+    if(e)e.textContent=arr.eng[i]||'';
+  }
+  _vbAdjustGap(_vbSetIdx); // 현재 계열에 맞춰 글자줄 간격 조정
+}
+// 현재 세트의 정순 배열을 즉시 적용(무작위 OFF용)
+function _vbApplyStraight(){
+  const base=_vbBaseArr();
+  _vbCurrentArr=base?{eng:base.eng.slice(),kor:base.kor.slice()}:null;
+  _vbRepaintLabels(_vbCurrentArr);
+}
+// 무작위 단독일 때 다음 패턴에 쓸 계열 인덱스 랜덤 선택 + 셔플백 리셋(계열 바뀌므로)
+function _vbDrawSetIdx(){
+  const p=currentPat();
+  const cnt=(p&&p.vowelB&&p.vowelB.sets)?p.vowelB.sets.length:1;
+  _vbSetIdx=Math.floor(Math.random()*cnt);
+  _vbBag=[]; // 계열이 바뀌면 순열 셔플백 새로
+}
+// 다음 패턴 순서 확정(계열 + 셔플) → 글자 갱신. 무작위 단독이면 계열도 랜덤.
+function _vbPrepareNext(){
+  if(!_vbSetSelected)_vbDrawSetIdx(); // 무작위 단독: 매 패턴 계열 랜덤
+  const base=_vbBaseArr();if(!base)return;
+  _vbPending=_vbDrawOrder(base.kor.length);
+  _vbCurrentArr=_vbApplyOrder(base,_vbPending);
+  _vbRepaintLabels(_vbCurrentArr);
+}
+// 카운팅 박마다 호출 — 흐아4beat와 동일한 타이밍.
+//   loop 0 (첫 카운팅): 1~2박(idx 0,1) '무작위 준비'(글자 숨김) → 3박(idx 2) 첫 순서 확정·글자 노출
+//   loop>0 (중간 카운팅): 3박(idx 2)에 다음 패턴 순서만 미리 확정 (글자는 계속 노출)
+function _vbApplyRandomCounting(vis){
+  if(currentPat().chromatic16)return; // 크로매틱은 셔플 미사용(상/하행 교체만)
+  if(!_vbRandomOn||!_vbActive())return;
+  if(!vis||vis.phase!=='counting')return;
+  if(vis.loop===0){
+    if(vis.idx===0){
+      _vbCurtainSet(true); // 글자 숨기고 '무작위 준비'만
+      _vbPending=null;
+    } else if(vis.idx===2){
+      _vbPrepareNext();    // 첫 패턴 순서(계열+셔플) 확정
+      _vbCurtainSet(false);// 글자 노출 — 3~4박 동안 다음 순서 미리보기
+    }
+  } else {
+    if(vis.idx===2){
+      _vbPrepareNext();    // 다음 패턴 순서 미리 확정 (글자는 이미 노출 상태)
+    }
+  }
+}
+// 발음B 선택기 UI
+function buildVowelSelectorB(body){
+  const pat=currentPat();
+  if(!_vbActive())return;
+  if(pat.chromatic16){buildVowelSelectorB_chroma(body);return;}
+  _vbSetIdx=0;_vbSetSelected=true;_vbRandomOn=false;_vbResetRandom();
+  _vbApplyStraight();
+  const outer=document.createElement('div');
+  outer.style.cssText='width:100%;max-width:364px;display:flex;flex-direction:column;align-items:center;gap:8px;';
+  const lbl=document.createElement('div');
+  lbl.style.cssText='font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;align-self:center;';
+  lbl.textContent='발음 선택';
+  outer.appendChild(lbl);
+  const btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:5px;flex-wrap:nowrap;justify-content:center;width:100%;';
+  const setBtns=[];
+  let rb; // 무작위 버튼 (아래에서 정의)
+  // 무작위 OFF면 커튼 걷고 정순 표시 / ON이면 커튼 닫고 준비문구
+  function _vbSyncView(){
+    if(_vbRandomOn){ _vbCurtainSet(true); }
+    else { _vbResetRandom(); _vbApplyStraight(); _vbCurtainSet(false); }
+    if(isPlaying)stopExercise();
+  }
+  // 세트 버튼 3개 — 단독선택, 같은 버튼 다시 누르면 해제(무작위 단독 모드)
+  pat.vowelB.sets.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='m-tab'+(i===0?' active':'');
+    b.style.cssText='padding:7px 2px;font-size:0.78rem;flex:1 1 0;min-width:0;';
+    b.textContent=s.label;
+    b.onclick=()=>{
+      const wasActive=b.classList.contains('active');
+      setBtns.forEach(x=>x.classList.remove('active'));
+      if(wasActive){
+        // 선택 해제 → 계열 미지정(무작위 단독 시 모든 계열 랜덤)
+        _vbSetSelected=false;
+        // 무작위가 꺼져 있으면 표시할 계열이 없으므로 무작위를 자동 ON
+        if(!_vbRandomOn){ _vbRandomOn=true; if(rb)rb.classList.add('active'); }
+      } else {
+        b.classList.add('active');
+        _vbSetSelected=true;_vbSetIdx=i;
+      }
+      _vbResetRandom();
+      _vbSyncView();
+    };
+    setBtns.push(b);btnRow.appendChild(b);
+  });
+  // 무작위 토글 버튼 (세트와 별개로 ON/OFF)
+  rb=document.createElement('button');
+  rb.className='m-tab vowel-random';
+  rb.style.cssText='padding:7px 2px;font-size:0.78rem;flex:1 1 0;min-width:0;';
+  rb.textContent='무작위';
+  rb.onclick=()=>{
+    _vbRandomOn=!_vbRandomOn;
+    rb.classList.toggle('active',_vbRandomOn);
+    // 무작위를 끄는데 계열도 선택돼 있지 않으면, 기본 계열(첫 버튼) 선택으로 복귀
+    if(!_vbRandomOn&&!_vbSetSelected){
+      _vbSetSelected=true;_vbSetIdx=0;
+      setBtns.forEach((x,xi)=>x.classList.toggle('active',xi===0));
+    }
+    _vbResetRandom();
+    _vbSyncView();
+  };
+  btnRow.appendChild(rb);
+  outer.appendChild(btnRow);
+  body.appendChild(outer);
+}
+
+// 크로매틱 전용 발음B 선택기: 세트(발음/음이름)만 단독 선택, 무작위 없음.
+// 상/하행 글자판 교체는 getActiveLabels + _chromaRelabel이 담당.
+function buildVowelSelectorB_chroma(body){
+  const pat=currentPat();
+  _vbSetIdx=0;_vbSetSelected=true;_vbRandomOn=false;
+  _chromaPhase=0;_chromaRelabel();
+  const outer=document.createElement('div');
+  outer.style.cssText='width:100%;max-width:364px;display:flex;flex-direction:column;align-items:center;gap:8px;';
+  const lbl=document.createElement('div');
+  lbl.style.cssText='font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;align-self:center;';
+  lbl.textContent='발음 선택';
+  outer.appendChild(lbl);
+  const btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:5px;flex-wrap:nowrap;justify-content:center;width:100%;';
+  const setBtns=[];
+  pat.vowelB.sets.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='m-tab'+(i===0?' active':'');
+    b.style.cssText='padding:7px 2px;font-size:0.95rem;flex:1 1 0;min-width:0;font-weight:700;';
+    // label 예: '#↑#↓' / '#↑b↓' → 화살표를 작게 위첨자로
+    b.innerHTML=s.label.replace(/([#b])([↑↓])/g,(_,acc,arr)=>
+      acc+'<span style="font-size:0.72em;">'+arr+'</span>');
+    b.onclick=()=>{
+      setBtns.forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      _vbSetIdx=i;_vbSetSelected=true;
+      if(isPlaying)stopExercise();
+      _chromaPhase=0;_chromaRelabel();
+    };
+    setBtns.push(b);btnRow.appendChild(b);
+  });
+  outer.appendChild(btnRow);
+  body.appendChild(outer);
+}
 /* 무작위 발음 상태:
    _vowelRandomOn = 무작위모드 여부
    _vowelCurrent  = 현재 패턴에 적용 중(표시 중)인 발음 옵션
@@ -2935,6 +3397,11 @@ function buildTempoUI(body){
 
 /* ── 심화 패널 UI ── */
 function buildAdvancedPanel(body){
+  // 발음 선택 패턴이면 심화에서도 선택기 노출 (음정간격 패널과 독립).
+  // 각 함수는 자체 가드가 있어 — 발음A는 vowelOptions 있는 패턴만, 발음B는 vowelB 있는 패턴만
+  // 그려지므로, 패턴은 자기가 가진 발음 기능만 노출된다(A패턴=A만, B패턴=B만).
+  buildVowelSelector(body);
+  if(typeof _vbActive==='function'&&_vbActive())buildVowelSelectorB(body);
   const ap=document.createElement('div');ap.className='adv-panel';
 
   /* 공통: 섹션 제목/설명을 키 그리드 왼쪽 라인에 맞추는 래퍼 */
@@ -3035,7 +3502,11 @@ function buildAdvancedPanel(body){
       +'<span>-첫 클릭'+chip('var(--accent)')+'</span>'
       +'<span>두번째 클릭'+chip('var(--accent2)')+'</span>';
     if(adv_dir==='loop'){
-      rngInfo.innerHTML=legendCommon+'<span>(도달 가능한 음만 표시)</span></span>';
+      rngInfo.innerHTML=legendCommon+'<span>(도달 가능한 음만 표시)</span></span>'
+        +'<div style="margin-top:5px;">*클릭 순서로 진행 방향이 정해져요</div>'
+        +'<div style="opacity:0.85;">· 저음 → 고음 순으로 누르면 <b>상행</b></div>'
+        +'<div style="opacity:0.85;">· 고음 → 저음 순으로 누르면 <b>하행</b>으로 시작합니다</div>'
+        +'<div style="opacity:0.7;font-size:0.68rem;margin-top:2px;">(첫 클릭이 시작 첫음, 두번째 클릭이 도착 첫음)</div>';
     } else {
       rngInfo.innerHTML=legendCommon+'<span>실제 사용 음역'+chip('var(--accent3)')+'</span></span>'
         +'<div style="margin-top:5px;">*클릭 순서로 진행 방향이 정해져요</div>'
@@ -3094,7 +3565,9 @@ function buildAdvancedPanel(body){
         if(isLoop){
           if(midi===Math.min(adv_loopStart,adv_loopEnd))cls+=' range-start';
           else if(midi===Math.max(adv_loopStart,adv_loopEnd))cls+=' range-end';
-          else if(reachable&&reachable.has(midi)&&midi>Math.min(adv_loopStart,adv_loopEnd)&&midi<Math.max(adv_loopStart,adv_loopEnd))cls+=' in-range';
+          // 사용 음역 전체 범위 통짜: 시작~끝 사이 + 끝음 위로 패턴 오프셋만큼 (빈틈 없이)
+          else if(midi>Math.min(adv_loopStart,adv_loopEnd)&&midi<Math.max(adv_loopStart,adv_loopEnd))cls+=' in-range';
+          else if(midi>Math.max(adv_loopStart,adv_loopEnd)&&midi<=Math.max(adv_loopStart,adv_loopEnd)+maxOffset)cls+=' in-range';
         } else {
           // 클릭 순서 기준: 첫클릭=보라(range-start), 두번째클릭=핑크(range-end)
           if(midi===adv_displayStart)cls+=' range-start';
@@ -3167,6 +3640,9 @@ function startExercise(id){
   // 스크롤 위치 저장 (뒤로 갔을 때 복원용)
   sessionStorage.setItem('somi_vocal_scroll', String(window.scrollY));
   EX_ID=id;
+  // 발음B 글자배열 잔재 초기화: 이전 패턴(예: 이에아오우2 5글자)이 남아 으어2가 5칸만 그려지는 것 방지.
+  // null로 비우면 라벨박스가 현재 패턴 기준(getActiveLabels 본체 = 으어2는 7글자)으로 그려짐.
+  _vbCurrentArr=null;_vbSetIdx=0;_vbSetSelected=false;_vbRandomOn=false;_vbResetRandom();
   const pat=currentPat();currentBPM=pat.baseTempo;
   const firstLabel=pat.modeLabels[0];TMODE=LABEL_TO_MODE[firstLabel]||MODE_BASIC;
   // 비브라토 카드: 첫 탭 라벨로 vibType 초기화 (비1=semitone/비2=bend/비3=plain)
@@ -3496,6 +3972,7 @@ function renderPatternCards(){
       +'<span class="meta-tag">'+noteDivLabel+'</span>'
       +'<span class="meta-tag">'+pat.modeLabels.join(' · ')+'</span>';
     if(pat.vowelOptions&&pat.vowelOptions.length>0) tags+='<span class="meta-tag tag-vowel">발음 선택</span>';
+    if(pat.vowelB&&pat.vowelB.sets&&pat.vowelB.sets.length>0) tags+='<span class="meta-tag tag-vowel">발음 선택</span>';
     if(pat.staccato) tags+='<span class="meta-tag" style="background:rgba(247,194,106,0.12);color:var(--counting);border-color:rgba(247,194,106,0.5);">✂ 스타카토</span>';
     if(pat.glissando) tags+='<span class="meta-tag" style="background:rgba(106,247,200,0.12);color:var(--accent3);border-color:rgba(106,247,200,0.5);">〰 글리산도</span>';
     if(pat.vibrato) tags+='<span class="meta-tag" style="background:rgba(247,106,200,0.12);color:var(--accent2);border-color:rgba(247,106,200,0.5);">〜 비브라토</span>';

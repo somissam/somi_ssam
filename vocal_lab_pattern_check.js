@@ -16,6 +16,16 @@
  *   noteDiv:8  → barBeats = 4 (고정), 패턴 8음 + 카운팅 1음, 총 9음, 라벨 9개
  *   noteDiv:16 → barBeats = 4 (고정), 패턴 16음 + 카운팅 1음, 총 17음, 라벨 9개
  *                (16beat의 barBeats=4는 8beat와 동일 — 오류 아님!)
+ *
+ * ── 크로매틱(chromatic16:true) 전용 구조 ──
+ *   유일하게 카운팅 1박에 물리지 않고 패턴 8박 안에서 16음이 딱 끝남.
+ *   offsets 16음 = 상행 0..7(반음) + 하행 7..0(반음).
+ *   noteDiv:8 이지만 1박당 2음 × 8박 = barBeats 8 (기존 8beat와 다름).
+ *   라벨박스 8칸(음높이 고정) 2줄: 위=발음(pron), 아래=계이름(name).
+ *   발음B 세트: 버튼A(#↑#↓)=하행 글자판 동일, 버튼B(#↑b↓)=하행 글자판 교체.
+ *   각 세트는 pronUp/pronDown/nameUp/nameDown(각 8칸) 보유.
+ *   카운팅 idx=0에서 마지막음 재생 안 함(8박 안에 종료).
+ *   ※ 임시표(#/b)는 formatChromaLabel로 inline 표기(7th 패턴에도 동일 적용).
  * ══════════════════════════════════════════════════
  */
 
@@ -78,6 +88,46 @@ VOCAL_PATTERNS.forEach(pat=>{
   const nd = pat.noteDiv || 4;
   const modes = pat.modeLabels.map(l => LABEL_TO_MODE[l] || l);
   const needsWarmup = modes.some(m => ['WU1','WU2','ADV1'].includes(m));
+
+  // ── 크로매틱(chromatic16) 전용 검증 ──
+  if(pat.chromatic16){
+    const tag='chromatic';
+    // offsets: 16음, 상행0..7 + 하행7..0
+    const expOffsets=[0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0];
+    if(!pat.offsets || pat.offsets.length!==16)
+      errors.push(`패턴${pat.id} ${tag}: offsets 길이(${pat.offsets?pat.offsets.length:0}) ≠ 16`);
+    else if(pat.offsets.join(',')!==expOffsets.join(','))
+      errors.push(`패턴${pat.id} ${tag}: offsets ✗ got:[${pat.offsets.join(',')}] exp:[${expOffsets.join(',')}]`);
+    else
+      ok.push(`패턴${pat.id} ${tag}: offsets ✓ 16음(상행0..7 + 하행7..0), barBeats=8, 1박당2음, 8박 안 종료`);
+    // pattern5/7: 16음
+    [['pattern5',pat.pattern5],['pattern7',pat.pattern7]].forEach(([k,arr])=>{
+      if(!arr) return;
+      if(arr.length!==16) errors.push(`패턴${pat.id} ${tag} ${k}: 길이(${arr.length}) ≠ 16`);
+      else ok.push(`패턴${pat.id} ${tag} ${k}: 16음 ✓`);
+    });
+    // 발음B 세트: pronUp/pronDown/nameUp/nameDown 각 8칸
+    if(pat.vowelB && pat.vowelB.sets){
+      pat.vowelB.sets.forEach(s=>{
+        ['pronUp','pronDown','nameUp','nameDown'].forEach(f=>{
+          if(!s[f]) errors.push(`패턴${pat.id} ${tag} 세트[${s.label}]: [${f}] 없음`);
+          else if(s[f].length!==8) errors.push(`패턴${pat.id} ${tag} 세트[${s.label}] ${f}: 칸수(${s[f].length}) ≠ 8`);
+          else ok.push(`패턴${pat.id} ${tag} 세트[${s.label}] ${f}: 8칸 ✓`);
+        });
+      });
+    } else errors.push(`패턴${pat.id} ${tag}: vowelB 세트 없음`);
+    // chromaDefault 8칸
+    if(pat.chromaDefault){
+      ['pronUp','pronDown','nameUp','nameDown'].forEach(f=>{
+        if(!pat.chromaDefault[f]||pat.chromaDefault[f].length!==8)
+          errors.push(`패턴${pat.id} ${tag} chromaDefault.${f}: 8칸 아님`);
+      });
+    } else errors.push(`패턴${pat.id} ${tag}: chromaDefault 없음`);
+    // 목풀기 시퀀스(있으면)
+    if(modes.includes('WU1') && !pat.warmup1Seq)
+      errors.push(`패턴${pat.id} ${tag}: 목풀기1인데 warmup1Seq 없음`);
+    return; // 크로매틱은 일반 checkLP 미적용
+  }
 
   // 1. 모드별 필수 필드
   if(needsWarmup){
