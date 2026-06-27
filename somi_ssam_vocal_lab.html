@@ -1496,6 +1496,12 @@ let loopCount=0,seqStep=0,patStep=0;
 let _chromaPhase=0;  // 크로매틱: 0=상행(1~4박), 1=하행(5~8박)
 let stopScheduled=false,stopAudioTime=0;
 let isPlaying=false,isPaused=false,pausedElapsed=0;
+// 재생영역 컨트롤 아이콘 (이모지 폴백 방지 — SVG 고정). 되돌리기=헤더 새로고침과 동일 아이콘.
+const SVG_RESET='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
+const SVG_PLAY='<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+const SVG_STOP='<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const SVG_PAUSE='<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>';
+function setPlayIcon(playing){const pb=document.getElementById('play-btn');if(pb)pb.innerHTML=playing?SVG_PAUSE:SVG_PLAY;}
 let mainStartWallTime=0,elapsedSeconds=0,timerRafId=null;
 let activeBarType=BAR_TYPE_COUNTING;
 let prevRootMidi=60;
@@ -1577,7 +1583,7 @@ function startEngine(){
   // 클럭 미기동 상태면 같은 제스처 안에서 정찰병(44100/48000)도 함께 기동 — 탭 한 번에 자동 복구
   if(audioCtx.currentTime<=0)_makeProbes();
   // 3) 스케줄러/타이머 셋업 — 콜백 없이 같은 콜스택에서 즉시 실행
-  isPlaying=true;const pb=document.getElementById('play-btn');if(pb)pb.textContent='⏸';
+  isPlaying=true;setPlayIcon(true);
   beatInterval=60/currentBPM;currentNoteInterval=beatInterval;
   const glissWrap=document.getElementById('glissando-slider-wrap');
   if(glissWrap&&glissWrap._setTransition)glissWrap._setTransition(Math.round(beatInterval*1000));
@@ -1609,8 +1615,8 @@ function startEngine(){
   schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
   if(_awaitClock)_startClockWatchdog(); // 클럭 미기동 시 단계적 소생 (suspend/resume → 재생성)
 }
-function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';isPaused=true;pausedElapsed=elapsedSeconds;}
-function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
+function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;setPlayIcon(false);isPaused=true;pausedElapsed=elapsedSeconds;}
+function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;setPlayIcon(false);beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
 function logPractice(){
   if(!_currentProfileId||elapsedSeconds<2) return;
   const pat=currentPat(); if(!pat) return;
@@ -2832,7 +2838,7 @@ function buildPracticeUI(){
 
   /* ── 컨트롤 ── */
   const ctrl=document.createElement('div');ctrl.className='controls';
-  ctrl.innerHTML='<button class="ctrl-btn reset" onclick="hardReset()">↺</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶</button><button class="ctrl-btn stop" onclick="stopExercise()">■</button>';
+  ctrl.innerHTML='<button class="ctrl-btn reset" onclick="hardReset()" aria-label="다시">'+SVG_RESET+'</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()" aria-label="재생">'+SVG_PLAY+'</button><button class="ctrl-btn stop" onclick="stopExercise()" aria-label="정지">'+SVG_STOP+'</button>';
   body.appendChild(ctrl);
 
   /* ── 모드별 키 UI ── */

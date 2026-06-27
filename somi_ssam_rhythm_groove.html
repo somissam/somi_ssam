@@ -663,6 +663,13 @@ let schedulerTimer=null, timerRafId=null;
 let beatQueue=[];
 let stopScheduled=false, stopSuccess=false, stopAudioTime=0;
 
+// 재생영역 컨트롤 아이콘 (이모지 폴백 방지 — SVG 고정). 되돌리기=헤더 새로고침과 동일 아이콘.
+const SVG_RESET = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
+const SVG_PLAY  = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+const SVG_STOP  = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const SVG_PAUSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>';
+function setPlayIcon(playing){ const pb=document.getElementById('play-btn'); if(pb) pb.innerHTML = playing ? SVG_PAUSE : SVG_PLAY; }
+
 function currentPat() { return RHYTHM_PATTERNS.find(p=>p.id===EX); }
 
 function startEngine() {
@@ -685,7 +692,7 @@ function startEngine() {
   }
 
   isPlaying=true;
-  const pb=document.getElementById('play-btn'); if(pb) pb.textContent='⏸';
+  setPlayIcon(true);
   schedulerTimer=setInterval(schedulerTick,25);
   timerRafId=requestAnimationFrame(timerFrame);
 }
@@ -820,7 +827,7 @@ function buildPracticeUI() {
 
   // 컨트롤
   const ctrl=document.createElement('div'); ctrl.className='controls';
-  ctrl.innerHTML=`<button class="ctrl-btn reset" onclick="hardReset()">↺</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()">▶</button><button class="ctrl-btn stop" onclick="stopExercise()">■</button>`;
+  ctrl.innerHTML=`<button class="ctrl-btn reset" onclick="hardReset()" aria-label="다시">${SVG_RESET}</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()" aria-label="재생">${SVG_PLAY}</button><button class="ctrl-btn stop" onclick="stopExercise()" aria-label="정지">${SVG_STOP}</button>`;
   body.appendChild(ctrl);
 
   // 볼륨
@@ -873,7 +880,7 @@ function pauseEngine() {
   isPlaying=false;
   clearInterval(schedulerTimer); schedulerTimer=null;
   cancelAnimationFrame(timerRafId); timerRafId=null;
-  const pb=document.getElementById('play-btn'); if(pb) pb.textContent='▶';
+  setPlayIcon(false);
   const tm=document.getElementById('timer-main'); if(tm) tm.className='timer-main';
   isPaused=true; pausedElapsed=elapsedSeconds;
 }
