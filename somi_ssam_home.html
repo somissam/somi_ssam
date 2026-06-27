@@ -204,34 +204,14 @@ button{font-family:inherit;cursor:pointer;}
   table { min-width: 260px; font-size: 0.78rem; }
   .pm-checkbox { width: 16px; height: 16px; }
 }
-/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
-@keyframes spin{to{transform:rotate(360deg)}}
-.somi-load-overlay{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
-.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
-.somi-load-overlay.hide{opacity:0;pointer-events:none;}
-.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
-.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
-.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
-.somi-load-slow.show{display:block;}
-.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;font-family:inherit;cursor:pointer;}
 </style>
 <script src="stamps.js"></script>
 <script src="common_core.js"></script>
+<script>/* 이 페이지(home)는 로딩막을 hide로 시작 — 원본과 동일하게 먼저 비번/앱
+   화면을 두고 동기화 시점에만 막을 켠다. common_core 인젝션이 이 값을 읽는다. */
+window.__SOMI_LOAD_HIDDEN = true;</script>
 </head>
 <body>
-
-<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
-<div id="somi-load-overlay" class="somi-load-overlay hide">
-  <div class="somi-load-spinner"></div>
-  <div class="somi-load-text">데이터 불러오는 중...</div>
-  <div class="somi-load-sub">SOMI_SSAM</div>
-  <div class="somi-load-slow">
-    연결이 평소보다 느려요.<br>계속 다시 시도하고 있어요.
-    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
-  </div>
-</div>
 
 <!-- ══════════ 스플래시 ══════════ -->
 <div id="splash">
@@ -365,42 +345,29 @@ button{font-family:inherit;cursor:pointer;}
 /* ════════════════════════════════════════════════
    【 섹션 A 】 저장/로드 헬퍼
 ════════════════════════════════════════════════ */
-/* ══════════ 공용 로딩 오버레이 제어 (전 파일 공통 표준) ══════════ */
-let _somiLoadTimer=null;
-function somiStartSlowTimer(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
-  clearTimeout(_somiLoadTimer);
-  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },25000); // 25초 후 비상구 노출
+/* 저장/불러오기: common_core.js의 공용 window.saveData/window.loadData 사용.
+   ★ 이 페이지는 '선생님'이므로 깃발을 켠다 → 공용 saveData가 감시 명단(SOMI_SYNC_WATCH_KEYS)에
+     해당하는 키를 저장할 때 '변경 도장(somi_sync_meta ts)'을 찍는다(학생 페이지가 감지).
+   ※ 깃발은 공용 saveData가 처음 호출되기 전에 켜져 있어야 한다(이 줄이 첫 호출보다 앞). */
+window.__SOMI_IS_TEACHER = true;
+/* 공용이 없을 만일의 경우 폴백 — 기존 home 동작(도장 포함)과 동일 */
+if (typeof window.loadData !== 'function') {
+  window.loadData = function(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; } };
 }
-function somiShowLoading(text){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
-  o.classList.remove('hide'); somiStartSlowTimer();
-}
-function somiHideLoading(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  clearTimeout(_somiLoadTimer); o.classList.add('hide');
-}
-
-function loadData(k, d) {
-  try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e) { return d; }
-}
-// 연습 페이지가 "변경됐을 때만" 재동기화할 수 있도록, 잠금/레벨 변경 시각을 함께 기록
-const _SYNC_WATCH_KEYS = ['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates','somi_teacher_stamps'];
-function saveData(k, v) {
-  try {
-    const json = JSON.stringify(v);
-    localStorage.setItem(k, json);
-    if (window._fsSet) window._fsSet(k, json);
-    // 잠금/레벨류가 바뀌면 동기화 메타(타임스탬프) 갱신 → 학생 연습 페이지가 감지
-    if (_SYNC_WATCH_KEYS.includes(k)) {
-      const meta = { ts: Date.now() };
-      const mj = JSON.stringify(meta);
-      localStorage.setItem('somi_sync_meta', mj);
-      if (window._fsSet) window._fsSet('somi_sync_meta', mj);
-    }
-  } catch(e) {}
+if (typeof window.saveData !== 'function') {
+  const _WK = window.SOMI_SYNC_WATCH_KEYS || ['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates','somi_teacher_stamps'];
+  window.saveData = function(k, v){
+    try {
+      const json = JSON.stringify(v);
+      localStorage.setItem(k, json);
+      if (window._fsSet) window._fsSet(k, json);
+      if (_WK.includes(k)) {
+        const mj = JSON.stringify({ ts: Date.now() });
+        localStorage.setItem('somi_sync_meta', mj);
+        if (window._fsSet) window._fsSet('somi_sync_meta', mj);
+      }
+    } catch(e) {}
+  };
 }
 
 /* ════════════════════════════════════════════════
@@ -2444,7 +2411,9 @@ function renderLevelManager() {
 /* ════════════════════════════════════════════════
    【 섹션 K 】 유틸 / 초기화
 ════════════════════════════════════════════════ */
-function toDateStr(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+/* toDateStr: 공용 1벌(common_core 모듈 U) 우선, 없을 때만 폴백(STEP H). */
+if(typeof window.toDateStr!=='function'){ window.toDateStr=function(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }; }
+var toDateStr=window.toDateStr;
 function calcAge(birthStr){
   if(!birthStr) return '';
   try{

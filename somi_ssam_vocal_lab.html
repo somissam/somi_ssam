@@ -217,32 +217,10 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
   .ctrl-btn.play{width:64px;height:64px;}
   .vbn{font-size:2.5rem;min-width:38px;}
 }
-/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
-@keyframes spin{to{transform:rotate(360deg)}}
-.somi-load-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
-.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
-.somi-load-overlay.hide{opacity:0;pointer-events:none;}
-.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
-.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
-.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
-.somi-load-slow.show{display:block;}
-.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;font-family:inherit;cursor:pointer;}
 </style>
 <script src="common_core.js"></script>
 </head>
 <body>
-<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
-<div id="somi-load-overlay" class="somi-load-overlay">
-  <div class="somi-load-spinner"></div>
-  <div class="somi-load-text">데이터 불러오는 중...</div>
-  <div class="somi-load-sub">SOMI_SSAM</div>
-  <div class="somi-load-slow">
-    연결이 평소보다 느려요.<br>계속 다시 시도하고 있어요.
-    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
-  </div>
-</div>
 <header class="lab-header">
   
   <div style="display:flex;align-items:center;gap:8px;">
@@ -291,6 +269,15 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
    [ 섹션 H ] 진입점 / 네비게이션
 ════════════════════════════════════════════════════════════════ */
 
+/* 저장/불러오기: common_core.js의 공용 window.saveData/window.loadData 사용.
+   (공용이 없을 만일의 경우를 대비한 폴백 — 기존 동작과 동일) */
+if (typeof window.loadData !== 'function') {
+  window.loadData = function(key, def){ try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } };
+}
+if (typeof window.saveData !== 'function') {
+  window.saveData = function(key, val){ try { const j=JSON.stringify(val); localStorage.setItem(key, j); if(window._fsSet) window._fsSet(key, j); } catch(e) {} };
+}
+
 /* ════════════════════════════════════════════════
    【 섹션 A 】 발성 패턴 데이터
    ★ 관리자 편집 구역 ★
@@ -299,6 +286,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ha_8beat_1',
     name: "H-a • 8beat (123454321) (1)",
+    logName: "H-a_8beat_1",
     cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
     pracTitle: "H-a(흐아) · 8beat (1)",
     baseTempo: 60,
@@ -316,6 +304,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ha_8beat_2',
     name: "H-a • 8beat (123454321) (2)",
+    logName: "H-a_8beat_2",
     cardDesc: "흐아 · 8분음표 · 도레미파솔파미레도",
     pracTitle: "H-a(흐아) · 8beat (2)",
     baseTempo: 60,
@@ -339,6 +328,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ha_4beat',
     name: "H-a • 4beat (13531)",
+    logName: "H-a_4beat_발음",
     cardDesc: "흐아 · 발음 선택 · 4분음표 · 도미솔미도",
     pracTitle: "H-a(흐아) · 4beat (13531)",
     baseTempo: 60,
@@ -351,7 +341,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'H-a (흐아)',
-    vowelOptions: [
+    vowelA: [
       {label:'H-a', title:'H-a (흐아)'},
       {label:'Na',  title:'Na (나)'},
       {label:'Ma',  title:'Ma (마)'},
@@ -371,6 +361,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ha_16beat',
     name: "H-a • 16beat (12345432123454321)",
+    logName: "H-a_16beat",
     cardDesc: "흐아 · 16분음표 · 도레미파솔파미레도 (2회 연주)",
     pracTitle: "H-a(흐아) · 16beat (12345432123454321)",
     baseTempo: 60,
@@ -392,6 +383,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_na_4beat_1',
     name: "Na • 4beat (13531) (1)",
+    logName: "Na_4beat_1",
     cardDesc: "나 · 4분음표 · 도미솔미도",
     pracTitle: "Na(나) · 4beat (1)",
     baseTempo: 70,
@@ -409,6 +401,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_na_4beat_2',
     name: "Na • 4beat (13531) (2)",
+    logName: "Na_4beat_2",
     cardDesc: "나 · 4분음표 · 도미솔미도",
     pracTitle: "Na(나) · 4beat (2)",
     baseTempo: 70,
@@ -432,6 +425,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ma_4beat_1',
     name: "Ma • 4beat (13531) (1)",
+    logName: "Ma_4beat_1",
     cardDesc: "마 · 4분음표 · 도미솔미도",
     pracTitle: "Ma(마) · 4beat (1)",
     baseTempo: 70,
@@ -449,6 +443,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ma_4beat_2',
     name: "Ma • 4beat (13531) (2)",
+    logName: "Ma_4beat_2",
     cardDesc: "마 · 4분음표 · 도미솔미도",
     pracTitle: "Ma(마) · 4beat (2)",
     baseTempo: 70,
@@ -472,6 +467,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ieaou_4beat_1',
     name: "ieaou • 4beat (11111) (1)",
+    logName: "ieaou_4beat_1",
     cardDesc: "이에아오우 · 4분음표 · 도도도도도",
     pracTitle: "ieaou(이에아오우) · 4beat (1)",
     baseTempo: 60,
@@ -492,6 +488,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ieaou_4beat_2',
     name: "ieaou • 4beat (11111) (2)",
+    logName: "ieaou_4beat_2_발음",
     cardDesc: "이에아오우 · 4분음표 · 도도도도도",
     pracTitle: "ieaou(이에아오우) · 4beat (2)",
     baseTempo: 60,
@@ -503,7 +500,7 @@ const VOCAL_PATTERNS = [
     korLabels7: ['이','에','아','오','우','으','어'],
     noteDiv: 4,
     display: 'label',
-    /* ── 발음 선택 B (음 하나당 글자 / 패턴 1회 단위 셔플) — 기존 vowelOptions(A)와 완전 독립 ──
+    /* ── 발음 선택 B (음 하나당 글자 / 패턴 1회 단위 셔플) — 기존 vowelA(A)와 완전 독립 ──
        버튼 라벨과 실제 라벨박스 발음을 분리. 5음/7음 각각 독립 글자배열. */
     vowelB: {
       sets: [
@@ -527,6 +524,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ieaoueueo_4beat_1',
     name: "ieaou+eueo • 4beat (1111111) (1)",
+    logName: "ieaoueueo_4beat_1",
     cardDesc: "이에아오우으어 · 4분음표 · 도도도도도도도",
     pracTitle: "ieaou+eueo(이에아오우으어) · 4beat (1)",
     baseTempo: 70,
@@ -547,6 +545,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ieaoueueo_4beat_2',
     name: "ieaou+eueo • 4beat (1111111) (2)",
+    logName: "ieaoueueo_4beat_2_발음",
     cardDesc: "이에아오우으어 · 4분음표 · 도도도도도도도",
     pracTitle: "ieaou+eueo(이에아오우으어) · 4beat (2)",
     baseTempo: 70,
@@ -580,6 +579,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_sung_4beat',
     name: "Sung • 4beat (13531)",
+    logName: "Sung_4beat",
     cardDesc: "썽 · 4분음표 · 도미솔미도",
     pracTitle: "Sung(썽) · 4beat (13531)",
     baseTempo: 70,
@@ -601,6 +601,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_iaiaiai_4beat',
     name: "iaiaiai • 4beat (1358531)",
+    logName: "iaiaiai_4beat",
     cardDesc: "이아이아이아이 · 4분음표 · 도미솔도솔미도",
     pracTitle: "iaiaiai(이아이아이아이) · 4beat (1358531)",
     baseTempo: 70,
@@ -621,6 +622,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ha_8beat_minor',
     name: "Ah • 8beat minor (12b3454b321)",
+    logName: "minor_8beat",
     cardDesc: "아 · 8분음표 · 도레미b파솔파미b레도 (마이너)",
     pracTitle: "Ah(아) · 8beat · minor",
     baseTempo: 60,
@@ -645,6 +647,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_ha_4beat_minor',
     name: "Ah • 4beat minor (1b35b31)",
+    logName: "minor_4beat_발음",
     cardDesc: "아 · 발음 선택 · 4분음표 · 도미b솔미b도 (마이너)",
     pracTitle: "Ah(아) · 4beat · minor",
     baseTempo: 60,
@@ -658,7 +661,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah',  title:'Ah (아)'},
       {label:'Na',  title:'Na (나)'},
       {label:'Ma',  title:'Ma (마)'},
@@ -678,6 +681,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_major_4beat',
     name: "Major 7th • 4beat (135787531)",
+    logName: "Maj7_4beat_발음",
     cardDesc: "메이저 7화음 · 발음 선택 · 4분음표 · 도미솔시도시솔미도",
     pracTitle: "Major 7th(메이저 세븐) · 4beat (135787531)",
     baseTempo: 70,
@@ -691,7 +695,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},
       {label:'Na',  title:'Na (나)'},
       {label:'Ma',  title:'Ma (마)'},
@@ -708,6 +712,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_dominant_4beat',
     name: "Dominant 7th • 4beat (135b7531)",
+    logName: "Dom7_4beat_발음",
     cardDesc: "도미넌트 7화음 · 발음 선택 · 4분음표 · 도미솔시b도시b솔미도",
     pracTitle: "Dominant 7th(도미넌트 세븐) · 4beat",
     baseTempo: 70,
@@ -721,7 +726,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},{label:'Na', title:'Na (나)'},
       {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
@@ -734,6 +739,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_minor_4beat',
     name: "Minor 7th • 4beat (1b35b75b31)",
+    logName: "min7_4beat_발음",
     cardDesc: "마이너 7화음 · 발음 선택 · 4분음표 · 도미b솔시b도시b솔미b도",
     pracTitle: "Minor 7th(마이너 세븐) · 4beat",
     baseTempo: 70,
@@ -747,7 +753,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},{label:'Na', title:'Na (나)'},
       {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
@@ -760,6 +766,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_minor_major_4beat',
     name: "Minor Major 7th • 4beat (1b3575b31)",
+    logName: "minMaj7_4beat_발음",
     cardDesc: "마이너 메이저 7화음 · 발음 선택 · 4분음표 · 도미b솔시도시솔미b도",
     pracTitle: "Minor Major 7th(마이너 메이저 세븐) · 4beat",
     baseTempo: 70,
@@ -773,7 +780,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},{label:'Na', title:'Na (나)'},
       {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
@@ -786,6 +793,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_half_diminished_4beat',
     name: "Half-diminished 7th • 4beat (1b3b5b7b5b31)",
+    logName: "half-dim7_4beat_발음",
     cardDesc: "하프 디미니쉬드 7화음 · 발음 선택 · 4분음표 · 도미b솔b시b도시b솔b미b도",
     pracTitle: "Half-diminished 7th(하프 디미니쉬드 세븐) · 4beat",
     baseTempo: 70,
@@ -799,7 +807,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},{label:'Na', title:'Na (나)'},
       {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
@@ -812,6 +820,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_diminished_4beat',
     name: "Diminished 7th • 4beat (1b3b5bb7b5b31)",
+    logName: "dim7_4beat_발음",
     cardDesc: "디미니쉬드 7화음 · 발음 선택 · 4분음표 · 도미b솔b시bb도시bb솔b미b도",
     pracTitle: "Diminished 7th(디미니쉬드 세븐) · 4beat",
     baseTempo: 70,
@@ -825,7 +834,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},{label:'Na', title:'Na (나)'},
       {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
@@ -838,6 +847,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_augmented_4beat',
     name: "Augmented 7th • 4beat (13#5b7#531)",
+    logName: "aug7_4beat_발음",
     cardDesc: "어그먼티드 7화음 · 발음 선택 · 4분음표 · 도미솔#시b도시b솔#미도",
     pracTitle: "Augmented 7th(어그먼티드 세븐) · 4beat",
     baseTempo: 70,
@@ -851,7 +861,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},{label:'Na', title:'Na (나)'},
       {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
@@ -864,6 +874,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_7th_augmented_major_4beat',
     name: "Augmented Major 7th • 4beat (13#57#531)",
+    logName: "augMaj7_4beat_발음",
     cardDesc: "어그먼티드 메이저 7화음 · 발음 선택 · 4분음표 · 도미솔#시도시솔#미도",
     pracTitle: "Augmented Major 7th(어그먼티드 메이저 세븐) · 4beat",
     baseTempo: 70,
@@ -877,7 +888,7 @@ const VOCAL_PATTERNS = [
     noteDiv: 4,
     display: 'label',
     labelTitle: 'Ah (아)',
-    vowelOptions: [
+    vowelA: [
       {label:'Ah', title:'Ah (아)'},{label:'Na', title:'Na (나)'},
       {label:'Ma', title:'Ma (마)'},{label:'Mum', title:'Mum (멈)'},{label:'Nay', title:'Nay (네이)'},
       {label:'Sung',title:'Sung (썽)'},{label:'무작위', title:'무작위', random:true},
@@ -892,6 +903,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_staccato_ah_8beat',
     name: "Staccato • Ah • 8beat (123454321)",
+    logName: "Staccato_8beat",
     cardDesc: "스타카토 · 아 · 8분음표 · 도레미파솔파미레도",
     pracTitle: "Staccato · Ah(아) · 8beat",
     baseTempo: 60,
@@ -915,13 +927,14 @@ const VOCAL_PATTERNS = [
   },
 
   /* ── 패턴 23-C: Chromatic 8beat (도디레리미파피솔 / 솔피파미리레디도) ──
-     ★ 전용 구조: barBeats=8 (1박당 1음, 8박 안에 딱 끝남 — 다음 카운팅으로 안 물림)
+     ★ 전용 구조: barBeats=8 (1박당 2음, 8박 안에 딱 끝남 — 다음 카운팅으로 안 물림)
      ★ offsets 16음: 상행 0..7(반음), 하행 7..0(반음)
      ★ 라벨박스 8칸 고정(음높이 기준) + 하이라이트 왕복(상행 왼→오, 하행 오→왼)
      ★ 발음B 하행세트: 5~8박에 글자판 교체 (도레레메미파셀솔 / 도레b레미b미파솔b솔) */
   {
     id: 'vocal_chromatic_8beat',
     name: "Chromatic • 8beat (DoDiReRiMiFaFiSol)",
+    logName: "Chromatic_8beat_발음",
     cardDesc: "크로매틱 · 8분음표 · 도디레리미파피솔 / 솔피파미리레디도",
     pracTitle: "Chromatic · 8beat",
     baseTempo: 60,
@@ -974,6 +987,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_glissando_ha_4beat',
     name: "Glissando • H-a • 4beat (15151)",
+    logName: "Glissando_4beat",
     cardDesc: "글리산도 · 흐아 · 4분음표 · 도솔도솔도 (왕복 슬라이딩)",
     pracTitle: "Glissando · H-a(흐아) · 4beat",
     baseTempo: 60,
@@ -998,6 +1012,7 @@ const VOCAL_PATTERNS = [
   {
     id: 'vocal_vibrato',
     name: "Vibrato • Ah • 4beat (11111...)",
+    logName: "Vibrato_4beat",
     cardDesc: "비브라토 · 아 · 4분음표 · 반음 왕복 / 순간 밴딩 · 느림→빠름",
     pracTitle: "Vibrato · Ah(아) · 4beat",
     baseTempo: 60,
@@ -1147,7 +1162,7 @@ function getActiveLabels(){
 function getPatternBarBeats(){
   const pat=currentPat();
   if(pat.vibrato)return 4;  // 비브라토: 4분음표 4박 (도·시·도·시)
-  if(pat.chromatic16)return 8;  // 크로매틱: 1박당 1음, 8박 안에 딱 끝남
+  if(pat.chromatic16)return 8;  // 크로매틱: 1박당 2음, 8박 안에 딱 끝남
   if((pat.noteDiv||4)===8)return 4;
   if((pat.noteDiv||4)===16)return 4;
   // offsets 직접 지정 패턴은 offsets.length-1
@@ -1573,7 +1588,7 @@ function startEngine(){
     schedulerTimer=setInterval(schedulerTick,25);timerRafId=requestAnimationFrame(timerFrame);
     if(_awaitClock)_startClockWatchdog();return;}
   stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
-  _loggedThisRun=false; // 새 재생 시작 — 저장 플래그 초기화
+  window.__SOMI_LOGGED_THIS_RUN=false; // 새 재생 시작 — 중복방지 플래그 초기화(공통 단일주체)
   activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
   if(isGlissandoPat())_resetGlissandoSlider(true);
   _fn_onEngineStart();
@@ -1598,32 +1613,24 @@ function pauseEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTi
 function stopEngine(){isPlaying=false;clearInterval(schedulerTimer);schedulerTimer=null;cancelAnimationFrame(timerRafId);timerRafId=null;const pb=document.getElementById('play-btn');if(pb)pb.textContent='▶';beatQueue=[];stopScheduled=false;activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;mainStartWallTime=0;isPaused=false;pausedElapsed=0;}
 function logPractice(){
   if(!_currentProfileId||elapsedSeconds<2) return;
-  if(_loggedThisRun) return; // 이번 재생분은 이미 저장됨 — 중복 방지
   const pat=currentPat(); if(!pat) return;
-  const modeLabel={
-    [MODE_BASIC]:'기본',[MODE_PRACTICE]:'연습',
-    [MODE_WARMUP_1]:'목풀기1',[MODE_WARMUP_2]:'목풀기2',[MODE_WARMUP_3]:'목풀기3',
-    [MODE_ADVANCED_1]:'심화'
-  }[TMODE]||'기본';
-  try{
-    // 저장 직전 최신본을 다시 읽어 병합 — 다른 기기/탭이 추가한 기록 유실 방지
-    { const _latest=JSON.parse(localStorage.getItem('somi_logs')||'{}'); _practiceLogs=_latest; }
-    if(!_practiceLogs[_currentProfileId]) _practiceLogs[_currentProfileId]=[];
-    const now=new Date();
-    _practiceLogs[_currentProfileId].push({
-      date:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'),
-      time:now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),
-      chapter:'vocal',
-      exercise:pat.name+' ('+modeLabel+')',
-      duration:Math.floor(elapsedSeconds),
-    });
-    _loggedThisRun=true; // 저장 완료 표시
-    const j=JSON.stringify(_practiceLogs);
-    localStorage.setItem('somi_logs',j);
-    if(window._fsSet) window._fsSet('somi_logs',j);
-  }catch(e){}
+  // ── 음식: 발성 고유의 모드라벨 조립(비브라토는 vib_activeTab 기준) ──
+  let modeLabel;
+  if(TMODE===MODE_VIBRATO){
+    // 비브라토는 현재 선택된 탭(vib_activeTab)이 비1/비2/비3을 결정
+    modeLabel = (vib_activeTab==='bend')?'비2':(vib_activeTab==='plain')?'비3':'비1';
+  } else {
+    modeLabel = {
+      [MODE_BASIC]:'기본',[MODE_PRACTICE]:'연습',
+      [MODE_WARMUP_1]:'목1',[MODE_WARMUP_2]:'목2',[MODE_WARMUP_3]:'목3',
+      [MODE_ADVANCED_1]:'심화'
+    }[TMODE]||'기본';
+  }
+  const exercise=(pat.logName||pat.name)+' ('+modeLabel+')';
+  // ── 그릇: 중복방지·재병합·저장·전송은 공통 _appendPracticeLog 1벌이 담당 ──
+  if(typeof window._appendPracticeLog==='function') window._appendPracticeLog(_currentProfileId, 'vocal', exercise, elapsedSeconds);
 }
-function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;_loggedThisRun=false;if(_resyncPending){_resyncPending=false;_checkAndResync();}clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
+function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;window.__SOMI_LOGGED_THIS_RUN=false;if(_resyncPending){_resyncPending=false;_checkAndResync();}clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
 function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
 
 // 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
@@ -2999,7 +3006,7 @@ function buildSeqGridUI(body,seq,selectedIdx,onSelect){
 
 /* ════════════════════════════════════════════════
    【 발음 선택 B 】 음 하나당 글자 / 패턴 1회 단위 셔플
-   ※ 기존 발음 선택 A(_vowel*, vowelOptions)와 완전 독립
+   ※ 기존 발음 선택 A(_vowel*, vowelA)와 완전 독립
    ※ 진입점: getActiveLabels() 를 가로채 _vbCurrentArr 반환
    ───────────────────────────────────────────────
    _vbSetIdx      = 버튼으로 고른 세트 인덱스 (0:이에아오우 / 1:M / 2:N)
@@ -3244,8 +3251,8 @@ const VOWEL_RANDOM_PREP_TEXT='무작위 준비';
 // 셔플백에서 다음 발음 하나 꺼내기 — 비면 새로 섞어 채움
 function _drawVowelFromBag(){
   const pat=currentPat();
-  if(!pat.vowelOptions)return null;
-  const pool=pat.vowelOptions.filter(o=>!o.random);
+  if(!pat.vowelA)return null;
+  const pool=pat.vowelA.filter(o=>!o.random);
   if(pool.length===0)return null;
   if(_vowelBag.length===0){
     _vowelBag=pool.slice();
@@ -3292,17 +3299,17 @@ function _applyRandomVowelCounting(vis){
 }
 function _pickRandomVowel(){
   const pat=currentPat();
-  if(!pat.vowelOptions)return null;
-  const pool=pat.vowelOptions.filter(o=>!o.random);
+  if(!pat.vowelA)return null;
+  const pool=pat.vowelA.filter(o=>!o.random);
   if(pool.length===0)return null;
   return pool[Math.floor(Math.random()*pool.length)];
 }
 function buildVowelSelector(body){
   const pat=currentPat();
-  if(!pat.vowelOptions||pat.vowelOptions.length===0)return;
+  if(!pat.vowelA||pat.vowelA.length===0)return;
   // 선택기 생성 시 첫 발음(일반)으로 상태 초기화
   _vowelRandomOn=false;
-  _vowelCurrent=pat.vowelOptions.find(o=>!o.random)||null;
+  _vowelCurrent=pat.vowelA.find(o=>!o.random)||null;
   const outer=document.createElement('div');
   outer.style.cssText='width:100%;max-width:364px;display:flex;flex-direction:column;align-items:center;gap:8px;';
   const lbl=document.createElement('div');
@@ -3312,7 +3319,7 @@ function buildVowelSelector(body){
   const btnRow=document.createElement('div');
   btnRow.style.cssText='display:flex;gap:5px;flex-wrap:nowrap;justify-content:center;width:100%;';
   const btns=[];
-  pat.vowelOptions.forEach((opt,i)=>{
+  pat.vowelA.forEach((opt,i)=>{
     const b=document.createElement('button');
     b.className='m-tab'+(opt.random?' vowel-random':'')+(i===0?' active':'');
     // 한 줄 정렬: 패딩 최소화 + flex 균등 분배
@@ -3387,7 +3394,7 @@ function buildTempoUI(body){
 /* ── 심화 패널 UI ── */
 function buildAdvancedPanel(body){
   // 발음 선택 패턴이면 심화에서도 선택기 노출 (음정간격 패널과 독립).
-  // 각 함수는 자체 가드가 있어 — 발음A는 vowelOptions 있는 패턴만, 발음B는 vowelB 있는 패턴만
+  // 각 함수는 자체 가드가 있어 — 발음A는 vowelA 있는 패턴만, 발음B는 vowelB 있는 패턴만
   // 그려지므로, 패턴은 자기가 가진 발음 기능만 노출된다(A패턴=A만, B패턴=B만).
   buildVowelSelector(body);
   if(typeof _vbActive==='function'&&_vbActive())buildVowelSelectorB(body);
@@ -3659,29 +3666,11 @@ function closePractice(){
 // ── 잠금 헬퍼 ──
 let _currentProfileId = null;
 let _practiceLogs = null; // Firebase 동기화 후 초기화됨
-let _loggedThisRun = false; // 현재 재생분 저장 여부 — 중복저장 방지
-
-/* ══════════ 공용 로딩 오버레이 제어 (전 파일 공통 표준) ══════════ */
-let _somiLoadTimer=null;
-function somiStartSlowTimer(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
-  clearTimeout(_somiLoadTimer);
-  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },25000); // 25초 후 비상구 노출
-}
-function somiShowLoading(text){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
-  o.classList.remove('hide'); somiStartSlowTimer();
-}
-function somiHideLoading(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  clearTimeout(_somiLoadTimer); o.classList.add('hide');
-}
 
 /* ══════════ 연습기록 병합 (덮어쓰기 방지 — 동기화 전 쌓인 기록 보존) ══════════
    같은 학생끼리 배열을 합치되 완전중복(date+time+exercise+duration)은 1개만 유지 */
-function _mergeLogs(local, remote){
+if(typeof window._mergeLogs!=='function'){
+window._mergeLogs=function(local, remote){
   local = local || {}; remote = remote || {};
   const out = {};
   const ids = new Set([...Object.keys(local), ...Object.keys(remote)]);
@@ -3698,16 +3687,29 @@ function _mergeLogs(local, remote){
     out[id] = merged;
   });
   return out;
+};
 }
+// (다리 함수 제거: 같은 이름이라 자기 자신을 무한 호출하던 버그. 호출부는 window._mergeLogs를 직접 사용)
 
 // ── 접속기록 + 복귀 시 변경감지 재동기화 ──
 let _fsDb = null, _fsDoc = null, _fsGetDoc = null; // Firebase 핸들 (첫 동기화 때 보관)
 let _lastSyncTs = 0;          // 마지막으로 반영한 잠금/레벨 변경 시각
 let _resyncPending = false;   // 연습 중 보류된 재동기화 요청
 // localStorage의 동기화 메타에서 변경 시각(ts) 읽기
-function _readSyncTs(){
-  try{ return (JSON.parse(localStorage.getItem('somi_sync_meta')||'{}').ts)||0; }catch(e){ return 0; }
+if(typeof window._readSyncTs!=='function'){
+window._readSyncTs=function(){
+  try{
+    const m=JSON.parse(localStorage.getItem('somi_sync_meta')||'{}');
+    return Number(m.ts||m.value||0)||0;
+  }catch(e){ return 0; }
+};
 }
+/* STEP I 후속 수정: 함수 선언은 호이스팅으로 window._readSyncTs(common_core 본체)를
+   덮어써 무한재귀를 일으켰다. const 참조로 바꿔 본체를 그대로 가리키게 한다.
+   (common_core 미로드 시를 대비한 폴백 포함 — 기존 동작과 동일) */
+const _readSyncTs = (typeof window._readSyncTs==="function")
+  ? window._readSyncTs
+  : function(){ try{ const m=JSON.parse(localStorage.getItem("somi_sync_meta")||"{}"); return Number(m.ts||m.value||0)||0; }catch(e){ return 0; } };
 // 접속기록 저장 (당일 첫 활동이면 추가, 이후엔 시각만 갱신) — student.html과 동일 규칙
 async function labRefresh() {
   somiShowLoading('최신 데이터 불러오는 중...');
@@ -3782,7 +3784,7 @@ const _REST_VOCAL_ALLOWED = {
 function _getProfileClass(){
   if(!_currentProfileId) return null;
   try{
-    const cs=JSON.parse(localStorage.getItem('somi_class_settings')||'{}');
+    const cs=loadData('somi_class_settings',{});
     return (cs[_currentProfileId]||{}).voClass||null;
   }catch(e){ return null; }
 }
@@ -3790,7 +3792,7 @@ function _getProfileClass(){
 function _getRestStartDate(){
   if(!_currentProfileId) return null;
   try{
-    const r=JSON.parse(localStorage.getItem('somi_rest_start_dates')||'{}');
+    const r=loadData('somi_rest_start_dates',{});
     return r[_currentProfileId]||null;
   }catch(e){ return null; }
 }
@@ -3819,7 +3821,7 @@ function _isLocked(patternId){
   // 테스터 반: 모든 패턴 항상 활성화
   if(_isTesterClass()) return false;
   try{
-    const locks = JSON.parse(localStorage.getItem('somi_pattern_locks')||'{}');
+    const locks = loadData('somi_pattern_locks',{});
     const pl = locks[_currentProfileId];
     // 원래(선생님 설정) 열림 여부
     const baseOpen = pl ? (pl[patternId]===true) : true; // 잠금데이터 없는 구버전 = 열림
@@ -3845,7 +3847,7 @@ const _MODE_LABEL_TO_KEY={'기본':'basic','연습':'free','목풀기1':'warmup2
 // 패턴별 레벨 ID 조회 (신규: {patternId} 단일 키, 구버전: {patternId}__{modeKey} 폴백)
 function _getLvIdForPat(patternId){
   try{
-    const lvs=JSON.parse(localStorage.getItem('somi_pattern_levels')||'{}');
+    const lvs=loadData('somi_pattern_levels',{});
     // 1) 신규 단일 키 (패턴별 레벨 하나)
     if(lvs[patternId]) return lvs[patternId];
     // 2) 구버전 모드별 키 폴백 — 한 패턴 안에서는 값이 동일하므로 첫 발견값 사용
@@ -3867,7 +3869,7 @@ function _getLevel(patternId){
     const lvId=_getLvIdForPat(patternId);
     if(!lvId) return null;
     try{
-      const settings=JSON.parse(localStorage.getItem('somi_level_settings')||'null');
+      const settings=loadData('somi_level_settings',null);
       if(settings){const found=settings.find(l=>l.id===lvId);if(found)return found.label;}
     }catch(e){}
     return lvId;
@@ -3883,7 +3885,7 @@ function _getLevelColor(patternId){
     const m=lvId.match(/^lv(\d+)$/i);
     if(m){const idx=parseInt(m[1])-1;return _TIER_COLORS[idx%_TIER_COLORS.length];}
     try{
-      const settings=JSON.parse(localStorage.getItem('somi_level_settings')||'null');
+      const settings=loadData('somi_level_settings',null);
       if(settings){const idx=settings.findIndex(l=>l.id===lvId);if(idx>=0)return _TIER_COLORS[idx%_TIER_COLORS.length];}
     }catch(e){}
     return null;
@@ -3959,7 +3961,7 @@ function renderPatternCards(){
       +'<span class="meta-tag">'+pat.baseTempo+' BPM</span>'
       +'<span class="meta-tag">'+noteDivLabel+'</span>'
       +'<span class="meta-tag">'+pat.modeLabels.join(' · ')+'</span>';
-    if(pat.vowelOptions&&pat.vowelOptions.length>0) tags+='<span class="meta-tag tag-vowel">발음 선택</span>';
+    if(pat.vowelA&&pat.vowelA.length>0) tags+='<span class="meta-tag tag-vowel">발음 선택</span>';
     if(pat.vowelB&&pat.vowelB.sets&&pat.vowelB.sets.length>0) tags+='<span class="meta-tag tag-vowel">발음 선택</span>';
     if(pat.staccato) tags+='<span class="meta-tag" style="background:rgba(247,194,106,0.12);color:var(--counting);border-color:rgba(247,194,106,0.5);">✂ 스타카토</span>';
     if(pat.glissando) tags+='<span class="meta-tag" style="background:rgba(106,247,200,0.12);color:var(--accent3);border-color:rgba(106,247,200,0.5);">〰 글리산도</span>';
@@ -4047,7 +4049,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     let remote = {};
     try{ remote = JSON.parse(localStorage.getItem('somi_logs')||'{}'); }catch(e){}
     // 이미 메모리에 쌓인 기록과 병합 (덮어쓰기 방지)
-    _practiceLogs = _mergeLogs(_practiceLogs, remote);
+    _practiceLogs = window._mergeLogs(_practiceLogs, remote);
     try{ _lastSyncTs = _readSyncTs(); }catch(e){}
     renderPatternCards();
     _recordAccess();
@@ -4062,6 +4064,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   (async ()=>{
     let fsDb=null, doc=null, getDoc=null, setDoc=null;
     // 5-1. Firebase 모듈 로드 + 초기화 (성공할 때까지 재시도)
+    window.somiSetLoadText && window.somiSetLoadText('서버에 연결하는 중...');
     while(!_offlineForced && !fsDb){
       try{
         const appMod = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
@@ -4089,6 +4092,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     window._fsSet = async(k,j)=>{ try{ await setDoc(doc(fsDb,'somi_data',k),{value:j}); }catch(e){} };
 
     // 5-2. 잠금+레벨+연습기록+메타 동기화 (모든 키 성공할 때까지 재시도)
+    window.somiSetLoadText && window.somiSetLoadText('기록 불러오는 중...');
     const KEYS = ['somi_logs','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_sync_meta'];
     let _ok=false;
     while(!_offlineForced && !_ok){

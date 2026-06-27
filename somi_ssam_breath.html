@@ -166,33 +166,10 @@ button{font-family:inherit;cursor:pointer;}
 #success-overlay{display:none;position:fixed;inset:0;background:rgba(10,10,15,0.96);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
 .success-btn{padding:14px 36px;background:var(--accent);border:none;border-radius:14px;color:white;font-size:1rem;font-family:inherit;cursor:pointer;font-weight:500;}
 @keyframes bounce{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
-/* ══════════ 공용 데이터 로딩 오버레이 (전 파일 공통 표준) ══════════ */
-@keyframes spin{to{transform:rotate(360deg)}}
-.somi-load-overlay{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-  background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
-.theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
-.somi-load-overlay.hide{opacity:0;pointer-events:none;}
-.somi-load-spinner{width:52px;height:52px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
-.somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
-.somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
-.somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
-.somi-load-slow.show{display:block;}
-.somi-load-slow button{margin-top:10px;padding:8px 18px;border-radius:10px;border:1px solid var(--counting);background:transparent;color:var(--counting);font-size:0.8rem;font-weight:600;font-family:inherit;cursor:pointer;}
 </style>
 <script src="common_core.js"></script>
 </head>
 <body>
-
-<!-- ══════════ 공용 데이터 로딩 오버레이 ══════════ -->
-<div id="somi-load-overlay" class="somi-load-overlay">
-  <div class="somi-load-spinner"></div>
-  <div class="somi-load-text">데이터 불러오는 중...</div>
-  <div class="somi-load-sub">SOMI_SSAM</div>
-  <div class="somi-load-slow">
-    연결이 평소보다 느려요.<br>계속 다시 시도하고 있어요.
-    <br><button onclick="somiHideLoading()">오프라인으로 계속하기</button>
-  </div>
-</div>
 
 <!-- ══════════ HEADER ══════════ -->
 <header class="lab-header">
@@ -306,34 +283,19 @@ const DEFAULT_LEVEL_SETTINGS = [
 /* ════════════════════════════════════════════════
    【 섹션 C 】 저장/로드 · 잠금 헬퍼
 ════════════════════════════════════════════════ */
-function loadData(key, def) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
+/* 저장/불러오기: common_core.js의 공용 window.saveData/window.loadData 사용.
+   (공용이 없을 만일의 경우를 대비한 폴백 — 기존 동작과 동일) */
+if (typeof window.loadData !== 'function') {
+  window.loadData = function(key, def){ try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } };
 }
-function saveData(key, val) {
-  try { const j=JSON.stringify(val); localStorage.setItem(key, j); if(window._fsSet) window._fsSet(key, j); } catch(e) {}
-}
-
-/* ══════════ 공용 로딩 오버레이 제어 (전 파일 공통 표준) ══════════ */
-let _somiLoadTimer=null;
-function somiStartSlowTimer(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  const slow=o.querySelector('.somi-load-slow'); if(slow) slow.classList.remove('show');
-  clearTimeout(_somiLoadTimer);
-  _somiLoadTimer=setTimeout(()=>{ if(slow) slow.classList.add('show'); },25000); // 25초 후 비상구 노출
-}
-function somiShowLoading(text){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  if(text){ const t=o.querySelector('.somi-load-text'); if(t) t.textContent=text; }
-  o.classList.remove('hide'); somiStartSlowTimer();
-}
-function somiHideLoading(){
-  const o=document.getElementById('somi-load-overlay'); if(!o) return;
-  clearTimeout(_somiLoadTimer); o.classList.add('hide');
+if (typeof window.saveData !== 'function') {
+  window.saveData = function(key, val){ try { const j=JSON.stringify(val); localStorage.setItem(key, j); if(window._fsSet) window._fsSet(key, j); } catch(e) {} };
 }
 
 /* ══════════ 연습기록 병합 (덮어쓰기 방지 — 동기화 전 쌓인 기록 보존) ══════════
    같은 학생끼리 배열을 합치되 완전중복(date+time+exercise+duration)은 1개만 유지 */
-function _mergeLogs(local, remote){
+if(typeof window._mergeLogs!=='function'){
+window._mergeLogs=function(local, remote){
   local = local || {}; remote = remote || {};
   const out = {};
   const ids = new Set([...Object.keys(local), ...Object.keys(remote)]);
@@ -350,7 +312,9 @@ function _mergeLogs(local, remote){
     out[id] = merged;
   });
   return out;
+};
 }
+// (다리 함수 제거: 같은 이름이라 자기 자신을 무한 호출하던 버그. 호출부는 window._mergeLogs를 직접 사용)
 
 let patternLocks        = loadData('somi_pattern_locks', {});
 let patternLevelOverrides = loadData('somi_pattern_levels', {});
@@ -362,9 +326,20 @@ let currentProfileId    = null; // student.html에서 넘어온 프로필 id
 let _fsDb = null, _fsDoc = null, _fsGetDoc = null;
 let _lastSyncTs = 0;
 let _resyncPending = false;
-function _readSyncTs(){
-  try{ return (JSON.parse(localStorage.getItem('somi_sync_meta')||'{}').ts)||0; }catch(e){ return 0; }
+if(typeof window._readSyncTs!=='function'){
+window._readSyncTs=function(){
+  try{
+    const m=JSON.parse(localStorage.getItem('somi_sync_meta')||'{}');
+    return Number(m.ts||m.value||0)||0;
+  }catch(e){ return 0; }
+};
 }
+/* STEP I 후속 수정: 함수 선언은 호이스팅으로 window._readSyncTs(common_core 본체)를
+   덮어써 무한재귀를 일으켰다. const 참조로 바꿔 본체를 그대로 가리키게 한다.
+   (common_core 미로드 시를 대비한 폴백 포함 — 기존 동작과 동일) */
+const _readSyncTs = (typeof window._readSyncTs==="function")
+  ? window._readSyncTs
+  : function(){ try{ const m=JSON.parse(localStorage.getItem("somi_sync_meta")||"{}"); return Number(m.ts||m.value||0)||0; }catch(e){ return 0; } };
 async function labRefresh() {
   somiShowLoading('최신 데이터 불러오는 중...');
   try {
@@ -433,11 +408,11 @@ const _REST_BREATH_ALLOWED = {
 };
 function _getProfileClass(){
   if(!currentProfileId) return null;
-  try{ const cs=JSON.parse(localStorage.getItem('somi_class_settings')||'{}'); return (cs[currentProfileId]||{}).voClass||null; }catch(e){ return null; }
+  try{ const cs=loadData('somi_class_settings',{}); return (cs[currentProfileId]||{}).voClass||null; }catch(e){ return null; }
 }
 function _getRestStartDate(){
   if(!currentProfileId) return null;
-  try{ const r=JSON.parse(localStorage.getItem('somi_rest_start_dates')||'{}'); return r[currentProfileId]||null; }catch(e){ return null; }
+  try{ const r=loadData('somi_rest_start_dates',{}); return r[currentProfileId]||null; }catch(e){ return null; }
 }
 function _getRestStage(startDateStr){
   if(!startDateStr) return 'month1';
@@ -679,6 +654,7 @@ function startEngine() {
     isPaused = false;
   } else {
     const pat = currentPat();
+    window.__SOMI_LOGGED_THIS_RUN = false; // 새 재생 시작 — 중복방지 플래그 초기화(공통)
     // 쓰기호흡: 카운팅 없이 바로 main 진입 (패턴 안에 카운팅이 내장되어 있음)
     if (pat && pat.scheduler === 'breathWrite') {
       seqPhase = 'main'; seqStep = 0; loopCount = 1;
@@ -810,7 +786,8 @@ function timerFrame(ts) {
     stopScheduled = false;
     logPractice(); // 자동완료 시 항상 로그 저장 (목표달성/일반완료 모두)
     stopEngine();
-    elapsedSeconds = 0; isPaused = false; pausedElapsed = 0;
+    // 타이머/일시정지 상태는 stopEngine()이 이미 정리함. elapsedSeconds는 안 건드림
+    // — 자동완료 후 화면에 마지막 연습시간을 남기기 위함(발성·리듬과 동일). 중복방지는 공통 __SOMI_LOGGED_THIS_RUN.
     if (stopSuccess) showSuccess('목표 시간 달성! 🎉');
     else showSuccess('기본 모드 완료!');
     return;
@@ -1307,20 +1284,10 @@ function stopExercise() {
 function logPractice() {
   if (!currentProfileId || elapsedSeconds < 2) return;
   const pat = currentPat(); if (!pat) return;
-  const now = new Date();
-  if (!practiceLogs[currentProfileId]) practiceLogs[currentProfileId] = [];
-  practiceLogs[currentProfileId].push({
-    date: toDateStr(now),
-    time: now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),
-    chapter: 'breath',
-    exercise: pat.name + (SUB ? ' ('+SUB+')' : ''),
-    duration: Math.floor(elapsedSeconds),
-  });
-  saveData('somi_logs', practiceLogs);
-}
-
-function toDateStr(d) {
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  // ── 음식: 호흡 고유의 exercise 이름 조립 ──
+  const exercise = pat.name + (SUB ? ' ('+SUB+')' : '');
+  // ── 그릇: 중복방지·재병합·저장·전송은 공통 _appendPracticeLog 1벌이 담당 ──
+  if(typeof window._appendPracticeLog==='function') window._appendPracticeLog(currentProfileId, 'breath', exercise, elapsedSeconds);
 }
 
 function showSuccess(msg) {
@@ -1478,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     levelSettings         = loadData('somi_level_settings', null) || DEFAULT_LEVEL_SETTINGS.map(l=>({...l}));
     // 연습기록은 덮어쓰지 않고 이미 메모리에 쌓인 것과 병합
     let remote = {}; try{ remote = JSON.parse(localStorage.getItem('somi_logs')||'{}'); }catch(e){}
-    practiceLogs = _mergeLogs(practiceLogs, remote);
+    practiceLogs = window._mergeLogs(practiceLogs, remote);
     try{ _lastSyncTs = _readSyncTs(); }catch(e){}
     renderPatternCards();
     _maybeShowRestStagePopup();
@@ -1489,6 +1456,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   (async ()=>{
     let fsDb=null, doc=null, getDoc=null, setDoc=null;
     // 1단계: Firebase 모듈 로드 + 초기화 (성공할 때까지 재시도)
+    window.somiSetLoadText && window.somiSetLoadText('서버에 연결하는 중...');
     while(!_offlineForced && !fsDb){
       try{
         const appMod = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
@@ -1514,6 +1482,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     window._fsSet = async (k, j) => { try { await setDoc(doc(fsDb, "somi_data", k), { value: j }); } catch(e) {} };
 
     // 2단계: 잠금+레벨+연습기록+메타 동기화 (모든 키 성공할 때까지 재시도)
+    window.somiSetLoadText && window.somiSetLoadText('기록 불러오는 중...');
     const KEYS = ['somi_logs','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_sync_meta'];
     let _ok=false;
     while(!_offlineForced && !_ok){
