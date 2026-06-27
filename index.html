@@ -290,7 +290,18 @@ async function checkLogin(){
   else if(/Windows/.test(sua)) sDeviceName='🖥️ Windows · 브라우저';
   const sessionEntry={token:sToken,deviceName:sDeviceName,loginAt:new Date().toISOString()};
   saveData('somi_student_session_'+found.id, sessionEntry);
-  if(_fsSet){ try{ await _fsSet('somi_student_session_'+found.id, JSON.stringify(sessionEntry)); }catch(e){} }
+  // ── [F-2 핵심] 서버에 새 토큰 저장을 '반드시 완료'한 뒤 student로 이동 ──
+  // Firebase(_fsSet) 준비 전에 학생이 로그인을 누르면 서버 토큰이 안 바뀌어,
+  // 기존 기기가 영원히 차이를 못 느껴 강제 로그아웃이 안 됨 → 준비될 때까지 잠깐 대기.
+  let _saved=false;
+  for(let i=0;i<30 && !_saved;i++){            // 최대 약 4.5초 대기 (150ms×30)
+    if(_fsSet){
+      try{ await _fsSet('somi_student_session_'+found.id, JSON.stringify(sessionEntry)); _saved=true; }
+      catch(e){ /* 일시 실패 → 잠깐 뒤 재시도 */ }
+    }
+    if(!_saved) await new Promise(r=>setTimeout(r,150));
+  }
+  // 끝내 저장 못 하면(오프라인 등) 그냥 진행 — 로컬 토큰은 이미 저장됨
 
   window.location.href='somi_ssam_student.html';
 }
