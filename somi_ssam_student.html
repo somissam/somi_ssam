@@ -20,14 +20,14 @@
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 button{font-family:inherit;cursor:pointer;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-#app{display:none;flex-direction:column;min-height:100vh;}
-.app-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+#app{display:none;flex-direction:column;min-height:100vh;align-items:center;}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;align-self:stretch;}
 .brand-wrap{display:flex;flex-direction:column;gap:1px;text-align:right;}
 .brand-title{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'DM Mono',monospace;}
 .brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
 .home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);text-decoration:none;font-size:0.85rem;font-weight:500;transition:all 0.2s;font-family:inherit;white-space:nowrap;flex-shrink:0;}
 .home-link:hover{border-color:var(--accent);color:var(--text);}
-.student-tabs{display:flex;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;overflow-x:auto;scrollbar-width:none;}
+.student-tabs{display:flex;border-bottom:2px solid var(--border);background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;overflow-x:auto;scrollbar-width:none;align-self:stretch;}
 .student-tabs::-webkit-scrollbar{display:none;}
 .stab{flex:1;min-width:80px;padding:12px 8px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:0.88rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;white-space:nowrap;position:relative;}
 .stab:hover{color:var(--text);}
@@ -35,7 +35,29 @@ button{font-family:inherit;cursor:pointer;}
 /* ── 설정 탭 빨간 점 ── */
 .stab-dot{position:absolute;top:5px;right:2px;width:10px;height:10px;border-radius:50%;background:#ff0000;box-shadow:0 0 5px 1px rgba(255,0,0,0.8);display:none;}
 .stab-dot.show{display:block;}
-.home-content{padding:20px;max-width:600px;margin:0 auto;}
+.home-content{padding:20px;max-width:500px;width:100%;margin:0 auto;box-sizing:border-box;}
+/* ── 좌우 분할 (640px↑에서 날짜 클릭 시 JS가 split-active 부여) ── */
+#day-detail-panel{display:none;}
+.home-content.split-active{
+  max-width:1020px;
+  display:grid !important;
+  grid-template-columns:500px minmax(320px,500px);
+  grid-template-areas:
+    "card    summary"
+    "calendar detail";
+  justify-content:center;
+  gap:20px;
+  align-items:stretch;
+}
+/* split 시 home-main을 그리드에서 투명화 → 자식(카드·성과·달력)이 그리드 직계처럼 배치 */
+.home-content.split-active > .home-main{display:contents;}
+.home-content.split-active #class-info-box{grid-area:card;margin-bottom:0 !important;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.home-content.split-active .today-summary{grid-area:summary;margin-bottom:0;min-width:0;display:flex;flex-direction:column;justify-content:center;}
+.home-content.split-active .calendar-wrap{grid-area:calendar;min-width:0;align-self:start;}
+.home-content.split-active > #day-detail-panel{
+  grid-area:detail;display:block;min-width:0;align-self:start;position:sticky;top:80px;
+}
+.home-content.split-active #inline-day-log{display:none;}
 /* ── 오늘의 요약 ── */
 .today-summary{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:24px;}
 .today-summary h3{font-size:0.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
@@ -59,14 +81,15 @@ button{font-family:inherit;cursor:pointer;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .cal-header h3{font-size:1rem;font-weight:600;}
 .cal-nav{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem;padding:4px 8px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
 .cal-day-label{text-align:center;font-size:0.82rem;color:var(--text2);padding:7px 0;font-weight:600;}
-.cal-day{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;min-height:40px;transition:all 0.2s;}
+.cal-day{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;transition:all 0.2s;container-type:inline-size;}
 .cal-day:hover{background:var(--surface2);}
 .cal-day.today{background:rgba(124,106,247,0.2);}
 .cal-day.other-month{opacity:0.3;}
-.date-num{position:relative;z-index:2;font-size:1rem;font-weight:500;line-height:1;}
-.teacher-stamp{position:absolute;top:-2px;left:-2px;width:28px;height:28px;z-index:3;pointer-events:none;}
+.date-num{position:relative;z-index:2;font-size:min(31cqw,18px);font-weight:500;line-height:1;}
+.teacher-stamp{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;pointer-events:none;}
+.teacher-stamp svg,.teacher-stamp img{width:100%!important;height:100%!important;object-fit:contain;display:block;}
 /* 선생님 메시지 포스트잇 — 앱 기본 톤과 다르게, 손으로 붙인 쪽지처럼 */
 .teacher-note{position:relative;display:flex;flex-direction:column;gap:3px;width:fit-content;max-width:100%;margin:4px 0 14px auto;padding:10px 13px 9px 34px;background:#fff8c4;background-image:linear-gradient(135deg,#fff8c4 0%,#fdf0a8 100%);border-radius:3px;box-shadow:2px 4px 10px rgba(0,0,0,0.18),0 1px 2px rgba(0,0,0,0.1);transform:rotate(-1deg);}
 .teacher-note::before{content:'';position:absolute;top:-9px;left:50%;width:64px;height:20px;transform:translateX(-50%) rotate(2deg);background:rgba(255,255,255,0.45);box-shadow:0 1px 3px rgba(0,0,0,0.12);}
@@ -75,8 +98,8 @@ button{font-family:inherit;cursor:pointer;}
 .teacher-note-text{font-size:0.82rem;line-height:1.4;color:#3d3010;word-break:break-word;white-space:normal;text-align:right;}
 .teacher-note-sign{font-size:0.82rem;line-height:1.4;color:#3d3010;text-align:right;}
 .student-stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none;}
-.student-stamp svg{width:72%;height:72%;opacity:0.55;}
-.practice-bar-wrap{position:absolute;bottom:2px;left:2px;right:2px;height:3px;display:flex;gap:1px;border-radius:2px;overflow:hidden;z-index:1;}
+.student-stamp img,.student-stamp svg{display:block;}
+.practice-bar-wrap{position:absolute;bottom:3px;left:4px;right:4px;height:5px;display:flex;gap:1px;border-radius:2px;overflow:hidden;z-index:1;}
 .practice-bar-seg{height:100%;border-radius:1px;}
 /* ── 도장 피커 + 로딩 스피너 ── */
 .stamp-picker{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:16px;position:relative;}
@@ -100,13 +123,7 @@ button{font-family:inherit;cursor:pointer;}
 .settings-box h4{font-size:0.88rem;color:var(--text2);margin-bottom:12px;}
 /* ── 모바일 반응형 ── */
 @media (max-width:600px){
-  .home-content{padding:14px;}
-  .today-summary{padding:16px;margin-bottom:16px;}
-  .summary-stats{gap:14px;}
-  .sum-row-val{font-size:1.6rem;}
-  .sum-row-lbl{font-size:0.7rem;}
   .sum-chapters{max-width:33%;gap:5px;margin-top:12px;}
-  .calendar-wrap{padding:14px;}
   .stamp-picker{padding:12px;}
   .stamp-opt{width:40px;height:40px;}
 }
@@ -130,7 +147,7 @@ button{font-family:inherit;cursor:pointer;}
 .info-missing-banner{padding:8px 12px;border-radius:10px;background:rgba(247,106,106,0.1);border:1px solid rgba(247,106,106,0.3);color:#f76a6a;font-size:0.78rem;margin-bottom:14px;display:none;}
 .info-missing-banner.show{display:block;}
 </style>
-<script src="stamps.js"></script>
+<script src="stamps.js?v=20260707f"></script>
 <script src="common_core.js"></script>
 </head>
 <body>
@@ -157,6 +174,7 @@ button{font-family:inherit;cursor:pointer;}
     <button class="stab"        id="tab-settings" onclick="showTab('settings',this)">⚙️ 설정<span class="stab-dot" id="settings-dot"></span></button>
   </div>
   <div id="stab-home" class="home-content">
+    <div class="home-main">
     <div class="today-summary">
       <h3>오늘의 연습 성과</h3>
       <div class="summary-stats">
@@ -184,6 +202,8 @@ button{font-family:inherit;cursor:pointer;}
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
+    </div>
+    <div id="day-detail-panel"></div>
   </div>
   <div id="stab-breath" style="display:none">
     <div class="chapter-goto"><div class="icon">🫁</div><p>호흡 연습 페이지로 이동합니다</p><button class="goto-btn" onclick="goToChapter('breath')">호흡 연습 시작 →</button></div>
@@ -275,7 +295,22 @@ let practiceLogs=loadData('somi_logs',{});
 let teacherStamps=loadData('somi_teacher_stamps',{});
 // ── 학생 날짜별 도장: { "pid_YYYY-MM-DD": "apple" } 형태로 독립 저장 ──
 let studentDayStamps=loadData('somi_student_day_stamps',{});
-function saveStudentDayStamps(){ saveData('somi_student_day_stamps',studentDayStamps); }
+function saveStudentDayStamps(){
+  // 여러 학생이 같은 통합 데이터(somi_student_day_stamps)를 같이 쓰므로,
+  // 저장 직전 서버(디스크) 최신본을 다시 읽어 "내 학생 몫만" 반영하고
+  // 다른 학생이 그 사이 추가/삭제한 도장은 그대로 둔다(통째 덮어쓰기로 인한 유실 방지).
+  let disk={};
+  try{ disk=JSON.parse(localStorage.getItem('somi_student_day_stamps')||'{}')||{}; }catch(e){ disk={}; }
+  if(currentProfile){
+    const prefix=currentProfile.id+'_';
+    Object.keys(disk).forEach(k=>{ if(k.indexOf(prefix)===0 && !(k in studentDayStamps)) delete disk[k]; });
+    Object.keys(studentDayStamps).forEach(k=>{ if(k.indexOf(prefix)===0) disk[k]=studentDayStamps[k]; });
+  } else {
+    disk=studentDayStamps;
+  }
+  studentDayStamps=disk;
+  saveData('somi_student_day_stamps',studentDayStamps);
+}
 let classSettings=loadData('somi_class_settings',{});
 let lessonStarts=loadData('somi_lesson_starts',{});
 let currentTheme=loadData('somi_theme','dark');
@@ -512,20 +547,20 @@ function renderClassInfo(){
     }
   }
   let box=document.getElementById('class-info-box');
-  if(!box){box=document.createElement('div');box.id='class-info-box';document.getElementById('stab-home').insertBefore(box,document.getElementById('stab-home').firstChild);}
+  if(!box){box=document.createElement('div');box.id='class-info-box';const _hm=document.querySelector('#stab-home .home-main');_hm.insertBefore(box,_hm.firstChild);}
   box.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px 24px;margin-bottom:16px;';
   const badgeRow=['리베','시창'].map(ex=>{const on=extras.includes(ex);return`<span style="padding:2px 12px;border-radius:20px;font-size:0.82rem;font-weight:600;border:1.5px solid ${on?'var(--accent3)':'var(--border)'};color:${on?'var(--accent3)':'var(--text2)'};background:${on?'rgba(106,247,200,0.1)':'var(--surface2)'};${on?'':'opacity:0.45;'}">${ex}</span>`;}).join('');
   const daysHtml=days?`
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0;flex-shrink:0;">
       <div style="font-size:0.72rem;font-weight:700;color:var(--accent2);white-space:nowrap;">소미쌤과 ✨</div>
-      <div style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:var(--accent2);white-space:nowrap;">+${days}일</div>
+      <div style="font-size:1.6rem;font-weight:800;color:var(--accent2);white-space:nowrap;">+${days}일</div>
     </div>`:'';
   box.innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <div style="display:flex;flex-direction:column;gap:6px;flex:1;min-width:0;">
         <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
-          <span style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;">${currentProfile.name}</span>
-          <span style="font-size:clamp(1.4rem,4vw,2rem);font-weight:800;color:var(--accent);">${voClass}</span>
+          <span style="font-size:1.6rem;font-weight:800;">${currentProfile.name}</span>
+          <span style="font-size:1.6rem;font-weight:800;color:var(--accent);">${voClass}</span>
         </div>
         <div style="display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;">${badgeRow}</div>
       </div>
@@ -609,11 +644,36 @@ function renderCalendar(){
     const div=document.createElement('div');div.className='cal-day'+(ds===today?' today':'');
     if(dayLogs.length>0){
       const tk=currentProfile.id+'_'+ds;
-      if(teacherStamps[tk]){const tl=document.createElement('div');tl.className='teacher-stamp';tl.innerHTML=getTeacherStampSVG(teacherStamps[tk].stamp, 20);div.appendChild(tl);}
+      if(teacherStamps[tk]){
+        const savedStamp=teacherStamps[tk].stamp;
+        const manualFinal=teacherStamps[tk].manualFinal===true;
+        const isAbsent=(savedStamp==='lessonabsent'||savedStamp==='lessonabsentfinal');
+        const isLesson=(savedStamp==='lessondone'||savedStamp==='lessondonefinal'||isAbsent);
+        let showStamp=savedStamp;
+        // 레슨완이면 등록권 연결 시 마지막여부 자동 반영. 출석/결석은 저장대로 유지. 배지 숫자는 학생에게 안 보임.
+        if(isLesson){
+          let isFinal = manualFinal ? true : (savedStamp==='lessondonefinal'||savedStamp==='lessonabsentfinal');
+          if(!manualFinal && typeof window.somiRoundAt==='function'){
+            const rinfo=window.somiRoundAt(currentProfile.id, ds);
+            if(rinfo) isFinal = rinfo.isFinal;
+          }
+          showStamp = isAbsent ? (isFinal?'lessonabsentfinal':'lessonabsent')
+                               : (isFinal?'lessondonefinal':'lessondone');
+        }
+        const tl=document.createElement('div');tl.className='teacher-stamp';
+        const extraStamp=teacherStamps[tk].extra;
+        if(isLesson && extraStamp && typeof getComboStampSVG==='function'){
+          tl.innerHTML=getComboStampSVG(showStamp, extraStamp);
+        } else {
+          tl.innerHTML=getTeacherStampSVG(showStamp);
+        }
+        div.appendChild(tl);
+      }
       const dayStamp=studentDayStamps[currentProfile.id+'_'+ds];
-      if(dayStamp){const sl=document.createElement('div');sl.className='student-stamp';sl.innerHTML=getStampSVG(dayStamp);div.appendChild(sl);}
+      if(dayStamp){const sl=document.createElement('div');sl.className='student-stamp';sl.innerHTML=getStudentStampSVG(dayStamp);div.appendChild(sl);}
+      else if(typeof window.somiAutoStampSVG==='function'){const sl=document.createElement('div');sl.className='student-stamp';sl.innerHTML=window.somiAutoStampSVG();div.appendChild(sl);}
     }
-    const dn=document.createElement('span');dn.className='date-num';if(dayLogs.length>0)dn.style.fontWeight='800';dn.textContent=d;div.appendChild(dn);
+    const dn=document.createElement('span');dn.className='date-num';dn.textContent=d;div.appendChild(dn);
     if(dayLogs.length>0){const bw=document.createElement('div');bw.className='practice-bar-wrap';['breath','vocal','rhythm'].forEach(c=>{const cnt=dayLogs.filter(l=>l.chapter===c).length;if(cnt>0){const seg=document.createElement('div');seg.className='practice-bar-seg';seg.style.flex=String(cnt);seg.style.background=c==='breath'?'var(--accent)':c==='vocal'?'var(--accent2)':'var(--accent3)';bw.appendChild(seg);}});div.appendChild(bw);}
     div.onclick=()=>showDayLog(ds);grid.appendChild(div);
   }
@@ -641,10 +701,28 @@ function selectStamp(key,el){
   },400);
 }
 
+let _openDayStr=null;  // 현재 열린 상세 날짜 (resize 재판단용)
 function showDayLog(dateStr){
+  _openDayStr=dateStr;
   const logs=(practiceLogs[currentProfile.id]||[]).filter(l=>l.date===dateStr);
-  let box=document.getElementById('inline-day-log');
-  if(!box){box=document.createElement('div');box.id='inline-day-log';box.style.cssText='margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;';document.getElementById('stab-home').appendChild(box);}
+  // 큰 가로화면이면 오른쪽 패널, 좁으면 기존처럼 왼쪽 아래 인라인
+  const stabHome=document.getElementById('stab-home');
+  const wide = window.matchMedia('(min-width:1024px)').matches;
+  // 이전 배치 잔재 정리 (전환 시 중복 방지)
+  const _oldInline=document.getElementById('inline-day-log');
+  const _panel0=document.getElementById('day-detail-panel');
+  let box;
+  if(wide){
+    if(_oldInline) _oldInline.remove();  // 인라인 잔재 제거
+    box=_panel0;
+    box.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;';
+    stabHome.classList.add('split-active');
+  }else{
+    stabHome.classList.remove('split-active');
+    if(_panel0) _panel0.innerHTML='';  // 패널 잔재 제거
+    box=_oldInline;
+    if(!box){box=document.createElement('div');box.id='inline-day-log';box.style.cssText='margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;';document.querySelector('#stab-home .home-main').appendChild(box);}
+  }
   const pc=c=>c==='breath'?'b':c==='vocal'?'v':'r',cn=c=>c==='breath'?'호흡':c==='vocal'?'발성':'리듬';
   // ── 선생님 메시지(포스트잇) — 도장에 코멘트가 있는 날만 ──
   let teacherNoteHtml='';
@@ -661,9 +739,27 @@ function showDayLog(dateStr){
     const opts=Object.keys(STAMPS).map(key=>`<div class="stamp-opt${cur===key?' active':''}" data-stamp="${key}" onclick="selectDayStamp('${dateStr}','${key}',this)">${getStampSVG(key)}</div>`).join('');
     stampHtml=`<div class="stamp-picker" style="margin-top:16px"><h4>이 날의 도장 선택</h4><div class="stamp-options">${opts}</div></div>`;
   }
-  box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1rem;font-weight:700">${dateStr} 연습 기록</h3><button onclick="document.getElementById('inline-day-log').remove()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button></div>`+teacherNoteHtml+(logs.length?`<table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${l.time||''}</td><td><span class="pill ${pc(l.chapter)}">${cn(l.chapter)}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text2);text-align:center;padding:16px">연습 기록이 없어요</p>')+stampHtml;
-  box.scrollIntoView({behavior:'smooth'});
+  box.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><h3 style="font-size:1rem;font-weight:700">${dateStr} 연습 기록</h3><button onclick="closeDayLog()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button></div>`+teacherNoteHtml+(logs.length?`<table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${l.time||''}</td><td><span class="pill ${pc(l.chapter)}">${cn(l.chapter)}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`).join('')}</tbody></table>`:'<p style="color:var(--text2);text-align:center;padding:16px">연습 기록이 없어요</p>')+stampHtml;
+  if(!wide) box.scrollIntoView({behavior:'smooth'});
 }
+/* 상세 닫기 — 인라인/오른쪽패널 둘 다 처리 + 분할 해제 */
+function closeDayLog(){
+  _openDayStr=null;
+  const stabHome=document.getElementById('stab-home');
+  const inline=document.getElementById('inline-day-log');
+  if(inline) inline.remove();
+  const panel=document.getElementById('day-detail-panel');
+  if(panel) panel.innerHTML='';
+  stabHome.classList.remove('split-active');
+}
+/* 화면 크기 바뀌면 좌우분할 여부 재판단 — 펼침↔접음 자동 전환 */
+let _resizeTimer=null;
+window.addEventListener('resize', function(){
+  clearTimeout(_resizeTimer);
+  _resizeTimer=setTimeout(function(){
+    if(_openDayStr) showDayLog(_openDayStr);  // 열린 상세가 있으면 현재 화면폭 기준으로 다시 배치
+  }, 150);
+});
 
 /* ── 날짜별 도장 선택 (연습 기록 있는 날만) ── */
 function selectDayStamp(dateStr,key,el){
@@ -731,10 +827,12 @@ document.addEventListener('DOMContentLoaded',async function(){
     } else {
       somiHideLoading();
       window.location.href='index.html';
+      return;  // 로그인 페이지로 떠나는 중 — 아래 동기화 루프로 진입하지 않음(렌더러 과부하 차단)
     }
   } else {
     somiHideLoading();
     window.location.href='index.html';
+    return;  // 로그인 페이지로 떠나는 중 — 아래 동기화 루프로 진입하지 않음(렌더러 과부하 차단)
   }
   // 비상구 버튼이 눌리면 재시도 중단
   let _offlineForced=false;
@@ -743,6 +841,8 @@ document.addEventListener('DOMContentLoaded',async function(){
   })(somiHideLoading);
 
   let _syncOk=false;
+  let _syncTries=0;                 // 재시도 횟수 — 무한 반복으로 인한 메모리 누적/렌더러 다운 방지
+  const _SYNC_MAX_TRIES=8;          // 이 횟수만큼 실패하면 오프라인(로컬 데이터)으로 진입
   while(!_offlineForced && !_syncOk){
    try{
     const{initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
@@ -831,7 +931,16 @@ document.addEventListener('DOMContentLoaded',async function(){
     somiHideLoading();  // 동기화 완료 — 혹시 아직 떠있으면 확실히 해제
    }catch(e){
      console.warn('student Firebase 동기화 재시도:',e.message);
-     await new Promise(r=>setTimeout(r,1500));
+     _syncTries++;
+     if(_syncTries>=_SYNC_MAX_TRIES){
+       // 상한 도달 — 더 돌면 메모리가 쌓여 렌더러가 다운될 수 있어, 받아둔 로컬 데이터로 화면을 띄우고 루프 탈출
+       console.warn('student 동기화 '+_SYNC_MAX_TRIES+'회 실패 — 오프라인(로컬 데이터)으로 진입');
+       _offlineForced=true;
+       somiHideLoading();
+       break;
+     }
+     // 점진적 지연(1.5s→최대 6s) — 빠르게 무한 재시도하며 객체를 쌓지 않도록
+     await new Promise(r=>setTimeout(r, Math.min(1500*_syncTries, 6000)));
    }
   }
 });

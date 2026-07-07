@@ -118,7 +118,8 @@ button{font-family:inherit;cursor:pointer;}
     </div>
     <div class="form-group">
       <div class="form-label">생년월일</div>
-      <input type="date" class="form-input" id="new-birth" autocomplete="off">
+      <input type="text" class="form-input" id="new-birth" inputmode="numeric" autocomplete="off" placeholder="예: 1993.05.13" maxlength="10" oninput="_onBirthInput(this)">
+      <input type="hidden" id="new-birth-value">
     </div>
     <div class="form-group">
       <div class="form-label">비밀번호 설정</div>
@@ -329,6 +330,7 @@ function showCreateProfile(){
   document.getElementById('new-name').value='';
   document.getElementById('new-pw').value='';
   document.getElementById('new-birth').value='';
+  document.getElementById('new-birth-value').value='';
   selectedGender='';
   document.getElementById('gbtn-f').classList.remove('active');
   document.getElementById('gbtn-m').classList.remove('active');
@@ -340,6 +342,17 @@ function showCreateProfile(){
   setTimeout(()=>document.getElementById('new-name').focus(),100);
 }
 
+/* ── 생년월일 숫자 입력: 8자리(YYYYMMDD) 입력 → 화면엔 1993.05.13, 저장은 1993-05-13 ── */
+function _onBirthInput(el){
+  // 공통 코어(common_core: parseNumericDate) 사용 — 점삽입/검증 1벌 공유
+  const r = (typeof window.parseNumericDate==='function')
+    ? window.parseNumericDate(el.value)
+    : (function(){var d=el.value.replace(/[^0-9]/g,'').slice(0,8);return {shown:d,iso:''};})();
+  el.value = r.shown;
+  const hid = document.getElementById('new-birth-value');
+  if(hid) hid.value = r.iso;
+}
+
 function selectGender(g){
   selectedGender=g;
   document.getElementById('gbtn-f').classList.toggle('active',g==='female');
@@ -349,7 +362,7 @@ function selectGender(g){
 async function createProfile(){
   const name=document.getElementById('new-name').value.trim();
   const pw=document.getElementById('new-pw').value;
-  const birth=document.getElementById('new-birth').value||''; // 필수 항목
+  const birth=document.getElementById('new-birth-value').value||''; // 변환된 YYYY-MM-DD (필수)
   document.getElementById('create-error').style.display='none';
   document.getElementById('create-duplicate-error').style.display='none';
 

@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>소미쌤 · 등록대장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   등록대장 — 독립 파일. 저장소 somi_ledger_*.
+   기존 앱 데이터(somi_profiles / somi_class_settings / somi_lesson_starts)는
+   오직 읽기만 한다. 본체를 절대 건드리지 않는다.
+   테마 토큰은 앱(home)과 동일하게 맞춰 "앱의 일부"처럼 보이게 함.
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  --bg:#0a0a0f; --surface:#13131a; --surface2:#1c1c27; --border:#2a2a3d;
+  --accent:#7c6af7; --accent2:#f76ac8; --accent3:#6af7c8; --counting:#f7c26a;
+  --text:#e8e8f0; --text2:#8888aa;
+  /* 등록대장 전용 의미색 */
+  --sales:#6af7a0;      /* 매출 = 들어오는 돈: 민트그린 */
+  --expense:#f7c26a;    /* 매입 = 나가는 돈: 앰버 */
+  --ok:#6af7a0;         /* 적격증빙 초록 */
+  --warn:#ff6a6a;       /* 증빙 부족 빨강 */
+  --acctB:#f76ac8;      /* 계좌B 표시색 (화면에서만) */
+}
+/* ── 아이보리 테마 (home과 동일. body.theme-ivory 일 때 적용) ── */
+body.theme-ivory{
+  --bg:#f5f0e8; --surface:#fffdf7; --surface2:#f0ebe0; --border:#d8cfc0;
+  --accent:#6b5ce7; --accent2:#e05fa0; --accent3:#2db89a; --counting:#c8960a;
+  --text:#2a2420; --text2:#7a6e60;
+  --sales:#1f9e63; --expense:#c8890a;
+  --ok:#1f9e63; --warn:#d64545; --acctB:#e05fa0;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Noto Sans KR',sans-serif;
+  background:var(--bg); color:var(--text);
+  font-size:15px; line-height:1.5;
+  padding-bottom:40px;
+}
+a{color:inherit;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;font-size:15px;}
+
+/* ── 상단 헤더 ── */
+.app-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.brand-wrap{display:flex;flex-direction:column;gap:1px;text-align:right;}
+.brand-title{
+  font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;
+  background:linear-gradient(135deg,var(--counting),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  font-family:'DM Mono',monospace;
+}
+.brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
+.home-link{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:10px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text2);text-decoration:none;
+  font-size:0.85rem;font-weight:500;transition:all 0.2s;
+  font-family:inherit;white-space:nowrap;flex-shrink:0;
+}
+
+/* ── 탭 (세 개의 방) ── */
+.tabs{
+  display:flex;gap:6px;padding:0 18px;margin-top:6px;
+  max-width:760px;
+}
+.tab{
+  flex:1;padding:11px 8px;border-radius:11px 11px 0 0;
+  border:1px solid var(--border);border-bottom:none;
+  background:var(--surface);color:var(--text2);
+  font-weight:700;font-size:0.9rem;text-align:center;
+}
+.tab.active{
+  background:var(--surface2);color:var(--text);
+  box-shadow:inset 0 3px 0 var(--accent);
+}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px;}
+.panel{
+  display:none;
+  background:var(--surface2);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 14px 14px;padding:18px 16px 22px;
+  margin-top:-1px;
+}
+.panel.active{display:block;}
+
+/* ── 공통: 섹션 제목 ── */
+.sec-title{font-weight:800;font-size:0.98rem;margin:6px 0 12px;display:flex;align-items:center;gap:7px;}
+.sec-hint{font-size:0.76rem;color:var(--text2);font-weight:400;}
+
+/* ── 입력 폼 ── */
+.form-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:13px;padding:15px 14px;margin-bottom:16px;
+}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:0.78rem;font-weight:600;color:var(--text2);margin-bottom:5px;}
+.field label .req{color:var(--warn);margin-left:3px;}
+.field input,.field select,.field textarea{
+  width:100%;padding:10px 11px;border-radius:9px;
+  border:1px solid var(--border);background:var(--surface2);color:var(--text);
+  outline:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+.field-row{display:flex;gap:10px;}
+.field-row .field{flex:1;}
+
+/* 계좌 A/B 토글 (화면에서만) */
+.acct-toggle{display:flex;gap:8px;}
+.acct-btn{
+  flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);font-weight:700;font-size:0.85rem;
+}
+.acct-btn.sel-a{background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--text);}
+.acct-btn.sel-b{background:rgba(247,106,200,0.18);border-color:var(--acctB);color:var(--text);}
+.subj-toggle{display:flex;gap:8px;}
+.subj-btn{
+  flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);font-weight:700;font-size:0.85rem;
+}
+.subj-btn.on{background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--text);}
+
+.btn-primary{
+  width:100%;padding:13px;border-radius:11px;border:none;
+  background:var(--accent);color:#fff;font-weight:800;font-size:0.95rem;
+}
+.btn-primary.sales{background:var(--sales);color:#04170d;}
+.btn-primary.expense{background:var(--expense);color:#2a1d05;}
+
+/* ── 목록 행 ── */
+.ledger-list{margin-top:6px;}
+.empty{
+  text-align:center;color:var(--text2);font-size:0.85rem;
+  padding:34px 10px;border:1px dashed var(--border);border-radius:12px;
+}
+.row{
+  display:flex;align-items:center;gap:11px;
+  padding:12px 13px;border:1px solid var(--border);border-radius:12px;
+  background:var(--surface);margin-bottom:9px;
+}
+.row .amt{font-weight:800;font-size:0.98rem;margin-left:auto;white-space:nowrap;}
+.row .amt.in{color:var(--sales);}
+.row .amt.out{color:var(--expense);}
+.row-actions{display:flex;gap:4px;flex-shrink:0;}
+.row-actions button{
+  background:none;border:none;cursor:pointer;padding:4px;
+  font-size:0.95rem;line-height:1;border-radius:7px;opacity:0.7;
+}
+.row-actions button:hover{opacity:1;background:var(--surface2);}
+.pill{
+  display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:0.68rem;font-weight:700;border:1px solid var(--border);
+}
+.pill.b{background:rgba(247,106,200,0.14);border-color:var(--acctB);color:var(--acctB);}
+.pill.a{background:rgba(124,106,247,0.12);border-color:var(--accent);color:var(--accent);}
+.pill.ok{background:rgba(106,247,160,0.12);border-color:var(--ok);color:var(--ok);}
+.pill.warn{background:rgba(255,106,106,0.14);border-color:var(--warn);color:var(--warn);}
+.pill.kind{background:rgba(106,199,247,0.14);border-color:#6ac7f7;color:#3a9fd4;}
+.btn-cancel{
+  width:100%;padding:11px;border-radius:11px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text2);font-weight:700;font-size:0.9rem;font-family:inherit;cursor:pointer;
+}
+/* 등록·취소 버튼 묶음: 평소엔 세로, 수정 모드일 땐 한 줄 좌우 분할 */
+.form-btns{display:flex;flex-direction:column;gap:8px;}
+.form-btns.editing{flex-direction:row;}
+.form-btns.editing .btn-cancel{order:1;flex:0 0 40%;}   /* 취소 = 왼쪽 40% */
+.form-btns.editing .btn-primary{order:2;flex:1 1 auto;}  /* 완료 = 오른쪽 나머지 */
+
+/* ── 내보내기 구역 ── */
+.export-box{border-radius:14px;padding:16px 15px;margin-bottom:16px;}
+.export-box.tax{border:2px solid var(--accent);background:rgba(124,106,247,0.06);}
+.export-box.mine{border:1px solid var(--border);background:var(--surface);}
+.export-box h3{margin:0 0 4px;font-size:0.95rem;font-weight:800;}
+.export-box .desc{font-size:0.76rem;color:var(--text2);margin-bottom:12px;}
+.export-btns{display:flex;gap:9px;flex-wrap:wrap;}
+.export-btns button{
+  flex:1;min-width:130px;padding:11px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);font-weight:700;font-size:0.85rem;
+}
+.export-box.tax .export-btns button{border-color:var(--accent);}
+.warn-line{
+  font-size:0.73rem;color:var(--warn);margin-top:11px;
+  display:flex;align-items:center;gap:6px;
+}
+.period{display:flex;gap:10px;align-items:center;margin:12px 0;}
+.period input{
+  flex:1;padding:9px 10px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);
+}
+.stub{
+  color:var(--text2);font-size:0.8rem;text-align:center;
+  padding:18px;border:1px dashed var(--border);border-radius:11px;margin-top:14px;
+}
+</style>
+<script>window.__SOMI_LOAD_HIDDEN=true;</script>
+<script src="common_core.js"></script>
+</head>
+<body>
+
+<div class="app-header">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button onclick="location.reload()" aria-label="새로고침" title="최신 데이터 불러오기" style="background:none;border:none;color:var(--text2);width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex-shrink:0;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+    <a class="home-link" href="somi_ssam_home.html?mode=teacher">← 소미쌤 홈</a>
+  </div>
+  <div class="brand-wrap">
+    <div class="brand-title">📒 등록대장</div>
+    <div class="brand-sub">LEDGER · SOMI_SSAM</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-sales"  onclick="showTab('sales')">매출</button>
+  <button class="tab"        id="tab-expense" onclick="showTab('expense')">매입</button>
+  <button class="tab"        id="tab-export"  onclick="showTab('export')">내보내기</button>
+</div>
+
+<div class="wrap">
+
+  <!-- ══════════ 매출 ══════════ -->
+  <div class="panel active" id="panel-sales">
+    <div class="sec-title">💰 매출 등록 <span class="sec-hint">학생이 낸 돈 (등록·입금)</span></div>
+
+    <div class="form-card">
+      <div class="field-row">
+        <div class="field">
+          <label>입금일<span class="req">*</span></label>
+          <input type="text" id="s-paydate" inputmode="numeric" placeholder="2026-08-01">
+        </div>
+        <div class="field">
+          <label>학생<span class="req">*</span></label>
+          <select id="s-student"><option value="">선택…</option></select>
+        </div>
+        <div class="field">
+          <label>입금자<span class="req">*</span></label>
+          <input type="text" id="s-payer" placeholder="통장 이름">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>금액<span class="req">*</span></label>
+          <input type="text" id="s-amount" inputmode="numeric" placeholder="원">
+        </div>
+        <div class="field">
+          <label>수입 종류<span class="req">*</span></label>
+          <select id="s-kind">
+            <option value="lesson">레슨</option>
+            <option value="studio">녹음실(엔지니어링)</option>
+            <option value="rental">연습실 대여</option>
+            <option value="etc">기타</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>회차 <span class="sec-hint">(레슨만)</span></label>
+          <div style="display:flex;gap:6px;">
+            <select id="s-sessions" onchange="toggleCustomSessions()" style="flex:1;min-width:0;">
+              <option value="">—</option>
+              <option value="4">4회</option>
+              <option value="8">8회</option>
+              <option value="custom">특수(직접입력)</option>
+            </select>
+            <input type="text" id="s-sessions-custom" inputmode="numeric" placeholder="숫자 입력" style="display:none;flex:1;min-width:0;">
+          </div>
+        </div>
+        <div class="field">
+          <label>첫 사용일 <span class="sec-hint">(선택)</span></label>
+          <input type="text" id="s-firstclass" inputmode="numeric" placeholder="수업/이용 시작일">
+        </div>
+      </div>
+
+      <div class="field" id="s-subject-wrap">
+        <label>과목 <span class="sec-hint">(등록하면 학생 프로필에 반영)</span></label>
+        <div class="subj-toggle" id="s-subjects">
+          <button type="button" class="subj-btn" data-subj="리베" onclick="toggleSubj(this)">리베</button>
+          <button type="button" class="subj-btn" data-subj="시창" onclick="toggleSubj(this)">시창</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>소속 반 <span class="sec-hint">(프로필 반영)</span></label>
+          <select id="s-class">
+            <option value="">— 변경 안 함</option>
+            <option value="취미반">취미반</option>
+            <option value="전문반">전문반</option>
+            <option value="입시반">입시반</option>
+            <option value="단기반">단기반</option>
+            <option value="숨고르기">숨고르기</option>
+            <option value="테스터">테스터</option>
+            <option value="종료반">종료반</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>받은 방법<span class="req">*</span></label>
+          <select id="s-method">
+            <option value="transfer">계좌이체</option>
+            <option value="card">카드</option>
+            <option value="cash">현금</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>증빙 상태<span class="req">*</span></label>
+        <select id="s-proof">
+          <option value="cash_receipt_num">현금영수증 (학생 번호)</option>
+          <option value="cash_receipt_parent">현금영수증 (부모님 번호)</option>
+          <option value="cash_receipt_1234">현금영수증 (1234 자진발급)</option>
+          <option value="none">아직 안 끊음 (계좌이체만)</option>
+          <option value="card">카드결제</option>
+        </select>
+      </div>
+
+
+      <div class="field">
+        <label>입금 계좌 <span class="sec-hint">(화면에서만 — 세무 파일엔 절대 안 나감)</span></label>
+        <div class="acct-toggle">
+          <button type="button" class="acct-btn sel-a" id="s-acct-a" onclick="pickSalesAcct('A')">A · 일반</button>
+          <button type="button" class="acct-btn" id="s-acct-b" onclick="pickSalesAcct('B')">B · 사업용</button>
+        </div>
+      </div>
+
+      <div class="form-btns" id="s-btns">
+        <button class="btn-primary sales" onclick="addSales()" id="s-submit-btn">매출 등록</button>
+        <button class="btn-cancel" onclick="cancelEditSales()" id="s-cancel-btn" style="display:none;">✕ 수정 취소</button>
+      </div>
+    </div>
+
+    <div class="sec-title" style="justify-content:space-between;">등록 내역 <span id="sales-sum" style="font-size:0.8rem;font-weight:700;color:var(--sales);"></span></div>
+    <div class="ledger-list" id="sales-list">
+      <div class="empty">아직 등록된 매출이 없어요. 위에서 첫 건을 추가해 보세요.</div>
+    </div>
+  </div>
+
+  <!-- ══════════ 매입 ══════════ -->
+  <div class="panel" id="panel-expense">
+    <div class="sec-title">🧾 매입 등록 <span class="sec-hint">사업에 쓴 돈 (임대료·장비·교재 등)</span></div>
+
+    <div class="form-card">
+      <div class="field-row">
+        <div class="field">
+          <label>쓴 날짜<span class="req">*</span></label>
+          <input type="text" id="e-date" inputmode="numeric" placeholder="2026-07-01">
+        </div>
+        <div class="field">
+          <label>금액<span class="req">*</span></label>
+          <input type="text" id="e-amount" inputmode="numeric" placeholder="원">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>어디에 썼나<span class="req">*</span></label>
+          <select id="e-category">
+            <option value="rent">연습실·작업실 월세</option>
+            <option value="gear">악기·장비 구입</option>
+            <option value="audio">음향장비·마이크</option>
+            <option value="book">교재·악보</option>
+            <option value="production">음원·편곡·반주 제작</option>
+            <option value="subscription">프로그램·앱 구독</option>
+            <option value="transport">교통·출장</option>
+            <option value="styling">의상·헤어·메이크업(공연용)</option>
+            <option value="ad">광고·홍보</option>
+            <option value="comm">통신(폰·인터넷)</option>
+            <option value="meal">식대·다과</option>
+            <option value="opening">개업준비 (등록 전 지출)</option>
+            <option value="etc">기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>증빙 종류<span class="req">*</span></label>
+          <select id="e-proof">
+            <optgroup label="적격 ✅ (비용 인정)">
+              <option value="tax_invoice">세금계산서 / 계산서</option>
+              <option value="card">신용카드 전표</option>
+              <option value="cash_receipt">현금영수증(지출증빙용)</option>
+            </optgroup>
+            <optgroup label="부족 ⚠️">
+              <option value="receipt">그냥 영수증·간이영수증</option>
+              <option value="transfer_only">계좌이체 내역만</option>
+              <option value="none">증빙 없음</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>결제수단<span class="req">*</span> <span class="sec-hint">(사실대로)</span></label>
+          <select id="e-paymethod">
+            <option value="personal_card">개인카드</option>
+            <option value="personal_acct">개인계좌</option>
+            <option value="biz_acct">사업용계좌</option>
+            <option value="cash">현금</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>거래처 <span class="sec-hint">(선택)</span></label>
+          <input type="text" id="e-vendor" placeholder="예: OO악기">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>지출 계좌 <span class="sec-hint">(화면에서만)</span></label>
+        <div class="acct-toggle">
+          <button type="button" class="acct-btn sel-a" id="e-acct-a" onclick="setExpenseAcct('A')">A · 일반</button>
+          <button type="button" class="acct-btn" id="e-acct-b" onclick="setExpenseAcct('B')">B · 사업용</button>
+        </div>
+      </div>
+
+      <div class="form-btns" id="e-btns">
+        <button class="btn-primary expense" onclick="addExpense()" id="e-submit-btn">매입 등록</button>
+        <button class="btn-cancel" onclick="cancelEditExpense()" id="e-cancel-btn" style="display:none;">✕ 수정 취소</button>
+      </div>
+    </div>
+
+    <div class="sec-title" style="justify-content:space-between;">지출 내역 <span id="expense-sum" style="font-size:0.8rem;font-weight:700;color:var(--expense);"></span></div>
+    <div class="ledger-list" id="expense-list">
+      <div class="empty">아직 등록된 매입이 없어요.</div>
+    </div>
+  </div>
+
+  <!-- ══════════ 내보내기 ══════════ -->
+  <div class="panel" id="panel-export">
+
+    <div class="form-card" style="border:1px solid var(--acctB);">
+      <div class="sec-title" style="margin-bottom:8px;">🏦 사업자 통장 개설일 <span class="sec-hint">(계좌 자동 추천 기준)</span></div>
+      <div style="font-size:0.76rem;color:var(--text2);margin-bottom:10px;line-height:1.5;">
+        이 날짜 <b>이후</b> 입금 건은 계좌B로 자동 추천됩니다. (추천일 뿐, 등록할 때 언제든 A/B로 바꿀 수 있어요.)<br>
+        아직 통장이 없으면 <b>비워 두세요</b> → 전부 계좌A로 추천됩니다.
+      </div>
+      <div class="field-row" style="align-items:flex-end;">
+        <div class="field" style="margin-bottom:0;">
+          <label>개설일</label>
+          <input type="text" id="biz-date" inputmode="numeric" placeholder="예: 2026-08-01 (없으면 비움)">
+        </div>
+        <button type="button" onclick="saveBizDate()" style="padding:10px 16px;border-radius:9px;border:1px solid var(--acctB);background:var(--surface2);color:var(--text);font-weight:700;white-space:nowrap;">저장</button>
+      </div>
+    </div>
+
+    <div class="period">
+      <input type="text" id="ex-from" inputmode="numeric" placeholder="시작일 2026-01-01">
+      <span style="color:var(--text2)">~</span>
+      <input type="text" id="ex-to" inputmode="numeric" placeholder="종료일 2026-12-31">
+    </div>
+
+    <div class="export-box tax">
+      <h3>📤 세무사 제출용</h3>
+      <div class="desc">매출은 계좌B만, 매입은 전부(개업준비비 포함) 내보냅니다. 파일엔 계좌 구분이 전혀 없습니다.</div>
+      <div class="export-btns">
+        <button onclick="exportTax('sales')">매출 내보내기</button>
+        <button onclick="exportTax('expense')">매입 내보내기</button>
+      </div>
+      <div class="warn-line">⚠ 이 파일은 세무사에게 주는 겁니다. 계좌 A/B 표시가 없습니다.</div>
+    </div>
+
+    <div class="export-box mine">
+      <h3>🏠 내 확인용</h3>
+      <div class="desc">계좌 구분이 다 보입니다. 세무사에게 주지 마세요.</div>
+      <div class="export-btns">
+        <button onclick="exportMine('sales-all')">전체 매출 (A+B)</button>
+        <button onclick="exportMine('sales-byacct')">계좌별로 보기</button>
+        <button onclick="exportMine('expense-all')">전체 매입</button>
+      </div>
+    </div>
+
+    <div class="stub">파일은 CSV로 저장됩니다. 엑셀·구글시트에서 바로 열려요. 기간을 비우면 전체가 나갑니다.</div>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   등록대장 로직 — 자체 저장소 somi_ledger_*.
+   기존 앱 데이터는 읽기 전용. 뼈대 단계: 입력→저장→목록 렌더까지.
+   집계/내보내기(xlsx)/회차 도장 연동은 다음 단계.
+   ═══════════════════════════════════════════════════════════ */
+'use strict';
+
+/* ── 저장소 (독립) ── */
+const LKEY_SALES   = 'somi_ledger_sales';
+const LKEY_EXPENSE = 'somi_ledger_expense';
+const LKEY_BIZDATE = 'somi_ledger_biz_account_date';  // 사업자 통장 개설일 (YYYY-MM-DD)
+
+function loadLedger(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
+function saveLedger(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('저장에 실패했어요. 저장공간을 확인해 주세요.'); } }
+
+/* ── 기존 앱 데이터 읽기 전용 ── */
+function readProfiles(){ try{ return JSON.parse(localStorage.getItem('somi_profiles')||'[]'); }catch(e){ return []; } }
+function readClassSettings(){ try{ return JSON.parse(localStorage.getItem('somi_class_settings')||'{}'); }catch(e){ return {}; } }
+
+/* ── 과목 선택 토글 ── */
+function toggleSubj(btn){ btn.classList.toggle('on'); }
+function getSelectedSubjects(){
+  return Array.from(document.querySelectorAll('#s-subjects .subj-btn.on')).map(b=>b.dataset.subj);
+}
+function setSelectedSubjects(list){
+  const set=new Set(list||[]);
+  document.querySelectorAll('#s-subjects .subj-btn').forEach(b=>{
+    b.classList.toggle('on', set.has(b.dataset.subj));
+  });
+}
+/* 학생 고르면 그 학생의 현재 과목·반·계좌를 폼에 불러옴 (프로필 읽기) */
+function onStudentPick(){
+  const pid=document.getElementById('s-student').value;
+  if(!pid){ setSelectedSubjects([]); document.getElementById('s-class').value=''; return; }
+  const cs=readClassSettings()[pid]||{};
+  // 과목: extras에 저장 (리듬베이직=리베로 표기)
+  const extras=(cs.extras||[]).map(e=> e==='리듬베이직'?'리베':e);
+  setSelectedSubjects(extras);
+  document.getElementById('s-class').value=cs.voClass||'';
+  // 계좌도 프로필 기준으로 초기 추천 (있으면)
+  if(cs.account) setSalesAcct(cs.account);
+}
+/* 등록 시 프로필 반영 (C안 확인창). 취소하면 프로필 안 건드림. */
+function applyToProfile(pid, subjects, klass, acct){
+  if(!pid) return true; // 학생 없으면 스킵
+  const all=readClassSettings();
+  const cur=all[pid]||{voClass:null,extras:[],account:null};
+  const curSubj=(cur.extras||[]).map(e=> e==='리듬베이직'?'리베':e);
+  // 변경점 계산
+  const addSubj=subjects.filter(s=>!curSubj.includes(s));
+  const delSubj=curSubj.filter(s=>!subjects.includes(s));
+  const classChanged = klass && klass!==cur.voClass;
+  const acctChanged = acct && acct!==cur.account;
+  // 아무 변경 없으면 조용히 통과
+  if(!addSubj.length && !delSubj.length && !classChanged && !acctChanged) return true;
+  // 확인 메시지 (바뀌는 것만)
+  const name=(readProfiles().find(p=>p.id===pid)||{}).name||'학생';
+  let msg=name+' 프로필을 이렇게 바꿀까요?\n';
+  if(classChanged) msg+=`\n· 반: ${cur.voClass||'없음'} → ${klass}`;
+  if(subjects.length || delSubj.length){
+    const parts=[];
+    subjects.forEach(s=> parts.push(addSubj.includes(s)?`${s}(추가)`:s));
+    delSubj.forEach(s=> parts.push(`${s}(삭제)`));
+    msg+=`\n· 과목: ${parts.join(', ')}`;
+  }
+  if(acctChanged) msg+=`\n· 계좌: ${cur.account||'없음'} → ${acct}`;
+  msg+='\n\n[확인] 등록하고 프로필도 바꿉니다.\n[취소] 실행을 취소합니다 (등록 안 함).';
+  if(!confirm(msg)) return false; // 취소 → 전체 취소
+  // 반영 (덮어쓰기)
+  const next={...cur};
+  next.extras = subjects.slice(); // 이번에 고른 과목으로 교체
+  if(klass) next.voClass = klass;
+  if(acct) next.account = acct;
+  all[pid]=next;
+  try{ localStorage.setItem('somi_class_settings', JSON.stringify(all)); }catch(e){}
+  return true;
+}
+
+/* ── 상태 ── */
+let salesAcct = 'A';    // 매출 폼 계좌 선택 (화면에서만)
+let expenseAcct = 'A';  // 매입 폼 계좌 선택 (화면에서만)
+let editingSalesId = null;    // 매출 편집 중인 건 id (null이면 신규 등록)
+let editingExpenseId = null;  // 매입 편집 중인 건 id
+
+/* ── 탭 전환 ── */
+function showTab(name){
+  ['sales','expense','export'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active', t===name);
+    document.getElementById('panel-'+t).classList.toggle('active', t===name);
+  });
+}
+
+/* ── 앱으로 돌아가기 ── */
+/* ── 사업자 통장 개설일 ── */
+function getBizDate(){ try{ return localStorage.getItem(LKEY_BIZDATE)||''; }catch(e){ return ''; } }
+function saveBizDate(){
+  const v=getDateVal('biz-date');
+  // 비우면 삭제(=통장 없음), 값 있으면 저장
+  try{
+    if(v){ localStorage.setItem(LKEY_BIZDATE, v); alert('개설일 저장 완료: '+v+'\n이 날짜 이후 입금 건은 계좌B로 추천됩니다.'); }
+    else { localStorage.removeItem(LKEY_BIZDATE); alert('개설일을 비웠어요. 전부 계좌A로 추천됩니다.'); }
+  }catch(e){ alert('저장 실패'); }
+  // 열려있는 폼의 추천 갱신
+  recommendSalesAcct();
+  recommendExpenseAcct();
+}
+/* 날짜문자열 비교: 입금일 >= 개설일 이면 B 추천 (개설일 없으면 무조건 A) */
+function recommendAcct(payDateStr){
+  const biz=getBizDate();
+  if(!biz) return 'A';
+  // YYYY-MM-DD 문자열 비교로 충분 (형식 통일 가정)
+  return (payDateStr && payDateStr >= biz) ? 'B' : 'A';
+}
+function recommendSalesAcct(){
+  const d=getDateVal('s-paydate');
+  setSalesAcct(recommendAcct(d));
+}
+function recommendExpenseAcct(){
+  const d=getDateVal('e-date');
+  setExpenseAcct(recommendAcct(d));
+}
+
+/* ── 계좌 토글 ── */
+function toggleCustomSessions(){
+  const sel=document.getElementById('s-sessions').value;
+  const box=document.getElementById('s-sessions-custom');
+  box.style.display = (sel==='custom') ? 'block' : 'none';
+}
+function defaultProofForAcct(a){ return a==='B' ? 'cash_receipt_num' : 'none'; }
+// 계좌 버튼을 직접 눌렀을 때만 증빙 기본값을 같이 맞춤 (자동추천·수정불러오기에선 안 건드림)
+function pickSalesAcct(a){
+  setSalesAcct(a);
+  document.getElementById('s-proof').value = defaultProofForAcct(a);
+}
+function setSalesAcct(a){
+  salesAcct=a;
+  document.getElementById('s-acct-a').className='acct-btn'+(a==='A'?' sel-a':'');
+  document.getElementById('s-acct-b').className='acct-btn'+(a==='B'?' sel-b':'');
+}
+function setExpenseAcct(a){
+  expenseAcct=a;
+  document.getElementById('e-acct-a').className='acct-btn'+(a==='A'?' sel-a':'');
+  document.getElementById('e-acct-b').className='acct-btn'+(a==='B'?' sel-b':'');
+}
+
+/* ── 학생 드롭다운 채우기 (프로필 읽기 전용) ── */
+function fillStudents(){
+  const sel=document.getElementById('s-student');
+  const profiles=readProfiles().slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko'));
+  sel.innerHTML='<option value="">학생 선택…</option>';
+  profiles.forEach(p=>{
+    const o=document.createElement('option');
+    o.value=p.id; o.textContent=p.name;
+    sel.appendChild(o);
+  });
+}
+
+/* ── 숫자만 남기기 (금액) ── */
+function onlyDigits(s){ return (s||'').replace(/[^0-9]/g,''); }
+// 날짜칸에서 실제값(YYYY-MM-DD) 읽기: attachNumericDate가 붙었으면 getISODate, 아니면 . → -
+function getDateVal(id){
+  const el=document.getElementById(id);
+  if(!el) return '';
+  const raw = (typeof el.getISODate==='function') ? el.getISODate() : (el.value||'').trim().replace(/\./g,'-');
+  // 저장 전 항상 YYYY-MM-DD로 통일 (20260701 / 2026.7.1 등 → 2026-07-01)
+  return raw ? normDate(raw) : '';
+}
+// 날짜칸에 실제값 세팅 (표시도 갱신)
+function setDateVal(id, iso){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(typeof el.setISODate==='function') el.setISODate(iso||'');
+  else el.value=(iso||'').replace(/-/g,'.');
+}
+function fmtWon(n){ return Number(n||0).toLocaleString('ko-KR')+'원'; }
+// 어떤 형식(20260701 / 2026.07.01 / 2026-7-1)이든 YYYY-MM-DD로 통일
+function normDate(s){
+  const d=String(s||'').replace(/[^0-9]/g,'');
+  if(d.length>=8) return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
+  // 이미 하이픈 있고 한자리 월/일이면 보정
+  const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  return String(s||'');
+}
+// 표시용 (YYYY-MM-DD → 그대로, 구분자 없으면 정규화)
+function fmtDate(s){ return normDate(s)||String(s||''); }
+// 금액 입력칸에 실시간 천단위 콤마
+function formatAmountInput(el){
+  const digits=onlyDigits(el.value);
+  el.value = digits ? Number(digits).toLocaleString('ko-KR') : '';
+}
+
+/* ── 매출 등록 ── */
+function addSales(){
+  const paydate=getDateVal('s-paydate');
+  const regdate=paydate; // 등록일 칸 폐지 → 입금일과 동일하게 저장(기존 데이터 호환)
+  const studentId=document.getElementById('s-student').value;
+  const payer=document.getElementById('s-payer').value.trim();
+  const amount=onlyDigits(document.getElementById('s-amount').value);
+  const kind=document.getElementById('s-kind').value;
+  const sessionsSel=document.getElementById('s-sessions').value;
+  const sessions = sessionsSel==='custom' ? onlyDigits(document.getElementById('s-sessions-custom').value) : sessionsSel;
+  const method=document.getElementById('s-method').value;
+  const proof=document.getElementById('s-proof').value;
+  const firstClass=getDateVal('s-firstclass');
+  const subjects=getSelectedSubjects();
+  const klass=document.getElementById('s-class').value;
+
+  if(!regdate||!paydate||!studentId||!payer||!amount){
+    alert('별표(*) 항목을 모두 채워 주세요.'); return;
+  }
+  if(sessionsSel==='custom' && !sessions){
+    alert('회차 숫자를 입력해 주세요.'); return;
+  }
+  // 프로필 반영 확인 (C안). 취소하면 = 실행 전체 취소 (등록도 안 함).
+  if(!applyToProfile(studentId, subjects, klass, salesAcct)){
+    return; // 사용자가 취소 → 아무것도 하지 않음
+  }
+
+  const profiles=readProfiles();
+  const stu=profiles.find(p=>p.id===studentId);
+
+  const rec={
+    id: editingSalesId || ('s_'+Date.now()),
+    regdate, paydate,
+    studentId, studentName: stu?stu.name:'(삭제된 학생)',
+    payer, amount:Number(amount),
+    kind, sessions, method, proof, firstClass,
+    subjects, klass,
+    acct: salesAcct,
+    createdAt: Date.now()
+  };
+  const arr=loadLedger(LKEY_SALES);
+  if(editingSalesId){
+    // 편집 중이면 같은 자리 교체
+    const idx=arr.findIndex(x=>x.id===editingSalesId);
+    if(idx>=0) arr[idx]=rec; else arr.unshift(rec);
+    editingSalesId=null;
+    hideCancelBtn('sales');
+  } else {
+    arr.unshift(rec);
+  }
+  saveLedger(LKEY_SALES, arr);
+
+  clearSalesForm();
+  renderSales();
+}
+
+/* ── 매입 등록 ── */
+function addExpense(){
+  const date=getDateVal('e-date');
+  const amount=onlyDigits(document.getElementById('e-amount').value);
+  const category=document.getElementById('e-category').value;
+  const proof=document.getElementById('e-proof').value;
+  const paymethod=document.getElementById('e-paymethod').value;
+  const vendor=document.getElementById('e-vendor').value.trim();
+
+  if(!date||!amount){ alert('날짜와 금액을 채워 주세요.'); return; }
+
+  const rec={
+    id: editingExpenseId || ('e_'+Date.now()),
+    date, amount:Number(amount),
+    category, proof, paymethod, vendor,
+    acct: expenseAcct,
+    createdAt: Date.now()
+  };
+  const arr=loadLedger(LKEY_EXPENSE);
+  if(editingExpenseId){
+    const idx=arr.findIndex(x=>x.id===editingExpenseId);
+    if(idx>=0) arr[idx]=rec; else arr.unshift(rec);
+    editingExpenseId=null;
+    hideCancelBtn('expense');
+  } else {
+    arr.unshift(rec);
+  }
+  saveLedger(LKEY_EXPENSE, arr);
+
+  clearExpenseForm();
+  renderExpense();
+}
+
+/* ── 표시용 라벨 ── */
+const KIND_LABEL={lesson:'레슨',studio:'녹음실',rental:'연습실 대여',etc:'기타'};
+const METHOD_LABEL={transfer:'계좌이체',card:'카드',cash:'현금'};
+const CAT_LABEL={rent:'월세',gear:'악기·장비',audio:'음향장비',book:'교재·악보',production:'음원·편곡',subscription:'구독',transport:'교통·출장',styling:'의상·헤어',ad:'광고·홍보',comm:'통신',meal:'식대',opening:'개업준비',etc:'기타'};
+const OK_PROOFS=['tax_invoice','card','cash_receipt']; // 매입 적격증빙
+const SALES_PROOF_LABEL={cash_receipt_num:'현금영수증(학생)',cash_receipt_parent:'현금영수증(부모)',cash_receipt_1234:'현금영수증(자진발급)',none:'미발급',card:'카드결제'};
+const EXP_PROOF_LABEL={tax_invoice:'세금계산서',card:'카드전표',cash_receipt:'현금영수증',receipt:'간이영수증',transfer_only:'이체내역만',none:'증빙없음'};
+const PAYMETHOD_LABEL={personal_card:'개인카드',personal_acct:'개인계좌',biz_acct:'사업용계좌',cash:'현금'};
+
+/* ── 매출 목록 렌더 ── */
+function renderSales(){
+  const box=document.getElementById('sales-list');
+  const arr=loadLedger(LKEY_SALES);
+  updateMonthSum('sales-sum', arr, 'paydate');
+  if(!arr.length){ box.innerHTML='<div class="empty">아직 등록된 매출이 없어요. 위에서 첫 건을 추가해 보세요.</div>'; return; }
+  const sorted=arr.slice().sort((a,b)=> normDate(b.paydate).localeCompare(normDate(a.paydate))); // 입금일 최신순 (형식 통일 후 비교)
+  box.innerHTML=sorted.map(r=>{
+    const acctPill=r.acct==='B'?'<span class="pill b">계좌B</span>':'<span class="pill a">계좌A</span>';
+    const cs=readClassSettings()[r.studentId]||{};
+    const klass=r.klass||cs.voClass||'';
+    const subjArr=(r.subjects||[]).filter(s=>s!=='보컬');
+    const kindPill=r.kind?`<span class="pill kind">${KIND_LABEL[r.kind]||r.kind}</span>`:'';
+    const metaTxt=[klass, r.sessions?(r.sessions==='custom'?'특수':r.sessions+'회'):'', ...subjArr].filter(Boolean).join(' · ');
+    const editing=(r.id===editingSalesId);
+    // ── 회차 현황 pill (레슨 회차권만) — 모듈 R 계산 ──
+    let roundPill='';
+    if((r.kind==='lesson'||!r.kind) && r.sessions && r.sessions!=='custom' && typeof window.somiRoundsForStudent==='function'){
+      const st=window.somiRoundsForStudent(r.studentId);
+      const b=(st.bundles||[]).find(x=>x.id===r.id);
+      if(b){
+        const used=b.used;
+        if(b.done){
+          roundPill=`<span class="pill warn">${used}/${b.total}회 · 재등록 필요</span>`;
+        }else{
+          roundPill=`<span class="pill ok">${used}/${b.total}회 · ${b.remaining}회 남음</span>`;
+        }
+      }
+    }
+    return `<div class="row"${editing?' style="border-color:var(--accent);border-width:2px;"':''}>
+      <div style="min-width:0;flex:1;">
+        <div style="font-weight:700;font-size:0.88rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${esc(r.studentName)} ${kindPill}${metaTxt?`<span style="color:var(--text2);font-weight:400;font-size:0.78rem;">${metaTxt}</span>`:''}${editing?' <span class="pill" style="background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--accent);">수정 중</span>':''}</div>
+        <div style="font-size:0.73rem;color:var(--text2);margin-top:2px;">${fmtDate(r.paydate)} · ${esc(r.payer)} · ${METHOD_LABEL[r.method]||''} ${acctPill}</div>
+        ${roundPill?`<div style="margin-top:4px;">${roundPill}</div>`:''}
+      </div>
+      <div class="amt in">+${fmtWon(r.amount)}</div>
+      <div class="row-actions">
+        <button onclick="editSales('${r.id}')" title="수정">✏️</button>
+        <button onclick="deleteSales('${r.id}')" title="삭제">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── 매입 목록 렌더 ── */
+function renderExpense(){
+  const box=document.getElementById('expense-list');
+  const arr=loadLedger(LKEY_EXPENSE);
+  updateMonthSum('expense-sum', arr, 'date');
+  if(!arr.length){ box.innerHTML='<div class="empty">아직 등록된 매입이 없어요.</div>'; return; }
+  const sorted=arr.slice().sort((a,b)=> normDate(b.date).localeCompare(normDate(a.date))); // 날짜 최신순 (형식 통일 후 비교)
+  box.innerHTML=sorted.map(r=>{
+    const acctPill=r.acct==='B'?'<span class="pill b">계좌B</span>':'<span class="pill a">계좌A</span>';
+    const ok=OK_PROOFS.includes(r.proof);
+    const proofPill=ok?'<span class="pill ok">적격</span>':'<span class="pill warn">증빙부족</span>';
+    // 3만원 초과 + 증빙부족 강조
+    const bigNoProof=(!ok && r.amount>30000);
+    const payLabel=r.paymethod?(PAYMETHOD_LABEL[r.paymethod]||r.paymethod):'';
+    const editingE=(r.id===editingExpenseId);
+    return `<div class="row"${editingE?' style="border-color:var(--accent);border-width:2px;"':''}>
+      <div style="min-width:0;flex:1;">
+        <div style="font-weight:700;font-size:0.88rem;">${CAT_LABEL[r.category]||'기타'} <span style="color:var(--text2);font-weight:400;font-size:0.78rem;">${r.vendor?'· '+esc(r.vendor):''}</span>${editingE?' <span class="pill" style="background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--accent);">수정 중</span>':''}</div>
+        <div style="font-size:0.73rem;color:var(--text2);margin-top:2px;">${fmtDate(r.date)} ${proofPill}${payLabel?' <span class="pill">'+payLabel+'</span>':''} ${acctPill}${bigNoProof?' <span class="pill warn">3만원↑ 인정 어려움</span>':''}</div>
+      </div>
+      <div class="amt out">−${fmtWon(r.amount)}</div>
+      <div class="row-actions">
+        <button onclick="editExpense('${r.id}')" title="수정">✏️</button>
+        <button onclick="deleteExpense('${r.id}')" title="삭제">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ── 이달 합계 ── */
+function updateMonthSum(spanId, arr, dateField){
+  const el=document.getElementById(spanId);
+  if(!el) return;
+  const t=new Date();
+  const ym=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0'); // YYYY-MM
+  const sum=arr.filter(r=>normDate(r[dateField]).slice(0,7)===ym)
+               .reduce((s,r)=>s+Number(r.amount||0),0);
+  el.textContent='이달 '+fmtWon(sum);
+}
+
+/* ── 편집 UI 헬퍼 ── */
+function showCancelBtn(which){
+  const cancel=document.getElementById(which==='sales'?'s-cancel-btn':'e-cancel-btn');
+  const submit=document.getElementById(which==='sales'?'s-submit-btn':'e-submit-btn');
+  const wrap=document.getElementById(which==='sales'?'s-btns':'e-btns');
+  if(cancel){ cancel.style.display='block'; cancel.textContent='✕ 취소'; }
+  if(submit) submit.textContent='수정 완료';
+  if(wrap) wrap.classList.add('editing');   // 한 줄 좌우 분할
+}
+function hideCancelBtn(which){
+  const cancel=document.getElementById(which==='sales'?'s-cancel-btn':'e-cancel-btn');
+  const submit=document.getElementById(which==='sales'?'s-submit-btn':'e-submit-btn');
+  const wrap=document.getElementById(which==='sales'?'s-btns':'e-btns');
+  if(cancel){ cancel.style.display='none'; cancel.textContent='✕ 수정 취소'; }
+  if(submit) submit.textContent=which==='sales'?'매출 등록':'매입 등록';
+  if(wrap) wrap.classList.remove('editing');  // 다시 세로
+}
+function clearSalesForm(){
+  ['s-payer','s-amount'].forEach(id=>document.getElementById(id).value='');
+  ['s-paydate','s-firstclass'].forEach(id=>setDateVal(id,''));
+  { const t=new Date(); const iso=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); setDateVal('s-paydate', iso); setDateVal('s-firstclass', iso); }
+  document.getElementById('s-student').value='';
+  document.getElementById('s-sessions').value='';
+  document.getElementById('s-sessions-custom').value='';
+  document.getElementById('s-sessions-custom').style.display='none';
+  setSelectedSubjects([]);
+  document.getElementById('s-class').value='';
+  setSalesAcct('A');
+  document.getElementById('s-proof').value = defaultProofForAcct('A');
+}
+function clearExpenseForm(){
+  ['e-amount','e-vendor'].forEach(id=>document.getElementById(id).value='');
+  { const t=new Date(); setDateVal('e-date', t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')); }
+  setExpenseAcct('A');
+}
+
+/* ── 삭제·수정 ── */
+function deleteSales(id){
+  if(!confirm('이 매출 기록을 삭제할까요?')) return;
+  saveLedger(LKEY_SALES, loadLedger(LKEY_SALES).filter(r=>r.id!==id));
+  renderSales();
+}
+function deleteExpense(id){
+  if(!confirm('이 지출 기록을 삭제할까요?')) return;
+  saveLedger(LKEY_EXPENSE, loadLedger(LKEY_EXPENSE).filter(r=>r.id!==id));
+  renderExpense();
+}
+// 수정: 값을 폼에 불러오고 원본은 목록에서 빼둠 → 고친 뒤 다시 '등록'하면 반영
+function editSales(id){
+  const arr=loadLedger(LKEY_SALES);
+  const r=arr.find(x=>x.id===id);
+  if(!r) return;
+  showTab('sales');
+  setDateVal('s-paydate', r.paydate||'');
+  document.getElementById('s-student').value=r.studentId||'';
+  document.getElementById('s-payer').value=r.payer||'';
+  document.getElementById('s-amount').value=r.amount?Number(r.amount).toLocaleString('ko-KR'):'';
+  document.getElementById('s-kind').value=r.kind||'lesson';
+  if(r.sessions==='4'||r.sessions==='8'||!r.sessions){
+    document.getElementById('s-sessions').value=r.sessions||'';
+    document.getElementById('s-sessions-custom').value='';
+    document.getElementById('s-sessions-custom').style.display='none';
+  } else {
+    document.getElementById('s-sessions').value='custom';
+    document.getElementById('s-sessions-custom').value=r.sessions;
+    document.getElementById('s-sessions-custom').style.display='block';
+  }
+  setDateVal('s-firstclass', r.firstClass||'');
+  document.getElementById('s-method').value=r.method||'transfer';
+  document.getElementById('s-proof').value=r.proof||'cash_receipt_num';
+  setSelectedSubjects(r.subjects||[]);
+  document.getElementById('s-class').value=r.klass||'';
+  setSalesAcct(r.acct||'A');
+  // 원본은 그대로 두고 편집 모드만 진입 (등록 눌러야 교체됨)
+  editingSalesId=id;
+  showCancelBtn('sales');
+  renderSales();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+// 편집 취소 (실행 취소): 폼 비우고 원상복구, 원본은 이미 그대로라 안전
+function cancelEditSales(){
+  editingSalesId=null;
+  hideCancelBtn('sales');
+  clearSalesForm();
+}
+function editExpense(id){
+  const arr=loadLedger(LKEY_EXPENSE);
+  const r=arr.find(x=>x.id===id);
+  if(!r) return;
+  showTab('expense');
+  setDateVal('e-date', r.date||'');
+  document.getElementById('e-amount').value=r.amount?Number(r.amount).toLocaleString('ko-KR'):'';
+  document.getElementById('e-category').value=r.category||'rent';
+  document.getElementById('e-proof').value=r.proof||'tax_invoice';
+  document.getElementById('e-paymethod').value=r.paymethod||'personal_card';
+  document.getElementById('e-vendor').value=r.vendor||'';
+  setExpenseAcct(r.acct||'A');
+  editingExpenseId=id;
+  showCancelBtn('expense');
+  renderExpense();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelEditExpense(){
+  editingExpenseId=null;
+  hideCancelBtn('expense');
+  clearExpenseForm();
+}
+
+/* ── 내보내기 (CSV — 엑셀에서 바로 열림) ── */
+// 기간 필터 (비어있으면 전체)
+function inPeriod(dateStr){
+  const from=normDate(getDateVal('ex-from'));
+  const to=normDate(getDateVal('ex-to'));
+  const d=normDate(dateStr);
+  if(from && d < from) return false;
+  if(to && d > to) return false;
+  return true;
+}
+// CSV 한 칸 안전 처리 (쉼표·따옴표·줄바꿈 감싸기)
+function csvCell(v){
+  const s=String(v==null?'':v);
+  return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+function rowsToCsv(headers, rows){
+  const head=headers.map(csvCell).join(',');
+  const body=rows.map(r=>r.map(csvCell).join(',')).join('\n');
+  // 엑셀 한글 깨짐 방지용 BOM
+  return '\ufeff'+head+'\n'+body;
+}
+function downloadCsv(filename, csv){
+  const blob=new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+// 세무사 제출용 — 계좌B만, 입금일 정렬, 계좌 흔적 제거
+function exportTax(type){
+  if(type==='sales'){
+    const rows=loadLedger(LKEY_SALES)
+      .filter(r=> r.acct==='B' && inPeriod(r.paydate))
+      .sort((a,b)=> (a.paydate||'').localeCompare(b.paydate||''));
+    if(!rows.length){ alert('내보낼 계좌B 매출이 없어요. (기간·계좌 확인)'); return; }
+    const headers=['입금일','학생','입금자','금액','수입종류','회차','첫사용일','받은방법','증빙'];
+    const data=rows.map(r=>[
+      normDate(r.paydate), r.studentName, r.payer, r.amount,
+      KIND_LABEL[r.kind]||r.kind||'',
+      r.sessions? (r.sessions==='custom'?'특수':r.sessions+'회') : '',
+      r.firstClass?normDate(r.firstClass):'',
+      METHOD_LABEL[r.method]||r.method||'',
+      SALES_PROOF_LABEL[r.proof]||r.proof||''
+    ]);
+    downloadCsv('솜씨_매출_'+today()+'.csv', rowsToCsv(headers, data));
+  } else {
+    // 매입은 계좌 구분 없이 전부 내보냄 (개업준비비 등 A계좌 지출도 세무사에게 전달해 비용 인정 확률↑)
+    // 단, 계좌 표시는 어떤 경우에도 파일에 넣지 않음 (원칙 0)
+    const rows=loadLedger(LKEY_EXPENSE)
+      .filter(r=> inPeriod(r.date))
+      .sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+    if(!rows.length){ alert('내보낼 매입이 없어요. (기간 확인)'); return; }
+    const headers=['날짜','분류','금액','증빙','결제수단','거래처'];
+    const data=rows.map(r=>[
+      normDate(r.date), CAT_LABEL[r.category]||r.category||'', r.amount,
+      EXP_PROOF_LABEL[r.proof]||r.proof||'',
+      PAYMETHOD_LABEL[r.paymethod]||r.paymethod||'', r.vendor||''
+    ]);
+    downloadCsv('솜씨_매입_'+today()+'.csv', rowsToCsv(headers, data));
+  }
+}
+
+// 내 확인용 — 전체(A+B), 계좌 표시 포함
+function exportMine(type){
+  if(type==='sales-all' || type==='sales-byacct'){
+    let rows=loadLedger(LKEY_SALES).filter(r=> inPeriod(r.paydate));
+    if(!rows.length){ alert('내보낼 매출이 없어요.'); return; }
+    // 계좌별 보기면 계좌→입금일 순, 아니면 입금일 순
+    rows.sort((a,b)=> type==='sales-byacct'
+      ? (a.acct===b.acct ? (a.paydate||'').localeCompare(b.paydate||'') : a.acct.localeCompare(b.acct))
+      : (a.paydate||'').localeCompare(b.paydate||''));
+    const headers=['계좌','입금일','학생','입금자','금액','수입종류','회차','첫사용일','받은방법','증빙'];
+    const data=rows.map(r=>[
+      r.acct, normDate(r.paydate), r.studentName, r.payer, r.amount,
+      KIND_LABEL[r.kind]||r.kind||'',
+      r.sessions? (r.sessions==='custom'?'특수':r.sessions+'회') : '',
+      r.firstClass?normDate(r.firstClass):'',
+      METHOD_LABEL[r.method]||r.method||'',
+      SALES_PROOF_LABEL[r.proof]||r.proof||''
+    ]);
+    downloadCsv('내확인_매출_'+today()+'.csv', rowsToCsv(headers, data));
+  } else {
+    let rows=loadLedger(LKEY_EXPENSE).filter(r=> inPeriod(r.date));
+    if(!rows.length){ alert('내보낼 매입이 없어요.'); return; }
+    rows.sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+    const headers=['계좌','날짜','분류','금액','증빙','결제수단','거래처'];
+    const data=rows.map(r=>[
+      r.acct, normDate(r.date), CAT_LABEL[r.category]||r.category||'', r.amount,
+      EXP_PROOF_LABEL[r.proof]||r.proof||'',
+      PAYMETHOD_LABEL[r.paymethod]||r.paymethod||'', r.vendor||''
+    ]);
+    downloadCsv('내확인_매입_'+today()+'.csv', rowsToCsv(headers, data));
+  }
+}
+function today(){
+  const t=new Date();
+  return t.getFullYear()+String(t.getMonth()+1).padStart(2,'0')+String(t.getDate()).padStart(2,'0');
+}
+
+/* ── 초기 로드 ── */
+(function init(){
+  // 등록대장은 자체 데이터라 로딩막 불필요 → 즉시 걷음 (common_core 오버레이 방지)
+  if(window.somiHideLoading) window.somiHideLoading();
+  // home과 같은 테마 적용 (somi_theme: 'ivory' | 'dark')
+  try{ if((localStorage.getItem('somi_theme')||'').replace(/"/g,'')==='ivory'){ document.body.classList.add('theme-ivory'); } }catch(e){}
+  fillStudents();
+  renderSales();
+  renderExpense();
+
+  // 날짜칸: 숫자만 치면 . 자동 (공통모듈). 실제값은 getISODate()로 꺼냄. (프리필보다 먼저 붙임)
+  ['s-paydate','s-firstclass','e-date','biz-date','ex-from','ex-to'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && window.attachNumericDate) attachNumericDate(el);
+  });
+
+  // 오늘 날짜 프리필 (인터넷/기기 날짜 기준, 내가 바꿀 수 있음)
+  const t=new Date();
+  const todayISO=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  setDateVal('s-paydate', todayISO);
+  setDateVal('s-firstclass', todayISO);
+  setDateVal('e-date', todayISO);
+
+  // 저장된 개설일 표시
+  setDateVal('biz-date', getBizDate());
+  // 입금일/지출일 바뀌면 계좌 자동 추천 갱신
+  document.getElementById('s-paydate').addEventListener('input', recommendSalesAcct);
+  document.getElementById('e-date').addEventListener('input', recommendExpenseAcct);
+  // 학생 고르면 그 학생 현재 과목·반·계좌 자동 로드
+  document.getElementById('s-student').addEventListener('change', onStudentPick);
+  // 금액칸 실시간 천단위 콤마
+  document.getElementById('s-amount').addEventListener('input', function(){ formatAmountInput(this); });
+  document.getElementById('e-amount').addEventListener('input', function(){ formatAmountInput(this); });
+  // 초기 추천 적용 (오늘 날짜 기준)
+  recommendSalesAcct();
+  recommendExpenseAcct();
+  document.getElementById('s-proof').value = defaultProofForAcct(salesAcct);
+
+  // 내보내기 기간 기본값 = 전월 1일~말일 (열 때마다 오늘 날짜 기준으로 자동 계산 → 달이 바뀌면 자동으로 따라감. 직접 수정 가능)
+  {
+    const now=new Date();
+    const prevLast=new Date(now.getFullYear(), now.getMonth(), 0);       // 이번달 1일의 전날 = 전월 말일
+    const prevFirst=new Date(prevLast.getFullYear(), prevLast.getMonth(), 1);
+    const iso=d=> d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    setDateVal('ex-from', iso(prevFirst));
+    setDateVal('ex-to', iso(prevLast));
+  }
+})();
+</script>
+</body>
+</html>

@@ -335,3 +335,235 @@ window.toDateStr = function(d){
     const t = o.querySelector('.somi-load-text'); if(t) t.textContent = text;
   };
 })();
+
+/* ════════════════════════════════════════════════════════════════
+   [공통 모듈] 날짜 숫자입력 생성기 (makeNumericDateInput)
+   ────────────────────────────────────────────────────────────────
+   type=date 대신 숫자 키보드(text + inputmode=numeric)로 날짜 입력.
+   - 핸드폰/태블릿에서 숫자 키보드만 뜸
+   - 8자리(YYYYMMDD) 입력 시 화면엔 YYYY.MM.DD 자동 점 삽입
+   - 유효한 날짜면 onCommit('YYYY-MM-DD'), 불완전/무효면 onCommit('')
+   사용: const inp = makeNumericDateInput(초기값YYYY-MM-DD, (v)=>{ ... });
+   ════════════════════════════════════════════════════════════════ */
+window.makeNumericDateInput = function(initVal, onCommit){
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.inputMode = 'numeric'; inp.autocomplete = 'off';
+  inp.maxLength = 10; inp.placeholder = '예: 2026.01.15';
+  inp.value = initVal ? String(initVal).replace(/-/g, '.') : '';
+  inp.oninput = function(){
+    let d = inp.value.replace(/[^0-9]/g, '').slice(0, 8);
+    let shown = d;
+    if (d.length > 6)      shown = d.slice(0,4) + '.' + d.slice(4,6) + '.' + d.slice(6);
+    else if (d.length > 4) shown = d.slice(0,4) + '.' + d.slice(4);
+    inp.value = shown;
+    if (d.length === 8){
+      const y = +d.slice(0,4), mo = +d.slice(4,6), da = +d.slice(6,8);
+      const dt = new Date(y, mo-1, da);
+      const valid = dt.getFullYear()===y && dt.getMonth()===mo-1 && dt.getDate()===da && y>=1900 && y<=2100;
+      onCommit(valid ? (d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)) : '');
+    } else {
+      onCommit('');
+    }
+  };
+  return inp;
+};
+
+/* [공통 모듈] 기존 input 요소에 숫자날짜 동작 입히기 (정적 input용)
+   - input의 .value는 항상 YYYY-MM-DD 유지(기존 코드 호환), 화면 표시만 YYYY.MM.DD
+   - 핸드폰/태블릿 숫자 키보드, 8자리 입력 시 자동 점
+   사용: attachNumericDate(document.getElementById('s-birth-input')); */
+window.attachNumericDate = function(inp){
+  if(!inp) return;
+  inp.type='text'; inp.inputMode='numeric'; inp.autocomplete='off';
+  inp.maxLength=10; inp.placeholder='예: 2026.01.15';
+  // 내부 실제값(YYYY-MM-DD)을 별도 보관, .value는 표시용이지만 코드 호환 위해 동기화
+  let _val = (inp.value||'').trim();
+  function render(){ inp.dataset.isodate = _val; }
+  // 표시 초기화
+  if(_val){ inp.value = _val.replace(/-/g,'.'); }
+  render();
+  inp.addEventListener('input', function(){
+    let d = inp.value.replace(/[^0-9]/g,'').slice(0,8);
+    let shown = d;
+    if(d.length>6) shown = d.slice(0,4)+'.'+d.slice(4,6)+'.'+d.slice(6);
+    else if(d.length>4) shown = d.slice(0,4)+'.'+d.slice(4);
+    inp.value = shown;
+    if(d.length===8){
+      const y=+d.slice(0,4),mo=+d.slice(4,6),da=+d.slice(6,8);
+      const dt=new Date(y,mo-1,da);
+      const valid=dt.getFullYear()===y&&dt.getMonth()===mo-1&&dt.getDate()===da&&y>=1900&&y<=2100;
+      _val = valid ? (d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)) : '';
+    } else { _val=''; }
+    render();
+  });
+  // 외부에서 .value(YYYY-MM-DD) 세팅 시 표시도 갱신하도록 헬퍼 제공
+  inp.setISODate = function(iso){ _val=(iso||'').trim(); inp.value=_val?_val.replace(/-/g,'.'):''; render(); };
+  inp.getISODate = function(){ return _val; };
+};
+
+/* [공통 모듈] 날짜 숫자입력 — 순수 변환/검증 코어 (위 두 함수와 index가 공유)
+   입력 문자열(점/숫자 섞임) → {shown:'YYYY.MM.DD 표시용', iso:'YYYY-MM-DD 또는 빈문자'} */
+window.parseNumericDate = function(raw){
+  let d = String(raw||'').replace(/[^0-9]/g,'').slice(0,8);
+  let shown = d;
+  if(d.length>6) shown = d.slice(0,4)+'.'+d.slice(4,6)+'.'+d.slice(6);
+  else if(d.length>4) shown = d.slice(0,4)+'.'+d.slice(4);
+  let iso='';
+  if(d.length===8){
+    const y=+d.slice(0,4),mo=+d.slice(4,6),da=+d.slice(6,8);
+    const dt=new Date(y,mo-1,da);
+    const valid=dt.getFullYear()===y&&dt.getMonth()===mo-1&&dt.getDate()===da&&y>=1900&&y<=2100;
+    iso = valid ? (d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)) : '';
+  }
+  return {shown, iso};
+};
+
+/* ════════════════════════════════════════════════════════════════
+   모듈 R: 회차(레슨완) 계산기 — 등록대장 ↔ 도장 연동 (공용 1벌)
+   ────────────────────────────────────────────────────────────────
+   목적: 세 화면(등록대장·선생 달력·학생 달력)이 "몇 번째 회차인가"를
+        똑같이 계산하도록 단 하나의 계산기를 공유한다(규칙 5: 공통).
+
+   방아쇠 = 도장(A안). 선생님이 레슨완 도장을 찍은 날짜를 세어
+   등록대장의 회차권(4/8/특수)에 순서대로 배정한다.
+
+   ★ 원칙(설계도 5-1): 과거는 소급하지 않는다.
+     - 각 등록 묶음은 firstClass(첫 사용일) 이후의 레슨완 도장만 센다.
+     - 기존 학생은 baseline(이미 쓴 회차)을 등록건에 넣어 그만큼 건너뛴다.
+
+   읽기 전용: somi_ledger_sales(등록대장)·somi_teacher_stamps(도장)만 읽음.
+   아무 데이터도 쓰지 않음 → 앱 본체 안전(규칙 5).
+   ──────────────────────────────────────────────────────────────── */
+(function(){
+  var LESSON_STAMPS = ['lessondone','lessondonefinal','lessonabsent','lessonabsentfinal'];
+
+  function readJSON(key){
+    try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; }
+  }
+  function readObj(key){
+    try{ return JSON.parse(localStorage.getItem(key)||'{}'); }catch(e){ return {}; }
+  }
+  /* 회차 총량: '4'|'8'|숫자 → 정수. 'custom'/빈값/기타는 0(=회차관리 안 함) */
+  function totalOf(rec){
+    var n = parseInt(rec && rec.sessions, 10);
+    return (isFinite(n) && n>0) ? n : 0;
+  }
+  /* 이미 쓴 회차(기준선): 기존 학생 전환용. 없으면 0 */
+  function baselineOf(rec){
+    var b = parseInt(rec && rec.baselineUsed, 10);
+    return (isFinite(b) && b>0) ? b : 0;
+  }
+
+  /* 한 학생의 레슨 등록 묶음 목록 — 첫사용일(없으면 입금일) 오름차순 */
+  function bundlesFor(studentId, sales){
+    return (sales||[])
+      .filter(function(r){
+        return r && r.studentId===studentId
+            && (r.kind==='lesson' || !r.kind)   // 레슨만(옛 데이터 kind 없으면 레슨 취급)
+            && totalOf(r) > 0;                   // 회차권만
+      })
+      .map(function(r){
+        return {
+          id: r.id,
+          total: totalOf(r),
+          baseline: baselineOf(r),
+          start: (r.firstClass || r.paydate || r.regdate || '')  // 카운팅 시작 기준일
+        };
+      })
+      .sort(function(a,b){ return String(a.start).localeCompare(String(b.start)); });
+  }
+
+  /* 한 학생의 레슨완 도장 날짜 목록(오름차순) */
+  function lessonStampDatesFor(studentId, stamps){
+    var out=[];
+    var prefix = studentId + '_';
+    Object.keys(stamps||{}).forEach(function(k){
+      if(k.indexOf(prefix)!==0) return;
+      var v = stamps[k];
+      if(v && LESSON_STAMPS.indexOf(v.stamp)>=0){
+        out.push(v.date || k.slice(prefix.length));
+      }
+    });
+    out.sort(function(a,b){ return String(a).localeCompare(String(b)); });
+    return out;
+  }
+
+  /* ── 핵심: 한 학생의 회차 현황 전체 계산 ──
+     반환:
+       bundles: [{id,total,baseline,start,used,remaining,done}]  각 등록권 현황
+       stampMap: { 'YYYY-MM-DD': {index,total,isFinal,bundleId} }  날짜별 그 도장의 회차정보
+       needReenroll: 마지막 묶음이 소진돼 재등록이 필요한가(boolean)
+  */
+  window.somiRoundsForStudent = function(studentId){
+    var sales  = readJSON('somi_ledger_sales');
+    var stamps = readObj('somi_teacher_stamps');
+    var bundles = bundlesFor(studentId, sales);
+    var dates   = lessonStampDatesFor(studentId, stamps);
+
+    var result = bundles.map(function(b){
+      return { id:b.id, total:b.total, baseline:b.baseline, start:b.start,
+               used:0, remaining:b.total - b.baseline, done:false, _dates:[] };
+    });
+    var stampMap = {};
+
+    /* 도장을 순서대로 묶음에 배정.
+       각 묶음은 자기 시작일(b.start=첫사용일, 없으면 입금일) 이후 도장만 센다.
+       → 첫 사용일 이전(과거) 도장은 이 등록권 것이 아님(설계도 5-1 소급 방지).
+       과거에 이미 쓴 회차는 baseline(이미 쓴 회차) 숫자로만 반영.
+       여러 권이 있으면 시작일 순서대로 각자 자기 구간의 도장을 가져감. */
+    var di = 0; // 도장 인덱스
+    for(var bi=0; bi<result.length; bi++){
+      var b = result[bi];
+      var capacity = b.total - b.baseline;  // 이 묶음이 실제로 셀 도장 수
+      if(capacity <= 0){ b.done=true; b.remaining=0; continue; }
+      var filled = 0;
+      while(di < dates.length && filled < capacity){
+        var d = dates[di];
+        // 이 묶음 시작일 이전 도장은 이 권 것이 아님 → 건너뜀(과거 소급 방지)
+        if(b.start && String(d) < String(b.start)){ di++; continue; }
+        filled++;
+        var indexInBundle = b.baseline + filled;      // 사람이 보는 회차 번호(기준선 포함)
+        var isFinal = (indexInBundle >= b.total);
+        stampMap[d] = { index:indexInBundle, total:b.total, isFinal:isFinal, bundleId:b.id };
+        b._dates.push(d);
+        di++;
+      }
+      b.used = filled;
+      b.remaining = capacity - filled;
+      b.done = (b.remaining <= 0);
+    }
+
+    var last = result.length ? result[result.length-1] : null;
+    var needReenroll = !!(last && last.done);
+
+    return { bundles: result, stampMap: stampMap, needReenroll: needReenroll };
+  };
+
+  /* ── 편의: 특정 날짜의 레슨완 도장이 몇 번째/마지막인지 ──
+     반환 {index,total,isFinal} 또는 null(회차권에 안 물린 도장) */
+  window.somiRoundAt = function(studentId, dateStr){
+    var r = window.somiRoundsForStudent(studentId);
+    return r.stampMap[dateStr] || null;
+  };
+
+  /* ── 편의: 등록대장 목록용 요약 문자열 ──
+     예: {used:3,total:4,remaining:1,done:false} → "3 / 4회 · 1회 남음" */
+  window.somiRoundSummary = function(bundleStatus){
+    if(!bundleStatus || !bundleStatus.total) return '';
+    var used = bundleStatus.baseline + bundleStatus.used; // 화면 표기(기준선 포함)
+    var s = used + ' / ' + bundleStatus.total + '회';
+    if(bundleStatus.done) s += ' · 소진(재등록 필요)';
+    else s += ' · ' + bundleStatus.remaining + '회 남음';
+    return s;
+  };
+})();
+
+/* ── 모듈 R 부록: 연습 자동 도장(학생 미선택 시) — 연한 회색 점선 원 (공용 1벌) ──
+   학생이 그날 도장을 직접 고르지 않았는데 연습기록이 있으면 이 그림을 쓴다.
+   당일결석(진한 회색 꽉참)과 확실히 구분되도록 연한 회색 + 점선으로.
+   선생님·학생 화면이 똑같이 보이도록 공통 함수로 둠(규칙 5). */
+window.somiAutoStampSVG = function(){
+  return '<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">'
+       + '<circle cx="40" cy="40" r="30" fill="none" stroke="#B4B2A9" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round"/>'
+       + '</svg>';
+};

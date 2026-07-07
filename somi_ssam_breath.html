@@ -1033,7 +1033,7 @@ function buildPracticeUI() {
   const ctrl = document.createElement('div'); ctrl.className = 'controls';
   const SVG_RESET = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
   const SVG_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>';
-  const SVG_STOP = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+  const SVG_STOP = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>';
   ctrl.innerHTML = `<button class="ctrl-btn reset" onclick="hardReset()" aria-label="다시">${SVG_RESET}</button><button class="ctrl-btn play" id="play-btn" onclick="togglePlay()" aria-label="재생">${SVG_PLAY}</button><button class="ctrl-btn stop" onclick="stopExercise()" aria-label="정지">${SVG_STOP}</button>`;
   body.appendChild(ctrl);
 

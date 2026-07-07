@@ -107,6 +107,12 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 #vb-lbls-row-7th .vlabel-item.kor{font-size:1.05rem;}
 #vb-lbls-row-chroma .vlabel-item.kor{font-size:1.05rem;}
 #vb-lbls-row-chroma .vlabel-item.eng{font-size:1.1rem;letter-spacing:-0.02em;}
+/* ── C-9: 다크모드에서 음절 라벨박스만 아이보리톤으로 (어두운 배경에 글씨가 안 보이는 문제 해결) ──
+   밝은 모드(theme-ivory)는 원래 잘 보이므로 다크일 때만 적용. */
+html:not(.theme-ivory) .vocal-label-box{background:#f0ebe0;border-color:#d8cfc0;}
+html:not(.theme-ivory) .vocal-label-box .vlabel-item{color:#5a5048;}
+html:not(.theme-ivory) .vocal-label-box .vlabel-item.lit{color:#e05fa0;text-shadow:0 0 8px #e05fa0;}
+html:not(.theme-ivory) .vocal-label-box .vkp-dir{color:#7a6e60;}
 .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;text-align:center;width:100%;max-width:440px;min-height:96px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;}
 .info-box.vocal-mode{min-height:125px;height:auto;padding:16px 24px;}
 .info-action{font-size:2.1rem;font-weight:700;transition:all 0.2s;line-height:1.2;}
@@ -143,6 +149,13 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 .key-grid-wrap{width:100%;max-width:480px;margin:0 auto;}
 .key-grid-label{font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;}
 .key-grid{display:flex;flex-wrap:wrap;gap:6px;}
+/* ── 음 버튼 균등분할: 모든 화면에서 컨테이너 폭(라벨박스 폭)에 꽉 차게 정렬 ──
+   inner=somi-keygrid(폭 100%·max 480), row=somi-keyrow(가로 꽉), 버튼=flex:1로 균등.
+   고정 px 대신 폭 비례라 좁은 폰에서도 한 줄 정렬 유지(노트북 비율 재현). */
+.somi-keygrid{width:100%!important;max-width:480px;align-items:stretch!important;}
+.somi-keyrow{display:flex!important;width:100%;}
+.somi-keyrow > button{flex:1 1 0!important;min-width:0!important;width:auto!important;}
+.somi-keyrow > .somi-key-spacer{flex:1 1 0;min-width:0;}
 .key-grid-btn{padding:5px 0;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.72rem;cursor:pointer;transition:all 0.15s;width:36px;text-align:center;flex-shrink:0;}
 @media(hover:hover){.key-grid-btn:hover{border-color:var(--accent3);color:var(--accent3);}}
 .key-grid-btn.selected{background:rgba(106,247,200,0.18);border-color:var(--accent3);box-shadow:0 0 0 1px var(--accent3);color:var(--accent3);font-weight:700;}
@@ -197,17 +210,17 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
   .ctrl-btn.play{width:60px;height:60px;font-size:1.3rem;}
   .tempo-val{font-size:1.2rem;width:90px;}
   .tempo-btn{width:44px;height:44px;font-size:1.2rem;}
-  .basic-key-btn{padding:4px 5px;min-width:28px;font-size:0.66rem;}
-  .key-grid-btn{width:30px;font-size:0.66rem;}
-  .seq-btn{padding:5px 6px;min-width:34px;font-size:0.7rem;}
+  .basic-key-btn{padding:4px 2px;font-size:0.66rem;}
+  .key-grid-btn{font-size:0.66rem;}
+  .seq-btn{padding:5px 2px;font-size:0.7rem;}
   .m-tab{padding:7px 14px;font-size:0.82rem;}
   .select-title{font-size:1rem;}
   .pattern-card{padding:14px 14px;}
   .timer-main{font-size:1.8rem!important;}
 }
 @media (max-width: 420px) {
-  .key-grid-btn{width:27px;font-size:0.6rem;padding:4px 0;}
-  .basic-key-btn{min-width:25px;font-size:0.6rem;}
+  .key-grid-btn{font-size:0.6rem;padding:4px 0;}
+  .basic-key-btn{font-size:0.6rem;}
   #adv-range-grid > div{gap:4px!important;}
   #adv-rng-info{font-size:0.68rem;}
 }
@@ -1499,7 +1512,7 @@ let isPlaying=false,isPaused=false,pausedElapsed=0;
 // 재생영역 컨트롤 아이콘 (이모지 폴백 방지 — SVG 고정). 되돌리기=헤더 새로고침과 동일 아이콘.
 const SVG_RESET='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
 const SVG_PLAY='<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>';
-const SVG_STOP='<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const SVG_STOP='<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2.5"/></svg>';
 const SVG_PAUSE='<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg>';
 function setPlayIcon(playing){const pb=document.getElementById('play-btn');if(pb)pb.innerHTML=playing?SVG_PAUSE:SVG_PLAY;}
 let mainStartWallTime=0,elapsedSeconds=0,timerRafId=null;
@@ -2567,7 +2580,7 @@ function vib_buildStartNoteUI(body){
   const PMIN=VIB_PMIN,PMAX=VIB_PMAX;
   const COLS=9;
   const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
-  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const inner=document.createElement('div');inner.className='somi-keygrid';inner.style.cssText='display:flex;flex-direction:column;gap:5px;align-items:stretch;';
   const lbl=document.createElement('div');lbl.className='key-grid-label';lbl.style.cssText='align-self:flex-start;';lbl.textContent='시작 음 선택';
   inner.appendChild(lbl);
   function render(){
@@ -2587,9 +2600,12 @@ function vib_buildStartNoteUI(body){
       };
       allBtns.push(btn);
     }
-    for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
-      const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
-      allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+    const _tr=Math.ceil(allBtns.length/COLS);
+    for(let r=0;r<_tr;r++){
+      const row=document.createElement('div');row.className='somi-keyrow';row.style.cssText='display:flex;gap:5px;';
+      const _sl=allBtns.slice(r*COLS,r*COLS+COLS);
+      _sl.forEach(b=>row.appendChild(b));
+      for(let _f=_sl.length;_f<COLS;_f++){const sp=document.createElement('div');sp.className='somi-key-spacer';row.appendChild(sp);}
       inner.appendChild(row);
     }
   }
@@ -2876,7 +2892,7 @@ function buildPracticeUI(){
 /* ── 기본 모드 키 UI ── */
 function buildBasicKeyUI(body){
   const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
-  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const inner=document.createElement('div');inner.className='somi-keygrid';inner.style.cssText='display:flex;flex-direction:column;gap:5px;align-items:stretch;';
   const lbl=document.createElement('div');lbl.className='basic-key-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 위치 선택';inner.appendChild(lbl);
   const upEntries=BASIC_SEQ.map((e,i)=>({...e,seqIdx:i})).filter(e=>e.dir===1);
   const downEntries=BASIC_SEQ.map((e,i)=>({...e,seqIdx:i})).filter(e=>e.dir===-1);
@@ -2901,9 +2917,9 @@ function buildBasicKeyUI(body){
     return row;
   }
   // 두 행을 grid로 묶어 화살표 컬럼 정렬
-  const rowsWrap=document.createElement('div');rowsWrap.style.cssText='display:grid;grid-template-columns:14px auto;gap:5px 4px;align-items:center;';
+  const rowsWrap=document.createElement('div');rowsWrap.style.cssText='display:grid;grid-template-columns:14px 1fr;gap:5px 4px;align-items:center;width:100%;max-width:480px;';
   [makeRow(upEntries,'▲'),makeRow(downEntries,'▼')].forEach(row=>{
-    const arrowEl=row.firstChild;const btnsEl=document.createElement('div');btnsEl.style.cssText='display:flex;gap:4px;';
+    const arrowEl=row.firstChild;const btnsEl=document.createElement('div');btnsEl.className='somi-keyrow';btnsEl.style.cssText='display:flex;gap:4px;';
     while(row.children.length>1)btnsEl.appendChild(row.children[1]);
     rowsWrap.appendChild(arrowEl);rowsWrap.appendChild(btnsEl);
   });
@@ -2916,7 +2932,7 @@ function buildPracticeKeyUI(body){
   const PMIN=48,PMAX=92; // G#6(midi 92)까지
   const COLS=9;
   const outer=document.createElement('div');outer.style.cssText='width:100%;display:flex;justify-content:center;';
-  const inner=document.createElement('div');inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  const inner=document.createElement('div');inner.className='somi-keygrid';inner.style.cssText='display:flex;flex-direction:column;gap:5px;align-items:stretch;';
   const hdr=document.createElement('div');hdr.style.cssText='display:flex;flex-direction:column;gap:3px;align-self:flex-start;';
   const rangeLbl=document.createElement('div');rangeLbl.className='key-grid-label';rangeLbl.textContent='음역 범위 설정';hdr.appendChild(rangeLbl);
   const rangeInfo=document.createElement('div');rangeInfo.id='practice-range-info';
@@ -2968,9 +2984,12 @@ function buildPracticeKeyUI(body){
       };
       allBtns.push(btn);
     }
-    for(let r=0;r<Math.ceil(allBtns.length/COLS);r++){
-      const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
-      allBtns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+    const _tr=Math.ceil(allBtns.length/COLS);
+    for(let r=0;r<_tr;r++){
+      const row=document.createElement('div');row.className='somi-keyrow';row.style.cssText='display:flex;gap:5px;';
+      const _sl=allBtns.slice(r*COLS,r*COLS+COLS);
+      _sl.forEach(b=>row.appendChild(b));
+      for(let _f=_sl.length;_f<COLS;_f++){const sp=document.createElement('div');sp.className='somi-key-spacer';row.appendChild(sp);}
       inner.appendChild(row);
     }
   }
@@ -2986,7 +3005,7 @@ function buildSeqGridUI(body,seq,selectedIdx,onSelect){
   const btns=[];
   seq.forEach((midi,i)=>{
     const name=midiToName(midi,-1);
-    const btn=document.createElement('button');btn.className='seq-btn';btn.style.cssText='width:'+btnW+';min-width:'+btnW+';padding:6px 0;';btn.textContent=name;btn.setAttribute('data-idx',i);
+    const btn=document.createElement('button');btn.className='seq-btn';btn.style.cssText='padding:6px 0;';btn.textContent=name;btn.setAttribute('data-idx',i);
     btn.onclick=()=>{
       previewNote(midi);onSelect(i);btns.forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');
       _setEl('vocal-key-display',midiToName(midi,-1));
@@ -2997,12 +3016,16 @@ function buildSeqGridUI(body,seq,selectedIdx,onSelect){
   });
   // 내부 블록: 왼쪽 라인 정렬, 블록 자체는 margin auto로 중앙
   const inner=document.createElement('div');
-  inner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:center;';
+  inner.className='somi-keygrid';
+  inner.style.cssText='display:flex;flex-direction:column;gap:5px;align-items:stretch;';
   const lbl=document.createElement('div');lbl.className='key-grid-label';lbl.style.cssText='margin-bottom:4px;align-self:flex-start;';lbl.textContent='시작 위치 선택';
   inner.appendChild(lbl);
-  for(let r=0;r<Math.ceil(seq.length/COLS);r++){
-    const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
-    btns.slice(r*COLS,r*COLS+COLS).forEach(b=>row.appendChild(b));
+  const _tr=Math.ceil(seq.length/COLS);
+  for(let r=0;r<_tr;r++){
+    const row=document.createElement('div');row.className='somi-keyrow';row.style.cssText='display:flex;gap:5px;';
+    const _sl=btns.slice(r*COLS,r*COLS+COLS);
+    _sl.forEach(b=>row.appendChild(b));
+    for(let _f=_sl.length;_f<COLS;_f++){const sp=document.createElement('div');sp.className='somi-key-spacer';row.appendChild(sp);}
     inner.appendChild(row);
   }
   const wrap=document.createElement('div');wrap.style.cssText='width:100%;display:flex;justify-content:center;';
@@ -3522,7 +3545,7 @@ function buildAdvancedPanel(body){
   const ADV_PMIN=48,ADV_PMAX=92; // G#6(midi 92)까지
   const ADV_COLS=9;
   const rngGridOuter=document.createElement('div');rngGridOuter.style.cssText='width:100%;display:flex;justify-content:center;';
-  const rngGridInner=document.createElement('div');rngGridInner.id='adv-range-grid';rngGridInner.style.cssText='display:inline-flex;flex-direction:column;gap:5px;align-items:flex-start;';
+  const rngGridInner=document.createElement('div');rngGridInner.id='adv-range-grid';rngGridInner.className='somi-keygrid';rngGridInner.style.cssText='display:flex;flex-direction:column;gap:5px;align-items:stretch;';
   rngGridOuter.appendChild(rngGridInner);
 
   function calcLoopReachable(startMidi,iv){
@@ -3600,9 +3623,12 @@ function buildAdvancedPanel(body){
       };
       allBtns.push(btn);
     }
-    for(let r=0;r<Math.ceil(allBtns.length/ADV_COLS);r++){
-      const row=document.createElement('div');row.style.cssText='display:flex;gap:5px;';
-      allBtns.slice(r*ADV_COLS,r*ADV_COLS+ADV_COLS).forEach(b=>row.appendChild(b));
+    const _tr=Math.ceil(allBtns.length/ADV_COLS);
+    for(let r=0;r<_tr;r++){
+      const row=document.createElement('div');row.className='somi-keyrow';row.style.cssText='display:flex;gap:5px;';
+      const _sl=allBtns.slice(r*ADV_COLS,r*ADV_COLS+ADV_COLS);
+      _sl.forEach(b=>row.appendChild(b));
+      for(let _f=_sl.length;_f<ADV_COLS;_f++){const sp=document.createElement('div');sp.className='somi-key-spacer';row.appendChild(sp);}
       rngGridInner.appendChild(row);
     }
   }

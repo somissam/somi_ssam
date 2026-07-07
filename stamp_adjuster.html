@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>도장 미세조정 (실제 화면 그대로)</title>
+<style>
+/* ── 실제 앱(student.html)과 완전히 같은 색상 변수·달력 셀 CSS를 그대로 복사 ── */
+:root{--bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c27;--border:#2a2a3d;--accent:#7c6af7;--accent2:#f76ac8;--accent3:#6af7c8;--counting:#f7c26a;--text:#e8e8f0;--text2:#8888aa;}
+.theme-ivory{--bg:#f5f0e8;--surface:#fffdf7;--surface2:#f0ebe0;--border:#d8cfc0;--accent:#6b5ce7;--accent2:#e05fa0;--accent3:#2db89a;--counting:#c8960a;--text:#2a2420;--text2:#7a6e60;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;}
+h1{font-size:1.1rem;font-weight:800;margin-bottom:4px;}
+.sub{font-size:0.8rem;color:var(--text2);margin-bottom:18px;}
+.wrap{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr;gap:18px;}
+@media(min-width:760px){.wrap{grid-template-columns:280px 1fr;}}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;}
+.tabs{display:flex;gap:8px;margin-bottom:14px;}
+.tab{flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);color:var(--text);font-weight:700;cursor:pointer;text-align:center;}
+.tab.active{border-color:var(--accent);background:rgba(124,106,247,0.12);color:var(--accent);}
+
+.stamp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.stamp-btn{aspect-ratio:1;border-radius:10px;border:2px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:6px;}
+.stamp-btn.active{border-color:var(--accent);background:rgba(124,106,247,0.12);}
+.stamp-btn img,.stamp-btn svg{width:100%;height:100%;object-fit:contain;}
+
+.combo-toggle{display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface2);border-radius:10px;margin-bottom:14px;font-size:0.85rem;}
+.combo-toggle input{width:18px;height:18px;}
+.combo-sub{display:flex;gap:8px;margin-left:auto;}
+.combo-sub button{padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:0.78rem;cursor:pointer;}
+.combo-sub button.active{border-color:var(--accent2);color:var(--accent2);background:rgba(247,106,200,0.12);}
+
+.slider-row{margin-bottom:14px;}
+.slider-row label{display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;}
+.slider-row label b{color:var(--accent);font-family:'DM Mono',monospace;}
+.slider-row input[type=range]{width:100%;}
+
+/* ── 실제 달력 셀 CSS(student.html에서 그대로 복사) — 크기 계산까지 동일하게 ── */
+.preview-stage{display:flex;flex-direction:column;align-items:center;gap:14px;}
+/* 실제와 같은 이중 패딩 구조: home-content(20px) → calendar-wrap(20px) → 7칸 그리드 */
+.real-outer{width:100%;max-width:500px;padding:20px;box-sizing:border-box;}
+.real-wrap{background:var(--surface2);border-radius:18px;padding:20px;}
+.real-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;container-type:inline-size;background:var(--surface);}
+.cal-day.center{outline:2px solid var(--accent);outline-offset:2px;z-index:2;}
+.cal-day.dim{opacity:0.4;}
+.date-num{position:relative;z-index:2;font-size:min(31cqw,18px);font-weight:500;line-height:1;color:var(--text);}
+.teacher-stamp{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;pointer-events:none;}
+.teacher-stamp svg,.teacher-stamp img{width:100%!important;height:100%!important;object-fit:contain;display:block;}
+.student-stamp{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none;}
+.student-stamp img,.student-stamp svg{display:block;}
+.practice-bar-wrap{position:absolute;bottom:3px;left:4px;right:4px;height:5px;display:flex;gap:1px;border-radius:2px;overflow:hidden;z-index:1;}
+.practice-bar-seg{height:100%;border-radius:1px;}
+.preview-caption{font-size:0.78rem;color:var(--text2);text-align:center;}
+.size-note{font-size:0.7rem;color:var(--accent2);text-align:center;font-family:'DM Mono',monospace;}
+.exact-badge{display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(45,184,154,0.15);color:var(--accent3);font-size:0.72rem;font-weight:700;margin-top:8px;}
+
+.export-box{margin-top:18px;}
+.export-box textarea{width:100%;height:160px;border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;font-size:0.72rem;margin-top:8px;resize:vertical;}
+.btn{padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;margin-right:8px;}
+.btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.reset-link{font-size:0.78rem;color:var(--text2);text-decoration:underline;cursor:pointer;margin-top:10px;display:inline-block;}
+</style>
+</head>
+<body class="theme-ivory">
+
+<h1>🎯 도장 미세조정 — 실제 화면 그대로</h1>
+<p class="sub">여기서 조정하는 모양은 실제 학생 달력에 찍히는 모양과 <b>완전히 같은 코드</b>로 그려집니다. 이 화면에서 좋아 보이면 실제 앱에서도 그대로입니다.</p>
+
+<div class="wrap">
+  <!-- 왼쪽: 도장 선택 -->
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab active" id="tab-student" onclick="switchTab('student')">학생 도장</div>
+      <div class="tab" id="tab-teacher" onclick="switchTab('teacher')">선생님 도장</div>
+    </div>
+    <div class="stamp-grid" id="stamp-grid"></div>
+
+    <div class="combo-toggle" id="combo-toggle" style="display:none;">
+      <input type="checkbox" id="combo-check" onchange="toggleCombo()">
+      <span>레슨완과 같이 찍기</span>
+    </div>
+    <div class="combo-sub" id="combo-sub" style="display:none;margin-bottom:14px;">
+      <button id="combo-blue" class="active" onclick="setComboLesson('lessondone')">파랑(1~3회차)</button>
+      <button id="combo-red" onclick="setComboLesson('lessondonefinal')">빨강(마지막회차)</button>
+    </div>
+
+    <div class="reset-link" onclick="resetCurrent()">이 도장 값 초기화</div>
+  </div>
+
+  <!-- 오른쪽: 미리보기 + 슬라이더 -->
+  <div class="panel">
+    <div class="preview-stage">
+      <div class="real-outer">
+        <div class="real-wrap">
+          <div class="real-grid" id="mini-grid">
+            <div class="cal-day dim"><span class="date-num">7</span></div>
+            <div class="cal-day dim"><span class="date-num">8</span></div>
+            <div class="cal-day dim"><span class="date-num">9</span></div>
+            <div class="cal-day center" id="preview-cell"><span class="date-num">10</span></div>
+            <div class="cal-day dim"><span class="date-num">11</span></div>
+            <div class="cal-day dim"><span class="date-num">12</span></div>
+            <div class="cal-day dim"><span class="date-num">13</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="size-note" id="size-note"></div>
+      <div class="preview-caption">
+        가운데 칸(테두리 강조)이 지금 조정 중인 도장입니다. 실제 달력과 <b>완전히 같은 폭·패딩·7칸 계산</b>을 그대로 씁니다.<br>
+        <span class="exact-badge">✓ 실제 렌더링 함수 + 실제 크기 그대로 사용 중</span>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="slider-row">
+        <label>크기 <b id="val-size">100%</b></label>
+        <input type="range" id="sl-size" min="20" max="200" step="1" oninput="onSlide()">
+      </div>
+      <div class="slider-row">
+        <label>위아래 <b id="val-y">0%</b></label>
+        <input type="range" id="sl-y" min="-100" max="100" step="1" oninput="onSlide()">
+      </div>
+      <div class="slider-row">
+        <label>좌우 <b id="val-x">0%</b></label>
+        <input type="range" id="sl-x" min="-100" max="100" step="1" oninput="onSlide()">
+      </div>
+      <div class="slider-row">
+        <label>기울기 <b id="val-rot">0°</b></label>
+        <input type="range" id="sl-rot" min="-90" max="90" step="1" oninput="onSlide()">
+      </div>
+      <div class="slider-row">
+        <label>투명도 <b id="val-op">100%</b></label>
+        <input type="range" id="sl-op" min="10" max="100" step="1" oninput="onSlide()">
+      </div>
+    </div>
+
+    <div class="export-box">
+      <button class="btn" onclick="exportAll()">전체 값 코드로 내보내기</button>
+      <button class="btn ghost" onclick="copyExport()">복사</button>
+      <textarea id="exportBox" readonly placeholder="여기에 코드가 나옵니다. 복사해서 개발자(Claude)에게 주세요."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 실제 앱과 완전히 같은 stamps.js를 그대로 불러옴 (이미지·함수·STAMP_LAYOUT 전부 동일) -->
+<script src="stamps.js"></script>
+<script>
+// ── localStorage에 저장해둔 예전 조정값이 있으면, 방금 불러온 STAMP_LAYOUT 위에 덮어씀 ──
+// (STAMP_LAYOUT은 const라 재할당은 못 하지만, 객체 내부 값은 자유롭게 바꿀 수 있음)
+(function loadSavedOverrides(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('somi_stamp_adjust_v2')||'null');
+    if(!saved) return;
+    ['student','teacher'].forEach(cat=>{
+      if(!saved.base || !saved.base[cat]) return;
+      Object.keys(saved.base[cat]).forEach(key=>{
+        if(STAMP_LAYOUT.base[cat][key]) Object.assign(STAMP_LAYOUT.base[cat][key], saved.base[cat][key]);
+      });
+    });
+    if(saved.overlap){
+      Object.keys(saved.overlap).forEach(key=>{
+        STAMP_LAYOUT.overlap[key] = Object.assign(STAMP_LAYOUT.overlap[key]||{}, saved.overlap[key]);
+      });
+    }
+  }catch(e){ console.warn('저장된 조정값 불러오기 실패', e); }
+})();
+
+function persist(){
+  localStorage.setItem('somi_stamp_adjust_v2', JSON.stringify({base:STAMP_LAYOUT.base, overlap:STAMP_LAYOUT.overlap}));
+}
+
+const STUDENT_KEYS = ['apple','sunflower','cloud','crown','heart','rainbow'];
+const TEACHER_KEYS = ['star','heart','flower','heartfull'];
+
+let curTab = 'student';       // 'student' | 'teacher'
+let curKey = 'apple';         // 현재 고른 도장
+let comboOn = false;          // 레슨완과 같이 찍기 여부(선생님 탭에서만)
+let comboLesson = 'lessondone'; // 'lessondone' | 'lessondonefinal'
+
+function switchTab(tab){
+  curTab = tab;
+  document.getElementById('tab-student').classList.toggle('active', tab==='student');
+  document.getElementById('tab-teacher').classList.toggle('active', tab==='teacher');
+  document.getElementById('combo-toggle').style.display = tab==='teacher' ? 'flex' : 'none';
+  if(tab==='student'){ comboOn=false; document.getElementById('combo-check').checked=false; document.getElementById('combo-sub').style.display='none'; }
+  curKey = tab==='student' ? STUDENT_KEYS[0] : TEACHER_KEYS[0];
+  renderStampGrid();
+  syncSlidersFromLayout();
+  renderPreview();
+}
+
+function toggleCombo(){
+  comboOn = document.getElementById('combo-check').checked;
+  document.getElementById('combo-sub').style.display = comboOn ? 'flex' : 'none';
+  syncSlidersFromLayout();
+  renderPreview();
+}
+function setComboLesson(v){
+  comboLesson = v;
+  document.getElementById('combo-blue').classList.toggle('active', v==='lessondone');
+  document.getElementById('combo-red').classList.toggle('active', v==='lessondonefinal');
+  syncSlidersFromLayout();
+  renderPreview();
+}
+
+function stampIconHtml(key){
+  // 그리드 버튼 안 작은 아이콘 미리보기(중앙 꽉채움, 배치값 무관 — 버튼용)
+  if(curTab==='student'){
+    const raw=(STAMPS[key]||STAMPS.apple).svg;
+    const m=raw.match(/href="(data:image\/[^"]+)"/);
+    if(m) return '<img src="'+m[1]+'" style="width:100%;height:100%;object-fit:contain">';
+    return raw.replace(/width="\d+" height="\d+"/, 'width="100%" height="100%"');
+  } else {
+    return getStampIconSVG(key, 40);
+  }
+}
+
+function renderStampGrid(){
+  const keys = curTab==='student' ? STUDENT_KEYS : TEACHER_KEYS;
+  const grid = document.getElementById('stamp-grid');
+  grid.innerHTML = keys.map(k=>
+    `<div class="stamp-btn${k===curKey?' active':''}" onclick="selectStamp('${k}')">${stampIconHtml(k)}</div>`
+  ).join('');
+}
+function selectStamp(k){
+  curKey = k;
+  renderStampGrid();
+  syncSlidersFromLayout();
+  renderPreview();
+}
+
+// 지금 조정 중인 대상의 STAMP_LAYOUT 값 객체를 찾아옴
+function currentLayoutRef(){
+  if(curTab==='student') return STAMP_LAYOUT.base.student[curKey];
+  if(comboOn){
+    const comboKey = comboLesson+'+'+curKey;
+    if(!STAMP_LAYOUT.overlap[comboKey]) STAMP_LAYOUT.overlap[comboKey] = {size:70,y:-30,x:25,rot:0,op:90};
+    return STAMP_LAYOUT.overlap[comboKey];
+  }
+  return STAMP_LAYOUT.base.teacher[curKey];
+}
+
+function syncSlidersFromLayout(){
+  const L = currentLayoutRef();
+  document.getElementById('sl-size').value = L.size;
+  document.getElementById('sl-y').value = L.y;
+  document.getElementById('sl-x').value = L.x;
+  document.getElementById('sl-rot').value = L.rot;
+  document.getElementById('sl-op').value = L.op;
+  document.getElementById('val-size').textContent = L.size+'%';
+  document.getElementById('val-y').textContent = L.y+'%';
+  document.getElementById('val-x').textContent = L.x+'%';
+  document.getElementById('val-rot').textContent = L.rot+'°';
+  document.getElementById('val-op').textContent = L.op+'%';
+}
+
+function onSlide(){
+  const L = currentLayoutRef();
+  L.size = Number(document.getElementById('sl-size').value);
+  L.y    = Number(document.getElementById('sl-y').value);
+  L.x    = Number(document.getElementById('sl-x').value);
+  L.rot  = Number(document.getElementById('sl-rot').value);
+  L.op   = Number(document.getElementById('sl-op').value);
+  document.getElementById('val-size').textContent = L.size+'%';
+  document.getElementById('val-y').textContent = L.y+'%';
+  document.getElementById('val-x').textContent = L.x+'%';
+  document.getElementById('val-rot').textContent = L.rot+'°';
+  document.getElementById('val-op').textContent = L.op+'%';
+  persist();
+  renderPreview();
+}
+
+function resetCurrent(){
+  const defaults = { size:100, y:0, x:0, rot:0, op:100 };
+  const L = currentLayoutRef();
+  Object.assign(L, defaults);
+  persist();
+  syncSlidersFromLayout();
+  renderPreview();
+}
+
+// 실제 CSS 색상변수 그대로 사용한 연습 비율 바(호흡/발성/리듬 비율 예시 — 미세조정 참고용 고정 비율)
+function practiceBarHtml(){
+  return '<div class="practice-bar-wrap">'
+       + '<div class="practice-bar-seg" style="flex:2;background:var(--accent)"></div>'
+       + '<div class="practice-bar-seg" style="flex:3;background:var(--accent2)"></div>'
+       + '<div class="practice-bar-seg" style="flex:1;background:var(--accent3)"></div>'
+       + '</div>';
+}
+
+// ── 미리보기: 실제 앱과 완전히 같은 함수를 그대로 호출 ──
+function stampWrapHtml(){
+  if(curTab==='student'){
+    return '<div class="student-stamp">'+getStudentStampSVG(curKey)+'</div>';
+  } else {
+    const inner = comboOn ? getComboStampSVG(comboLesson, curKey) : getTeacherStampSVG(curKey);
+    return '<div class="teacher-stamp">'+inner+'</div>';
+  }
+}
+function renderPreview(){
+  const html = '<span class="date-num">10</span>' + stampWrapHtml() + practiceBarHtml();
+  document.getElementById('preview-cell').innerHTML = html;
+  // 실제 칸이 몇 px로 렌더링되는지 표시(화면폭에 따라 실제 값과 동일하게 변함)
+  const cellW = document.getElementById('preview-cell').getBoundingClientRect().width;
+  document.getElementById('size-note').textContent = '지금 이 화면에서 실제 칸 크기 ≈ '+Math.round(cellW)+'px (화면폭에 따라 실제 달력과 똑같이 변함)';
+}
+window.addEventListener('resize', renderPreview);
+
+// ── 내보내기 (기존과 동일 포맷 유지) ──
+function exportAll(){
+  const out = { student:{}, teacher:{}, overlap:{} };
+  STUDENT_KEYS.forEach(k=> out.student[k] = {...STAMP_LAYOUT.base.student[k]});
+  TEACHER_KEYS.forEach(k=> out.teacher[k] = {...STAMP_LAYOUT.base.teacher[k]});
+  Object.keys(STAMP_LAYOUT.overlap).forEach(k=> out.overlap[k] = {...STAMP_LAYOUT.overlap[k]});
+  document.getElementById('exportBox').value = JSON.stringify(out, null, 1);
+}
+function copyExport(){
+  const t=document.getElementById('exportBox');
+  if(!t.value) exportAll();
+  t.select();
+  document.execCommand('copy');
+}
+
+// ── 초기 렌더 ──
+renderStampGrid();
+syncSlidersFromLayout();
+renderPreview();
+</script>
+</body>
+</html>

@@ -67,8 +67,8 @@ button{font-family:inherit;cursor:pointer;}
 .save-login-row input[type=checkbox]{width:18px;height:18px;accent-color:var(--counting);cursor:pointer;flex-shrink:0;}
 .save-login-row span{font-size:0.82rem;color:var(--text2);}
 
-#app{display:none;flex-direction:column;min-height:100vh;}
-.app-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+#app{display:none;flex-direction:column;min-height:100vh;align-items:center;}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;align-self:stretch;}
 .brand-wrap{display:flex;flex-direction:column;gap:1px;text-align:right;}
 .brand-title{font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--counting),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'DM Mono',monospace;}
 .brand-sub{font-size:0.65rem;color:var(--text2);letter-spacing:3px;text-transform:uppercase;}
@@ -77,12 +77,12 @@ button{font-family:inherit;cursor:pointer;}
 .back-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:10px 20px;border-radius:10px;font-size:0.88rem;font-weight:500;transition:all 0.2s;font-family:inherit;cursor:pointer;min-width:120px;white-space:nowrap;}
 .back-btn:hover{border-color:var(--accent);color:var(--text);}
 
-.teacher-content{padding:20px;max-width:700px;margin:0 auto;}
+.teacher-content{padding:20px;max-width:600px;margin:0 auto;width:100%;box-sizing:border-box;overflow-x:hidden;}
 .section-desc{color:var(--text2);font-size:0.82rem;margin-bottom:20px;line-height:1.6;}
-.stats-grid{display:grid;grid-template-columns:1fr 0.7fr 1fr;gap:14px;margin-bottom:24px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;min-height:90px;}
-.stat-label{font-size:0.72rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;}
-.stat-value{font-size:2rem;font-weight:700;margin-top:6px;font-family:'DM Mono',monospace;}
+.stats-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,0.7fr) minmax(0,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;min-height:90px;min-width:0;overflow:hidden;}
+.stat-label{font-size:0.72rem;color:var(--text2);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-value{font-size:2rem;font-weight:700;margin-top:6px;font-family:'DM Mono',monospace;line-height:1.15;white-space:nowrap;}
 .stat-value.a1{color:var(--accent);}.stat-value.a2{color:var(--accent2);}.stat-value.a3{color:var(--accent3);}
 
 /* ── 학생 카드 (반 색상 배경 버전) ── */
@@ -123,22 +123,24 @@ button{font-family:inherit;cursor:pointer;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .cal-header h3{font-size:1rem;font-weight:600;}
 .cal-nav{background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem;padding:4px 8px;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0.4cqw;}
 .cal-day-label{text-align:center;font-size:0.82rem;color:var(--text2);padding:7px 0;font-weight:600;}
-.t-cal-day{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:1.15rem;font-weight:500;min-height:44px;transition:all 0.2s;}
+.t-cal-day{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:min(31cqw,20px);font-weight:500;min-height:34px;transition:all 0.2s;container-type:inline-size;}
+.t-cal-day img,.t-cal-day svg{width:100%!important;height:100%!important;object-fit:contain;display:block;}
 .t-cal-day:hover{background:var(--surface2);}
 .t-cal-day.has-practice{font-weight:800;color:var(--text);}
 .t-cal-day.selected{background:rgba(124,106,247,0.2);}
 .t-cal-day.other-month{color:var(--text2);opacity:0.4;}
-.date-num{position:relative;z-index:2;font-size:1.15rem;font-weight:500;line-height:1;}
+.date-num{position:relative;z-index:2;font-size:min(31cqw,20px);font-weight:500;line-height:1;}
 .comment-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:16px;}
 .comment-box h4{font-size:0.85rem;margin-bottom:10px;}
 .comment-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:0.88rem;font-family:inherit;outline:none;resize:none;min-height:60px;}
 .comment-input:focus{border-color:var(--accent2);}
 .send-stamp-btn{margin-top:10px;padding:10px 20px;border-radius:10px;border:none;background:var(--accent2);color:white;font-family:inherit;font-size:0.85rem;cursor:pointer;font-weight:600;}
 
-.teacher-tabs{display:flex;border-bottom:2px solid var(--border);gap:0;background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;}
+.teacher-tabs{display:flex;border-bottom:2px solid var(--border);gap:0;background:var(--bg);position:sticky;top:var(--header-h,57px);z-index:99;align-self:stretch;}
 .teacher-tab{flex:1;text-align:center;padding:12px 8px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:0.9rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;white-space:nowrap;}
+@media(max-width:400px){.teacher-tab{font-size:0.82rem;padding:12px 4px;}}
 .teacher-tab:hover{color:var(--text);}
 .teacher-tab.active{color:var(--counting);border-bottom-color:var(--counting);font-weight:700;}
 
@@ -204,8 +206,48 @@ button{font-family:inherit;cursor:pointer;}
   table { min-width: 260px; font-size: 0.78rem; }
   .pm-checkbox { width: 16px; height: 16px; }
 }
+
+/* ── 선생님 학생상세 좌우 분할 (1024px↑) ── 왼:카드/달력/도장  오른:통계/상세 ── */
+@media (min-width:1024px){
+  /* 학생 홈과 동일: 상세화면 열렸을 때만 콘텐츠 최대폭을 넓히되 가운데 정렬 유지(화면 전체로 안 퍼짐) */
+  .teacher-content:has(#teacher-detail:not([style*="display:none"])){
+    max-width:1020px;
+  }
+  #detail-content{
+    display:grid;
+    grid-template-columns:minmax(320px,500px) minmax(320px,500px);
+    grid-template-areas:
+      "card    stats"
+      "cal     detail"
+      "comment detail";
+    gap:20px;
+    align-items:start;
+    justify-content:center;
+  }
+  #detail-content > .detail-student-card{grid-area:card;margin:0;min-width:0;}
+  #detail-content > .detail-stats-grid{grid-area:stats;margin:0;min-width:0;align-self:stretch;}
+  #detail-content > #t-cal-wrap{grid-area:cal;margin:0;min-width:0;}
+  #detail-content > .comment-box{grid-area:comment;margin:0;min-width:0;}
+  #detail-content > #t-day-detail{grid-area:detail;margin:0 !important;min-width:0;}
+}
+
+/* [학생관리] 좁은 화면에서 통계 숫자 비율 축소 (vw 금지 → 미디어쿼리 단계) */
+@media (max-width:620px){ .stats-grid .stat-value{font-size:1.7rem;} }
+@media (max-width:540px){ .stats-grid .stat-value{font-size:1.45rem;} .stat-card{padding:16px 13px;} }
+@media (max-width:470px){ .stats-grid .stat-value{font-size:1.25rem;} .stat-card{padding:14px 11px;} }
+@media (max-width:400px){ .stats-grid .stat-value{font-size:1.05rem;} .stat-card{padding:12px 9px;} }
+@media (max-width:340px){ .stats-grid .stat-value{font-size:0.92rem;} }
+
+/* [학생관리] 프로필 토글: 좁을 때 2열 그리드 (소속반/리베 윗줄, 계좌/시창 아랫줄) */
+@media (max-width:540px){
+  .toggle-group{display:grid !important;grid-template-columns:auto auto;justify-content:start;gap:8px 10px;flex:0 1 auto !important;}
+  .toggle-group .tg-class{order:1;}
+  .toggle-group .tg-libe{order:2;}
+  .toggle-group .tg-acc{order:3;}
+  .toggle-group .tg-sichang{order:4;}
+}
 </style>
-<script src="stamps.js"></script>
+<script src="stamps.js?v=20260707f"></script>
 <script src="common_core.js"></script>
 <script>/* 이 페이지(home)는 로딩막을 hide로 시작 — 원본과 동일하게 먼저 비번/앱
    화면을 두고 동기화 시점에만 막을 켠다. common_core 인젝션이 이 값을 읽는다. */
@@ -253,9 +295,10 @@ window.__SOMI_LOAD_HIDDEN = true;</script>
     </div>
   </div>
 
-  <div class="teacher-tabs" style="padding:0 20px;max-width:700px;margin:0 auto;width:100%;box-sizing:border-box;">
+  <div class="teacher-tabs">
     <button class="teacher-tab active" id="tab-btn-student" onclick="showTeacherTab('student')">학생 관리</button>
     <button class="teacher-tab" id="tab-btn-pattern" onclick="showTeacherTab('pattern')">패턴 관리</button>
+    <button class="teacher-tab" id="tab-btn-ledger" onclick="goLedger()">등록대장</button>
     <button class="teacher-tab" id="tab-btn-settings" onclick="showTeacherTab('settings')">설정</button>
   </div>
 
@@ -386,6 +429,7 @@ let practiceLogs         = loadData('somi_logs', {});
 let accessLog            = loadData('somi_access_log', {});
 let teacherPw            = loadData('somi_teacher_pw', '1');
 let teacherStamps        = loadData('somi_teacher_stamps', {});
+let studentDayStamps     = loadData('somi_student_day_stamps', {});  // {pid_YYYY-MM-DD: 'apple'} 학생이 찍은 날짜별 도장 (선생님은 읽기만)
 let teacherChecks        = loadData('somi_teacher_checks', {});
 let restStartDates       = loadData('somi_rest_start_dates', {});  // {pid: 'YYYY-MM-DD'} 휴식반 진입일
 let classSettings        = loadData('somi_class_settings', {});
@@ -492,8 +536,7 @@ function renderUncheckedPanel(){
     html+=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--border);">
       <button onclick="toggleSelectAllUnchecked()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;">${allSelected?'전체 해제':'전체 선택'}</button>
       <span style="font-size:0.78rem;color:var(--text2);">도장</span>
-      <button onclick="setUncheckedStampType('star')" id="uk-stamp-star" style="padding:5px 10px;border-radius:8px;border:2px solid ${_uncheckedStampType==='star'?'#FFEE00':'var(--border)'};background:${_uncheckedStampType==='star'?'rgba(255,238,0,0.15)':'var(--surface2)'};cursor:pointer;font-size:1rem;">⭐</button>
-      <button onclick="setUncheckedStampType('heart')" id="uk-stamp-heart" style="padding:5px 10px;border-radius:8px;border:2px solid ${_uncheckedStampType==='heart'?'#ff6a8a':'var(--border)'};background:${_uncheckedStampType==='heart'?'rgba(255,106,138,0.15)':'var(--surface2)'};cursor:pointer;font-size:1rem;">❤️</button>
+      ${['star','heart','flower','heartfull','lessondone','lessondonefinal','lessonabsent','lessonabsentfinal'].map(t=>`<button onclick="setUncheckedStampType('${t}')" id="uk-stamp-${t}" style="padding:2px;width:32px;height:32px;border-radius:8px;border:2px solid ${_uncheckedStampType===t?'#FFEE00':'var(--border)'};background:${_uncheckedStampType===t?'rgba(255,238,0,0.15)':'var(--surface2)'};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">${getStampIconSVG(t,26)}</button>`).join('')}
       <button onclick="bulkStampUnchecked()" ${selCount===0?'disabled':''} style="margin-left:auto;padding:7px 14px;border-radius:9px;border:none;background:${selCount===0?'var(--surface2)':'var(--accent2)'};color:${selCount===0?'var(--text2)':'#fff'};font-family:inherit;font-size:0.82rem;font-weight:700;cursor:${selCount===0?'default':'pointer'};">선택 ${selCount}건 도장 찍기</button>
       <button onclick="bulkCheckUnchecked()" ${selCount===0?'disabled':''} style="padding:7px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:${selCount===0?'var(--text2)':'var(--text)'};font-family:inherit;font-size:0.82rem;font-weight:700;cursor:${selCount===0?'default':'pointer'};">확인만</button>
     </div>`;
@@ -633,17 +676,22 @@ function classRank(voClass) {
   return i === -1 ? CLASS_ORDER.length : i;
 }
 
-/* ── 만 나이 범위 (±1살 범위 표시용) ── */
+/* ── 나이 범위: 하한=현재 만나이(생일 반영), 상한=한국 세는나이(연도차+1) ──
+   생일 지났으면 1살 폭(만나이~한국나이), 안 지났으면 2살 폭. */
+
+
 function calcAgeRange(birthStr) {
   if (!birthStr) return '';
   try {
     const b = new Date(birthStr);
     const now = new Date();
-    let age = now.getFullYear() - b.getFullYear();
+    const yearDiff = now.getFullYear() - b.getFullYear();
+    let age = yearDiff;
     const m = now.getMonth() - b.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
     if (age < 0) return '';
-    return age + '~' + (age + 2) + '세';
+    const korean = yearDiff + 1;   // 한국 세는나이 = 상한
+    return age + '~' + korean + '세';
   } catch(e) { return ''; }
 }
 
@@ -724,7 +772,7 @@ async function teacherRefresh() {
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_student_day_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
     await Promise.all(KEYS.map(async k=>{
       const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
     }));
@@ -734,6 +782,7 @@ async function teacherRefresh() {
     }));
     practiceLogs=loadData('somi_logs',{});
     teacherStamps=loadData('somi_teacher_stamps',{});
+    studentDayStamps=loadData('somi_student_day_stamps',{});
     teacherChecks=loadData('somi_teacher_checks',{});
     classSettings=loadData('somi_class_settings',{});
     lessonStarts=loadData('somi_lesson_starts',{});
@@ -866,7 +915,7 @@ function renderTeacher() {
     .filter(Boolean);
   const _totalEl = document.getElementById('t-total');
   if(asideParts.length){
-    _totalEl.innerHTML = `<span style="white-space:nowrap;">${mainCount}<span style="font-size:0.42em;font-weight:600;color:var(--text2);margin-left:5px;letter-spacing:0;font-family:inherit;">(${asideParts.join('·')})</span></span>`;
+    _totalEl.innerHTML = `<span style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;"><span>${mainCount}</span><span style="font-size:0.34em;font-weight:600;color:var(--text2);letter-spacing:0;font-family:inherit;line-height:1.2;word-break:keep-all;white-space:nowrap;">${asideParts.join('<br>')}</span></span>`;
   } else {
     _totalEl.textContent = mainCount;
   }
@@ -950,6 +999,10 @@ function renderTeacher() {
   renderUncheckedPanel();
 }
 
+function goLedger(){
+  // 등록대장은 독립 페이지. 호흡·발성처럼 같은 창에서 이동.
+  window.location.href='somi_ledger.html';
+}
 function showTeacherTab(tab){
   // 헤더 높이 측정해서 탭 sticky top 위치 설정
   const hdr=document.querySelector('.app-header');
@@ -1119,27 +1172,40 @@ function renderDetailContent(p) {
     </div>`;
 
   html+=`<div class="teacher-cal" id="t-cal-wrap"><div class="cal-header"><button class="cal-nav" onclick="tCalMove(-1)">‹</button><h3 id="t-cal-title"></h3><button class="cal-nav" onclick="tCalMove(1)">›</button></div><div class="cal-grid" id="t-cal-grid"></div></div>`;
-  html+=`<div class="comment-box"><h4>📮 도장 + 코멘트 보내기 (<span id="selected-date-label">날짜를 선택해주세요</span>)</h4><div style="display:flex;gap:8px;margin-bottom:10px"><button id="stamp-type-star" onclick="selectTeacherStampType('star')" style="padding:6px 14px;border-radius:8px;border:2px solid #FFEE00;background:rgba(255,238,0,0.15);cursor:pointer;font-size:1.1rem">⭐</button><button id="stamp-type-heart" onclick="selectTeacherStampType('heart')" style="padding:6px 14px;border-radius:8px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-size:1.1rem">❤️</button></div><textarea class="comment-input" id="teacher-comment" placeholder="코멘트를 입력해주세요 (선택사항)"></textarea><div style="display:flex;gap:8px;align-items:center"><button class="send-stamp-btn" onclick="sendTeacherStamp()">도장 보내기</button><button class="send-stamp-btn" onclick="checkTeacherDate()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)">확인만</button></div></div>`;
-  html+=`<div style="margin-top:24px"><div style="font-size:1rem;font-weight:700;margin-bottom:14px">상세 연습 기록</div>`;
-  const byDay={}; logs.forEach(l=>{ if(!byDay[l.date])byDay[l.date]=[]; byDay[l.date].push(l); });
-  const dayKeys=Object.keys(byDay).sort().reverse();
-  dayKeys.forEach(day=>{
-    const dayTotal=byDay[day].reduce((a,l)=>a+(l.duration||0),0);
-    const _dc=(teacherStamps[p.id+'_'+day]||{}).comment||'';
-    const _dcHtml=_dc.trim()?`<span style="font-weight:400;color:var(--accent2)">💬 ${_dc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`:'';
-    html+=`<div style="margin-bottom:16px"><div style="font-size:0.82rem;color:var(--text2);margin-bottom:8px;font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><span>${day}</span>${_dcHtml}</div><table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>`;
-    html+=`<tr style="background:var(--surface2)"><td colspan="3" style="font-size:0.78rem;color:var(--text2);font-weight:600">📋 당일 총 연습</td><td style="font-weight:700;color:var(--accent)">${formatDur(dayTotal)}</td></tr>`;
-    byDay[day].forEach(l=>{
-      const pc=l.chapter==='breath'?'b':l.chapter==='vocal'?'v':'r';
-      const cn=l.chapter==='breath'?'호흡':l.chapter==='vocal'?'발성':'리듬';
-      html+=`<tr><td>${l.time||''}</td><td><span class="pill ${pc}">${cn}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`;
-    });
-    html+=`</tbody></table></div>`;
-  });
-  if(!dayKeys.length) html+='<p style="color:var(--text2);text-align:center;padding:20px">연습 기록이 없어요</p>';
-  html+='</div>';
+  html+=`<div class="comment-box"><h4>📮 도장 + 코멘트 보내기 (<span id="selected-date-label">날짜를 선택해주세요</span>)</h4><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">${['star','heart','flower','heartfull','lessondone','lessondonefinal','lessonabsent','lessonabsentfinal'].map(t=>`<button id="stamp-type-${t}" onclick="selectTeacherStampType('${t}')" style="padding:3px;width:40px;height:40px;border-radius:10px;border:2px solid ${t==='star'?'#FFEE00':'var(--border)'};background:${t==='star'?'rgba(255,238,0,0.15)':'var(--surface)'};cursor:pointer;display:flex;align-items:center;justify-content:center;">${getStampIconSVG(t,34)}</button>`).join('')}</div><div id="combo-extra-row" style="display:none;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap"><span style="font-size:0.8rem;color:var(--text2)">같이 찍기:</span>${['star','heart','flower','heartfull'].map(t=>`<button id="combo-extra-${t}" onclick="selectComboExtra('${t}')" style="padding:3px;width:36px;height:36px;border-radius:10px;border:2px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;">${getStampIconSVG(t,30)}</button>`).join('')}</div><textarea class="comment-input" id="teacher-comment" placeholder="코멘트를 입력해주세요 (선택사항)"></textarea><div style="display:flex;gap:8px;align-items:center"><button class="send-stamp-btn" onclick="sendTeacherStamp()">도장 보내기</button><button class="send-stamp-btn" onclick="checkTeacherDate()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border)">확인만</button></div></div>`;
+  html+=`<div id="t-day-detail" style="margin-top:24px"></div>`;
   document.getElementById('detail-content').innerHTML=html;
   renderTeacherCalendar(p.id);
+  // 초기 표시: 선택된 날짜가 있으면 그 날, 없으면 가장 최근 연습일
+  const _allDates = (logs||[]).map(l=>l.date);
+  let _initDay = selectedTeacherDate;
+  if(!_initDay || !_allDates.includes(_initDay)){
+    _initDay = _allDates.length ? _allDates.slice().sort().reverse()[0] : null;
+  }
+  if(_initDay){ selectedTeacherDate=_initDay; const _lbl=document.getElementById('selected-date-label'); if(_lbl) _lbl.textContent=_initDay; renderTeacherCalendar(p.id); }
+  renderTeacherDayLog(p.id, _initDay);
+}
+
+function renderTeacherDayLog(pid, day){
+  const box=document.getElementById('t-day-detail'); if(!box) return;
+  const logs=(practiceLogs[pid]||[]).filter(l=>l.date===day);
+  if(!day || !logs.length){
+    box.innerHTML='<div style="font-size:1rem;font-weight:700;margin-bottom:14px">상세 연습 기록</div><p style="color:var(--text2);text-align:center;padding:20px">'+(day?('이 날은 연습 기록이 없어요'):('날짜를 선택해주세요'))+'</p>';
+    return;
+  }
+  const dayTotal=logs.reduce((a,l)=>a+(l.duration||0),0);
+  const _dc=(teacherStamps[pid+'_'+day]||{}).comment||'';
+  const _dcHtml=_dc.trim()?`<span style="font-weight:400;color:var(--accent2)">💬 ${_dc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`:'';
+  let html=`<div style="font-size:1rem;font-weight:700;margin-bottom:14px">상세 연습 기록</div>`;
+  html+=`<div style="margin-bottom:16px"><div style="font-size:0.82rem;color:var(--text2);margin-bottom:8px;font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><span>${day}</span>${_dcHtml}</div><table class="log-table"><thead><tr><th>시간</th><th>챕터</th><th>항목</th><th>시간</th></tr></thead><tbody>`;
+  html+=`<tr style="background:var(--surface2)"><td colspan="3" style="font-size:0.78rem;color:var(--text2);font-weight:600">📋 당일 총 연습</td><td style="font-weight:700;color:var(--accent)">${formatDur(dayTotal)}</td></tr>`;
+  logs.forEach(l=>{
+    const pc=l.chapter==='breath'?'b':l.chapter==='vocal'?'v':'r';
+    const cn=l.chapter==='breath'?'호흡':l.chapter==='vocal'?'발성':'리듬';
+    html+=`<tr><td>${l.time||''}</td><td><span class="pill ${pc}">${cn}</span></td><td>${l.exercise||''}</td><td>${formatDur(l.duration||0)}</td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  box.innerHTML=html;
 }
 
 function renderTeacherCalendar(pid) {
@@ -1152,9 +1218,9 @@ function renderTeacherCalendar(pid) {
   const prev=new Date(teacherCalYear,teacherCalMonth,0).getDate();
   const logs=practiceLogs[pid]||[];
 
-  // ── [8번] 학생 도장 ──
+  // ── [8번] 학생 도장 — 날짜별 도장(studentDayStamps) 우선, 없으면 프로필 대표 도장 폴백 ──
   const studentProfile = profiles.find(p=>p.id===pid);
-  const studentStampKey = studentProfile?.stamp || 'apple';
+  const fallbackStampKey = studentProfile?.stamp || 'apple';
 
   for(let i=0;i<first;i++){ const d=document.createElement('div'); d.className='t-cal-day other-month'; const dn=document.createElement('span'); dn.className='date-num'; dn.textContent=prev-first+1+i; d.appendChild(dn); grid.appendChild(d); }
   for(let d=1;d<=days;d++){
@@ -1166,9 +1232,42 @@ function renderTeacherCalendar(pid) {
     // 선생님 도장 — 도장을 직접 클릭하면 삭제 모달(코멘트 표시)
     if(teacherStamps[tk]){
       const ts2=document.createElement('div');
-      ts2.style.cssText='position:absolute;top:-2px;left:-2px;width:28px;height:28px;z-index:5;cursor:pointer;';
+      ts2.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;cursor:pointer;';
       ts2.title='도장/코멘트 보기·삭제';
-      ts2.innerHTML=getTeacherStampSVG(teacherStamps[tk].stamp, 28);
+      const savedStamp=teacherStamps[tk].stamp;
+      const manualFinal=teacherStamps[tk].manualFinal===true;
+      // 레슨완 4종: 출석계열(파랑/빨강) vs 결석계열(회색/회색동그라미)
+      const isAbsent=(savedStamp==='lessonabsent'||savedStamp==='lessonabsentfinal');
+      const isLesson=(savedStamp==='lessondone'||savedStamp==='lessondonefinal'||isAbsent);
+      // 레슨완이면 회차 정보를 실시간 계산(마지막 여부 판정용)
+      let rinfo=null;
+      if(isLesson && !manualFinal && typeof window.somiRoundAt==='function'){ rinfo=window.somiRoundAt(pid, ds); }
+      // 마지막 여부: 수동 고정(manualFinal) 또는 등록권 계산 결과
+      const isFinal = manualFinal ? true : (rinfo ? rinfo.isFinal : (savedStamp==='lessondonefinal'||savedStamp==='lessonabsentfinal'));
+      // 출석/결석은 저장된 대로 유지, 마지막여부(동그라미)만 반영
+      let showStamp;
+      if(isLesson){
+        showStamp = isAbsent ? (isFinal?'lessonabsentfinal':'lessonabsent')
+                             : (isFinal?'lessondonefinal':'lessondone');
+      } else { showStamp = savedStamp; }
+      // 같이 찍은 상대도장(extra)이 있고, 레슨완 계열이면 겹쳐찍기로 표시
+      const extraStamp = teacherStamps[tk].extra;
+      if(isLesson && extraStamp && typeof getComboStampSVG==='function'){
+        ts2.innerHTML='<div style="width:100%;height:100%">'+getComboStampSVG(showStamp, extraStamp)+'</div>';
+      } else {
+        ts2.innerHTML='<div style="width:100%;height:100%">'+getTeacherStampSVG(showStamp)+'</div>';
+      }
+      // 회차 배지("3") — 선생님 화면에만, 등록권 연결된 것만
+      if(isLesson){
+        if(rinfo){
+          const badgeColor = isAbsent ? '#888780' : (rinfo.isFinal?'#E24B4A':'#378ADD');
+          const badge=document.createElement('div');
+          badge.style.cssText='position:absolute;top:-2cqw;right:-2cqw;min-width:20cqw;height:20cqw;padding:0 4cqw;border-radius:10cqw;background:'+badgeColor+';color:#fff;font-size:11cqw;font-weight:800;display:flex;align-items:center;justify-content:center;z-index:6;box-shadow:0 0 0 1.5px var(--surface);line-height:1;';
+          badge.textContent=rinfo.index;
+          badge.title=rinfo.index+' / '+rinfo.total+'회'+(rinfo.isFinal?' (마지막)':'')+(isAbsent?' · 결석':'');
+          ts2.appendChild(badge);
+        }
+      }
       ts2.onclick=(e)=>{
         e.stopPropagation();   // 날짜 셀 클릭으로 전파되지 않게
         showStampDeleteModal(ds, ()=>{
@@ -1191,18 +1290,36 @@ function renderTeacherCalendar(pid) {
       };
       div.appendChild(ts2);
     }
-    // 학생 도장 (연습한 날)
+    // 학생 도장 (연습한 날) — 학생이 고른 것만, 안 골랐으면 검은 선 원(자동)
     if(has){
+      const picked = studentDayStamps[tk];
       const sl=document.createElement('div');
-      sl.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none;opacity:0.5;';
-      sl.innerHTML=`<div style="width:85%;height:85%">${getStampSVG(studentStampKey)}</div>`;
+      sl.style.cssText='position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0.55;';
+      const svg = picked ? getStudentStampSVG(picked)
+                 : (typeof window.somiAutoStampSVG==='function' ? window.somiAutoStampSVG() : '');
+      sl.innerHTML=picked ? svg : `<div style="width:86%;height:86%;display:flex;align-items:center;justify-content:center;position:absolute;inset:0;margin:auto">${svg}</div>`;
       div.appendChild(sl);
+    }
+    // ── [2번] 학생 연습 챕터별 비율 바 (셀 하단) ──
+    if(has){
+      const dayLogs=logs.filter(l=>l.date===ds);
+      const bw=document.createElement('div');
+      bw.style.cssText='position:absolute;bottom:4cqw;left:5cqw;right:5cqw;height:10cqw;max-height:6px;display:flex;gap:1px;border-radius:2px;overflow:hidden;z-index:2;';
+      ['breath','vocal','rhythm'].forEach(c=>{
+        const cnt=dayLogs.filter(l=>l.chapter===c).length;
+        if(cnt>0){
+          const seg=document.createElement('div');
+          seg.style.cssText='height:100%;border-radius:1px;flex:'+cnt+';background:'+(c==='breath'?'var(--accent)':c==='vocal'?'var(--accent2)':'var(--accent3)')+';';
+          bw.appendChild(seg);
+        }
+      });
+      div.appendChild(bw);
     }
 
     // ── [5번] 새 연습 알림 빨간 점 — 도장 발송과 무관, 확인표시 전까지 유지 ──
     if(has && !_isHandled(pid, ds)){
       const dot=document.createElement('div');
-      dot.style.cssText='position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#ff4444;z-index:4;pointer-events:none;box-shadow:0 0 0 1.5px var(--surface);';
+      dot.style.cssText='position:absolute;top:6cqw;right:6cqw;width:16cqw;height:16cqw;max-width:9px;max-height:9px;border-radius:50%;background:#ff4444;z-index:4;pointer-events:none;box-shadow:0 0 0 1.5px var(--surface);';
       div.appendChild(dot);
     }
 
@@ -1211,24 +1328,72 @@ function renderTeacherCalendar(pid) {
       selectedTeacherDate=ds;
       document.getElementById('selected-date-label').textContent=ds;
       renderTeacherCalendar(pid);
+      renderTeacherDayLog(pid, ds);
     };
     grid.appendChild(div);
   }
 }
 function tCalMove(dir){ teacherCalMonth+=dir; if(teacherCalMonth>11){teacherCalMonth=0;teacherCalYear++;} if(teacherCalMonth<0){teacherCalMonth=11;teacherCalYear--;} renderTeacherCalendar(teacherDetailProfileId); }
 let selectedTeacherStampType='star';
+let selectedComboExtra=null;   // 겹쳐찍기: 레슨완과 같이 찍을 상대도장(star/heart/flower/heartfull)
 function selectTeacherStampType(type){
   selectedTeacherStampType=type;
-  ['star','heart'].forEach(t=>{
+  ['star','heart','flower','heartfull','lessondone','lessondonefinal','lessonabsent','lessonabsentfinal'].forEach(t=>{
     const btn=document.getElementById('stamp-type-'+t);
     if(btn) btn.style.borderColor=t===type?'#FFEE00':'var(--border)';
+  });
+  // 레슨완 계열을 골랐을 때만 "같이 찍기" 선택줄 노출
+  const isLesson=['lessondone','lessondonefinal','lessonabsent','lessonabsentfinal'].includes(type);
+  const comboRow=document.getElementById('combo-extra-row');
+  if(comboRow) comboRow.style.display = isLesson ? 'flex' : 'none';
+  if(!isLesson){ selectedComboExtra=null; refreshComboExtraButtons(); }
+}
+function selectComboExtra(t){
+  selectedComboExtra = (selectedComboExtra===t) ? null : t;  // 다시 누르면 해제
+  refreshComboExtraButtons();
+}
+function refreshComboExtraButtons(){
+  ['star','heart','flower','heartfull'].forEach(t=>{
+    const b=document.getElementById('combo-extra-'+t);
+    if(b) b.style.borderColor = (selectedComboExtra===t) ? '#FFEE00' : 'var(--border)';
   });
 }
 function sendTeacherStamp(){
   if(!selectedTeacherDate){ alert('날짜를 먼저 선택해주세요'); return; }
   const tk=teacherDetailProfileId+'_'+selectedTeacherDate;
-  teacherStamps[tk]={stamp:selectedTeacherStampType,comment:document.getElementById('teacher-comment').value,date:selectedTeacherDate};
-  saveTeacherStamps(); alert('도장을 보냈어요!'); document.getElementById('teacher-comment').value=''; renderTeacherCalendar(teacherDetailProfileId); renderUncheckedPanel();
+  const cmt=document.getElementById('teacher-comment').value;
+  let stampToSave=selectedTeacherStampType;
+  let manualFinal=false;
+  // 레슨완 4종 체계:
+  //   파랑 lessondone(출석)  ↔ 회색 lessonabsent(결석)      = 진행 중 회차
+  //   빨강 lessondonefinal(출석·마지막) ↔ 회색동그라미 lessonabsentfinal(결석·마지막)
+  // 출석/결석은 선생님이 고른 대로 유지. "마지막 회차인지(=동그라미)"만 회차 계산으로 자동 결정.
+  const isLessonStamp = ['lessondone','lessondonefinal','lessonabsent','lessonabsentfinal'].includes(stampToSave);
+  if(isLessonStamp){
+    // 선생님이 고른 것이 결석(회색)인가?
+    const isAbsent = (stampToSave==='lessonabsent' || stampToSave==='lessonabsentfinal');
+    // 선생님이 "마지막(동그라미)"을 직접 골랐으면 그 의지 존중(수동 고정)
+    const pickedFinal = (stampToSave==='lessondonefinal' || stampToSave==='lessonabsentfinal');
+    if(pickedFinal){ manualFinal=true; }
+    // 일단 진행 중 버전으로 저장 후 회차 계산
+    const baseStamp = isAbsent ? 'lessonabsent' : 'lessondone';
+    teacherStamps[tk]={stamp:baseStamp,comment:cmt,date:selectedTeacherDate};
+    saveTeacherStamps();  // 계산은 localStorage를 읽으므로 저장 먼저
+    let isFinal = pickedFinal;
+    if(!manualFinal && typeof window.somiRoundAt==='function'){
+      const info=window.somiRoundAt(teacherDetailProfileId, selectedTeacherDate);
+      if(info) isFinal = info.isFinal;  // 등록권 연결 시 마지막 여부 자동
+    }
+    // 출석/결석 × 마지막여부 조합으로 최종 도장 결정
+    if(isAbsent) stampToSave = isFinal ? 'lessonabsentfinal' : 'lessonabsent';
+    else         stampToSave = isFinal ? 'lessondonefinal'   : 'lessondone';
+  }
+  teacherStamps[tk]={stamp:stampToSave,comment:cmt,date:selectedTeacherDate,manualFinal:manualFinal};
+  // 겹쳐찍기: 레슨완 계열 + 같이찍을 상대도장을 골랐으면 extra로 저장
+  if(isLessonStamp && selectedComboExtra){
+    teacherStamps[tk].extra = selectedComboExtra;
+  }
+  saveTeacherStamps(); alert('도장을 보냈어요!'); document.getElementById('teacher-comment').value=''; selectedComboExtra=null; renderTeacherCalendar(teacherDetailProfileId); renderUncheckedPanel();
 }
 // 도장 없이 확인만 처리
 function checkTeacherDate(){
@@ -1378,7 +1543,7 @@ function renderPatternManager() {
 
   const lvAllActive = pmFilter.lvAllMode===true;
   const lvAllBtn=document.createElement('button');
-  lvAllBtn.style.cssText=`font-size:0.72rem;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:${lvAllActive?'var(--surface2)':'transparent'};color:${lvAllActive?'var(--text)':'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${lvAllActive?'700':'400'};`;
+  lvAllBtn.style.cssText=`font-size:0.72rem;padding:3px 6px;border-radius:8px;border:2px solid var(--border);background:${lvAllActive?'var(--surface2)':'transparent'};color:${lvAllActive?'var(--text)':'var(--text2)'};cursor:pointer;font-family:inherit;font-weight:${lvAllActive?'700':'400'};`;
   lvAllBtn.textContent='전체';
   lvAllBtn.onclick=()=>{
     pmFilter.lvAllMode = !pmFilter.lvAllMode;
@@ -1392,7 +1557,7 @@ function renderPatternManager() {
     const c=getLvColorById(lv.id);
     const isActive=(pmFilter.selectedLevels||[]).includes(lv.id);
     const b=document.createElement('button');
-    b.style.cssText=`font-size:0.72rem;padding:3px 8px;border-radius:8px;border:1px solid ${c};background:${isActive?c:'transparent'};color:${isActive?'#fff':c};cursor:pointer;font-family:inherit;font-weight:700;transition:all 0.15s;`;
+    b.style.cssText=`font-size:0.72rem;padding:3px 6px;border-radius:8px;border:2px solid ${c};background:${isActive?c:'transparent'};color:${isActive?'#fff':c};cursor:pointer;font-family:inherit;font-weight:700;transition:all 0.15s;`;
     b.textContent=lv.label;
     b.onclick=()=>{
       if(!pmFilter.selectedLevels) pmFilter.selectedLevels=[];
@@ -1754,13 +1919,13 @@ function renderLevelClassifier() {
   const allCheckboxes = [];
 
   const topBar=document.createElement('div');
-  topBar.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;';
+  topBar.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;';
 
   const lvBtnsWrap=document.createElement('div'); lvBtnsWrap.style.cssText='display:flex;gap:6px;flex-wrap:wrap;flex:1;';
   levelSettings.forEach(lv=>{
     const c=getLvColor(lv.id);
     const b=document.createElement('button');
-    b.style.cssText=`font-size:0.75rem;padding:4px 10px;border-radius:8px;border:1px solid ${c};background:transparent;color:${c};cursor:pointer;font-family:inherit;font-weight:700;transition:all 0.15s;`;
+    b.style.cssText=`font-size:0.72rem;padding:3px 6px;border-radius:8px;border:2px solid ${c};background:transparent;color:${c};cursor:pointer;font-family:inherit;font-weight:700;transition:all 0.15s;`;
     b.textContent=lv.label;
     b.onclick=()=>{
       if(!selected.size){alert('패턴을 먼저 체크해주세요');return;}
@@ -1771,14 +1936,15 @@ function renderLevelClassifier() {
   });
 
   const clearAllBtn=document.createElement('button');
-  clearAllBtn.style.cssText='font-size:0.72rem;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all 0.15s;';
-  clearAllBtn.textContent='초기화';
+  clearAllBtn.style.cssText='font-size:0.72rem;font-weight:700;padding:3px 8px;border-radius:8px;border:2px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all 0.15s;line-height:1.4;';
+  clearAllBtn.textContent='−';
+  clearAllBtn.title='레벨 초기화';
   clearAllBtn.onclick=()=>{
     if(!selected.size){alert('패턴을 먼저 체크해주세요');return;}
     selected.forEach(pid=>setLv(pid,null));
     refreshDropdownLabels();
   };
-  lvBtnsWrap.appendChild(clearAllBtn);
+  topBar.appendChild(clearAllBtn);
   topBar.appendChild(lvBtnsWrap);
 
   const lcSaveWrap=document.createElement('div'); lcSaveWrap.id='lc-save-wrap';
@@ -1841,7 +2007,7 @@ function renderLevelClassifier() {
 
     const tbl=document.createElement('table'); tbl.style.cssText='width:100%;border-collapse:collapse;font-size:0.78rem;table-layout:fixed;';
     const thead=tbl.createTHead(); const hRow=thead.insertRow();
-    const thEmpty=document.createElement('th'); thEmpty.style.cssText='padding:7px 4px;border-bottom:2px solid var(--border);width:28px;';
+    const thEmpty=document.createElement('th'); thEmpty.style.cssText='padding:7px 4px;border-bottom:2px solid var(--border);width:28px;text-align:center;';
     const thName=document.createElement('th'); thName.style.cssText='text-align:left;padding:7px 4px;color:var(--text2);border-bottom:2px solid var(--border);font-size:0.7rem;word-break:keep-all;'; thName.textContent='패턴';
     hRow.appendChild(thEmpty); hRow.appendChild(thName);
     const thLevel=document.createElement('th');
@@ -1852,6 +2018,21 @@ function renderLevelClassifier() {
 
     // 레벨 분류는 패턴 전체 기준 (학생 무관) — firstPid는 단순 표시용
     const firstPid = profiles.length ? profiles[0].id : '__none__';
+
+    // ── 전체 선택/해제 행 (활성화 '전체' 토글과 동일 컨셉) ──
+    const allRow=tbody.insertRow(); allRow.style.cssText='background:var(--surface);';
+    const allTdCb=allRow.insertCell(); allTdCb.style.cssText='padding:8px 2px;text-align:center;border-bottom:3px solid var(--border);';
+    const allSelCb=document.createElement('input'); allSelCb.type='checkbox';
+    allSelCb.style.cssText='width:14px;height:14px;accent-color:var(--counting);cursor:pointer;';
+    allSelCb.onchange=()=>{
+      allCheckboxes.forEach(c=>{
+        c.checked=allSelCb.checked;
+        const pid2=c.getAttribute('data-pat-id');
+        if(allSelCb.checked) selected.add(pid2); else selected.delete(pid2);
+      });
+    };
+    allTdCb.appendChild(allSelCb);
+    const allTdName=allRow.insertCell(); allTdName.colSpan=2; allTdName.style.cssText='padding:8px 10px;font-weight:900;font-size:0.82rem;border-bottom:3px solid var(--border);'; allTdName.textContent='전체';
 
     chapters.forEach((ch,chi)=>{
       const chPatterns=patternData.filter(p=>p.chapter===ch.id);
@@ -1875,7 +2056,7 @@ function renderLevelClassifier() {
         const cbTd=document.createElement('td'); cbTd.style.cssText='padding:5px 2px;border-bottom:1px solid var(--border);width:28px;';
         const cb=document.createElement('input'); cb.type='checkbox';
         cb.style.cssText='width:14px;height:14px;accent-color:var(--counting);cursor:pointer;';
-        cb.onchange=(e)=>{
+        cb.onclick=(e)=>{
           if(e.shiftKey && lastCheckedIdx>=0 && lastCheckedIdx!==allCheckboxes.indexOf(cb)){
             const a=Math.min(lastCheckedIdx,allCheckboxes.indexOf(cb));
             const b2=Math.max(lastCheckedIdx,allCheckboxes.indexOf(cb));
@@ -2162,12 +2343,15 @@ function renderProfileManage() {
       const row=document.createElement('div'); row.className='profile-row';
       row.style.cssText=isUnassigned
         ? 'padding:12px 8px;border-bottom:none;background:rgba(220,60,60,0.07);border:4px solid #dc3c3c;border-radius:8px;margin-bottom:6px;'
-        : 'padding:12px 0;border-bottom:1px solid var(--border);';
+        : 'padding:12px 0 8px;border-bottom:1px solid var(--border);';
 
       const line1=document.createElement('div');
-      line1.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;width:100%;';
+      line1.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;width:100%;';
       const line2=document.createElement('div');
-      line2.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:nowrap;';
+      line2.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:space-between;width:100%;';
+      // 토글 묶음 그룹 (소속반/리베/시창/계좌) — 좁아지면 내부에서 2줄 wrap
+      const toggleGroup=document.createElement('div');
+      toggleGroup.className='toggle-group'; toggleGroup.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0;';
 
       // 이름 (볼드) + 성별/나이 (기본 두께)
       const nameSpan=document.createElement('span');
@@ -2195,14 +2379,14 @@ function renderProfileManage() {
       line1.appendChild(pwDisplay);
 
       // ── [2번] 반 선택 드롭다운 (색상 배지 포함) ──
-      const classWrap=document.createElement('div'); classWrap.style.cssText='position:relative;width:96px;flex-shrink:0;';
+      const classWrap=document.createElement('div'); classWrap.className='tg-class'; classWrap.style.cssText='position:relative;width:78px;flex-shrink:0;';
       const hasClass=!!ci.voClass;
       const curClsColor = getClassColor(ci.voClass);
       const classBtn=document.createElement('button');
       if(hasClass && curClsColor){
-        classBtn.style.cssText=`font-size:0.8rem;font-weight:800;padding:4px 12px;border-radius:20px;border:none;background:${curClsColor};color:#1a1a00;cursor:pointer;font-family:inherit;width:100%;`;
+        classBtn.style.cssText=`font-size:0.8rem;font-weight:800;padding:4px 6px;border-radius:20px;border:none;background:${curClsColor};color:#1a1a00;cursor:pointer;font-family:inherit;width:100%;`;
       } else {
-        classBtn.style.cssText=`font-size:0.8rem;font-weight:700;padding:4px 12px;border-radius:20px;border:1.5px dashed #dc3c3c;background:rgba(220,60,60,0.08);color:#dc3c3c;cursor:pointer;font-family:inherit;width:100%;`;
+        classBtn.style.cssText=`font-size:0.8rem;font-weight:700;padding:4px 6px;border-radius:20px;border:1.5px dashed #dc3c3c;background:rgba(220,60,60,0.08);color:#dc3c3c;cursor:pointer;font-family:inherit;width:100%;`;
       }
       classBtn.textContent=(ci.voClass||'반 선택')+' ▾';
       const classDd=document.createElement('div');
@@ -2235,16 +2419,16 @@ function renderProfileManage() {
         };
         classDd.appendChild(opt);
       });
-      classWrap.appendChild(classBtn); classWrap.appendChild(classDd); line2.appendChild(classWrap);
+      classWrap.appendChild(classBtn); classWrap.appendChild(classDd); toggleGroup.appendChild(classWrap);
 
       // 리베 / 시창
       const extras=ci.extras||[];
       ['리베','시창'].forEach(tag=>{
         const on=extras.includes(tag);
-        const tb=document.createElement('button');
+        const tb=document.createElement('button'); tb.className='tg-'+(tag==='리베'?'libe':'sichang');
         tb.style.cssText=on
-          ? `font-size:0.78rem;font-weight:800;width:52px;flex-shrink:0;padding:4px 0;border-radius:20px;border:none;background:var(--accent3);color:#0a2e22;cursor:pointer;font-family:inherit;transition:all 0.15s;`
-          : `font-size:0.78rem;font-weight:600;width:52px;flex-shrink:0;padding:4px 0;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all 0.15s;`;
+          ? `font-size:0.78rem;font-weight:800;width:44px;flex-shrink:0;padding:4px 0;border-radius:20px;border:none;background:var(--accent3);color:#0a2e22;cursor:pointer;font-family:inherit;transition:all 0.15s;`
+          : `font-size:0.78rem;font-weight:600;width:44px;flex-shrink:0;padding:4px 0;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;transition:all 0.15s;`;
         tb.textContent=tag;
         tb.onclick=()=>{
           if(!pending[p.id]) pending[p.id]={voClass:null,extras:[]};
@@ -2253,7 +2437,7 @@ function renderProfileManage() {
           if(idx>=0) pending[p.id].extras.splice(idx,1); else pending[p.id].extras.push(tag);
           rebuildRows();
         };
-        line2.appendChild(tb);
+        toggleGroup.appendChild(tb);
       });
 
       // ··· 메뉴
@@ -2304,12 +2488,10 @@ function renderProfileManage() {
       };
       menuWrap.appendChild(menuBtn); menuWrap.appendChild(menuDd);
       // 레슨 시작일 (2줄로 이동)
-      const dateWrap=document.createElement('div'); dateWrap.style.cssText='display:flex;align-items:center;gap:6px;margin-left:auto;';
-      const dateLabel=document.createElement('span'); dateLabel.style.cssText='font-size:0.75rem;color:var(--text2);white-space:nowrap;'; dateLabel.textContent='레슨 시작일';
-      const dateInp=document.createElement('input'); dateInp.type='date';
-      dateInp.value=pendingLessons[p.id]||'';
-      dateInp.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.78rem;cursor:pointer;';
-      dateInp.onchange=()=>{ pendingLessons[p.id]=dateInp.value; updateProfileSaveBtnState(); };
+      const dateWrap=document.createElement('div'); dateWrap.style.cssText='position:relative;flex-shrink:0;';
+      const dateLabel=document.createElement('span'); dateLabel.style.cssText='position:absolute;bottom:100%;left:0;margin-bottom:3px;font-size:0.72rem;color:var(--text2);white-space:nowrap;'; dateLabel.textContent='레슨 시작일';
+      const dateInp=makeNumericDateInput(pendingLessons[p.id]||'', (v)=>{ pendingLessons[p.id]=v; updateProfileSaveBtnState(); });
+      dateInp.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.78rem;width:92px;box-sizing:border-box;text-align:center;';
       dateWrap.appendChild(dateLabel); dateWrap.appendChild(dateInp);
 
       // ··· 메뉴 (1줄 맨 오른쪽)
@@ -2321,14 +2503,14 @@ function renderProfileManage() {
       const birthEditWrap=document.createElement('div');
       birthEditWrap.style.cssText='display:none;align-items:center;gap:6px;width:100%;margin-top:4px;';
       const birthLabel=document.createElement('span'); birthLabel.style.cssText='font-size:0.75rem;color:var(--text2);white-space:nowrap;'; birthLabel.textContent='생년월일';
-      const birthInp=document.createElement('input'); birthInp.type='date';
-      birthInp.value=p.birth||'';
-      birthInp.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.78rem;cursor:pointer;';
+      let _birthVal=p.birth||'';
+      const birthInp=makeNumericDateInput(p.birth||'', (v)=>{ _birthVal=v; });
+      birthInp.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 8px;color:var(--text);font-family:inherit;font-size:0.78rem;width:120px;';
       const birthSave=document.createElement('button');
       birthSave.style.cssText='font-size:0.75rem;font-weight:600;padding:4px 10px;border-radius:8px;border:none;background:var(--accent);color:white;cursor:pointer;font-family:inherit;';
       birthSave.textContent='저장';
       birthSave.onclick=()=>{
-        p.birth=birthInp.value||'';
+        p.birth=_birthVal||'';
         saveProfiles();
         rebuildRows();
       };
@@ -2339,7 +2521,7 @@ function renderProfileManage() {
         // 계좌 파스텔톤: A=파스텔 주황, B=파스텔 블루
         const accBg=(a)=>a==='B'?'#cfe3ff':'#ffe6c2';
         const accInk=(a)=>a==='B'?'#1e4e8c':'#8a5a12';
-        const accWrap=document.createElement('div'); accWrap.style.cssText='position:relative;width:82px;flex-shrink:0;';
+        const accWrap=document.createElement('div'); accWrap.className='tg-acc'; accWrap.style.cssText='position:relative;width:70px;flex-shrink:0;';
         const accBtn=document.createElement('button');
         accBtn.style.cssText=`font-size:0.78rem;font-weight:800;padding:4px 0;border-radius:20px;border:none;background:${accBg(curAcc)};color:${accInk(curAcc)};cursor:pointer;font-family:inherit;width:100%;`;
         accBtn.textContent='계좌 '+curAcc+' ▾';
@@ -2365,9 +2547,9 @@ function renderProfileManage() {
           document.querySelectorAll('.pm-dropdown').forEach(d=>d.style.display='none');
           if(!isOpen) accDd.style.display='block';
         };
-        accWrap.appendChild(accBtn); accWrap.appendChild(accDd); line2.appendChild(accWrap);
+        accWrap.appendChild(accBtn); accWrap.appendChild(accDd); toggleGroup.appendChild(accWrap);
       }
-      line2.appendChild(dateWrap);
+      line2.appendChild(toggleGroup); line2.appendChild(dateWrap);
 
       row.appendChild(line2);
       row.appendChild(birthEditWrap);
@@ -2470,7 +2652,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
       const fsDb=getFirestore(fbApp);
       window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-      const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+      const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_student_day_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
       await Promise.all(KEYS.map(async k=>{
         const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
       }));
@@ -2482,6 +2664,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       practiceLogs=loadData('somi_logs',{});
       teacherPw=loadData('somi_teacher_pw','1');
       teacherStamps=loadData('somi_teacher_stamps',{});
+    studentDayStamps=loadData('somi_student_day_stamps',{});
       classSettings=loadData('somi_class_settings',{});
       lessonStarts=loadData('somi_lesson_starts',{});
       patternLocks=loadData('somi_pattern_locks',{});
