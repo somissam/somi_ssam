@@ -494,7 +494,93 @@ const LKEY_EXPENSE = 'somi_ledger_expense';
 const LKEY_BIZDATE = 'somi_ledger_biz_account_date';  // 사업자 통장 개설일 (YYYY-MM-DD)
 
 function loadLedger(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
-function saveLedger(key,arr){ try{ localStorage.setItem(key, JSON.stringify(arr)); }catch(e){ alert('저장에 실패했어요. 저장공간을 확인해 주세요.'); } }
+
+/* ════════════════════════════════════════════════════════════
+   등록대장 안전장치 (돈 데이터 — 유실 절대 불가)
+   ① 서버 백업: 저장할 때마다 Firebase에도 올림 (기존엔 이 기기에만 저장 → 브라우저 청소로 영구소실 가능했음)
+   ② 병합 저장: 통째 덮어쓰기 금지 — 건별(id)로 합치고, 같은 id는 더 최근 것(createdAt 큰 쪽)이 이김
+      → 두 기기에서 각각 입력해도 서로 안 지움
+   ③ 삭제 기록장(LKEY_DELETED): 일부러 지운 건의 id를 남겨, 병합 때 "지운 게 되살아나는" 부작용 차단
+════════════════════════════════════════════════════════════ */
+const LKEY_DELETED = 'somi_ledger_deleted';   // {id: 삭제시각} — 매출·매입 공용
+function loadDeleted(){ try{ return JSON.parse(localStorage.getItem(LKEY_DELETED)||'{}')||{}; }catch(e){ return {}; } }
+function markDeleted(id){
+  const d=loadDeleted(); d[id]=Date.now();
+  try{ localStorage.setItem(LKEY_DELETED, JSON.stringify(d)); }catch(e){}
+  _ledgerPush(LKEY_DELETED);
+}
+/* 병합기: 두 배열을 id 기준으로 합침. 같은 id면 createdAt 큰 쪽. 삭제 기록장에 있는 id는 제외. */
+function mergeLedger(a, b, deleted){
+  const map={};
+  [].concat(Array.isArray(a)?a:[], Array.isArray(b)?b:[]).forEach(r=>{
+    if(!r || !r.id) return;
+    if(deleted && deleted[r.id]) return; // 일부러 지운 건은 되살리지 않음
+    const prev=map[r.id];
+    if(!prev || (r.createdAt||0) >= (prev.createdAt||0)) map[r.id]=r;
+  });
+  return Object.values(map);
+}
+/* 저장 = 디스크 최신본과 병합 → localStorage → 서버 전송 */
+function saveLedger(key,arr){
+  const merged=mergeLedger(arr, loadLedger(key), loadDeleted());
+  try{ localStorage.setItem(key, JSON.stringify(merged)); }
+  catch(e){ alert('저장에 실패했어요. 저장공간을 확인해 주세요.'); return; }
+  _ledgerPush(key);
+}
+/* ── 서버 통신 (백그라운드 — 실패해도 화면은 로컬 데이터로 정상 작동) ── */
+let _ledgerFs=null;                 // {db, doc, getDoc, setDoc} — 연결되면 채워짐
+let _ledgerPendingPush=new Set();   // 연결 전에 저장된 키 — 연결되면 밀어올림
+function _ledgerPush(key){
+  if(!_ledgerFs){ _ledgerPendingPush.add(key); return; }
+  try{
+    const j=localStorage.getItem(key);
+    if(j!==null) _ledgerFs.setDoc(_ledgerFs.doc(_ledgerFs.db,'somi_data',key),{value:j}).catch(()=>{ _ledgerPendingPush.add(key); });
+  }catch(e){ _ledgerPendingPush.add(key); }
+}
+async function initLedgerSync(){
+  try{
+    const {initializeApp,getApps}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+    const {getFirestore,doc,getDoc,setDoc}=await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+    const FB_CONFIG={apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"};
+    const APP_NAME='somi-ledger-v1';
+    const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
+    const db=getFirestore(fbApp);
+    // 1) 삭제 기록장 먼저 받아 합침 (양쪽 union — 어느 기기에서 지웠든 존중)
+    try{
+      const snap=await getDoc(doc(db,'somi_data',LKEY_DELETED));
+      if(snap.exists()){
+        const remote=JSON.parse(snap.data().value||'{}')||{};
+        const local=loadDeleted();
+        Object.keys(remote).forEach(k=>{ if(!local[k]||remote[k]>local[k]) local[k]=remote[k]; });
+        localStorage.setItem(LKEY_DELETED, JSON.stringify(local));
+      }
+    }catch(e){}
+    // 2) 매출·매입: 서버본과 로컬본을 병합해 양쪽 다 살림
+    for(const key of [LKEY_SALES, LKEY_EXPENSE]){
+      try{
+        const snap=await getDoc(doc(db,'somi_data',key));
+        const remote=snap.exists()?(JSON.parse(snap.data().value||'[]')||[]):[];
+        const merged=mergeLedger(loadLedger(key), remote, loadDeleted());
+        localStorage.setItem(key, JSON.stringify(merged));
+      }catch(e){}
+    }
+    // 3) 개설일: 로컬에 없고 서버에 있으면 받아옴 (로컬 값이 항상 우선 — 저장 시 즉시 서버로 가므로)
+    try{
+      if(!getBizDate()){
+        const snap=await getDoc(doc(db,'somi_data',LKEY_BIZDATE));
+        if(snap.exists()&&snap.data().value) localStorage.setItem(LKEY_BIZDATE, JSON.parse(snap.data().value));
+      }
+    }catch(e){}
+    // 4) 연결 확정 → 밀린 저장 올리고, 병합된 최신본도 서버에 반영
+    _ledgerFs={db,doc,getDoc,setDoc};
+    _ledgerPendingPush.add(LKEY_SALES); _ledgerPendingPush.add(LKEY_EXPENSE); _ledgerPendingPush.add(LKEY_DELETED);
+    const pend=[..._ledgerPendingPush]; _ledgerPendingPush.clear();
+    pend.forEach(k=>_ledgerPush(k));
+    // 5) 병합 결과로 화면 갱신
+    renderSales(); renderExpense();
+    setDateVal('biz-date', getBizDate());
+  }catch(e){ /* 오프라인 — 로컬 데이터로 계속 사용, 다음 접속 때 자동 병합 */ }
+}
 
 /* ── 기존 앱 데이터 읽기 전용 ── */
 function readProfiles(){ try{ return JSON.parse(localStorage.getItem('somi_profiles')||'[]'); }catch(e){ return []; } }
@@ -556,6 +642,7 @@ function applyToProfile(pid, subjects, klass, acct){
   if(acct) next.account = acct;
   all[pid]=next;
   try{ localStorage.setItem('somi_class_settings', JSON.stringify(all)); }catch(e){}
+  _ledgerPush('somi_class_settings'); // 서버 백업 — 안 올리면 선생님 홈이 다음 동기화 때 예전 값으로 되돌림
   return true;
 }
 
@@ -582,6 +669,7 @@ function saveBizDate(){
   try{
     if(v){ localStorage.setItem(LKEY_BIZDATE, v); alert('개설일 저장 완료: '+v+'\n이 날짜 이후 입금 건은 계좌B로 추천됩니다.'); }
     else { localStorage.removeItem(LKEY_BIZDATE); alert('개설일을 비웠어요. 전부 계좌A로 추천됩니다.'); }
+    if(_ledgerFs){ try{ _ledgerFs.setDoc(_ledgerFs.doc(_ledgerFs.db,'somi_data',LKEY_BIZDATE),{value:JSON.stringify(v||'')}).catch(()=>{}); }catch(e){} }
   }catch(e){ alert('저장 실패'); }
   // 열려있는 폼의 추천 갱신
   recommendSalesAcct();
@@ -896,11 +984,13 @@ function clearExpenseForm(){
 /* ── 삭제·수정 ── */
 function deleteSales(id){
   if(!confirm('이 매출 기록을 삭제할까요?')) return;
+  markDeleted(id); // 삭제 기록장 — 다른 기기와 병합해도 안 되살아남
   saveLedger(LKEY_SALES, loadLedger(LKEY_SALES).filter(r=>r.id!==id));
   renderSales();
 }
 function deleteExpense(id){
   if(!confirm('이 지출 기록을 삭제할까요?')) return;
+  markDeleted(id);
   saveLedger(LKEY_EXPENSE, loadLedger(LKEY_EXPENSE).filter(r=>r.id!==id));
   renderExpense();
 }
@@ -1114,6 +1204,9 @@ function today(){
     setDateVal('ex-from', iso(prevFirst));
     setDateVal('ex-to', iso(prevLast));
   }
+
+  // 서버 백업·병합 시작 (백그라운드 — 실패해도 화면은 로컬 데이터로 정상 작동)
+  initLedgerSync();
 })();
 </script>
 </body>
