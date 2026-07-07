@@ -337,6 +337,11 @@ input,select,textarea{font-family:inherit;font-size:15px;}
       </div>
     </div>
 
+    <div class="month-nav" style="display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 10px;">
+      <button type="button" onclick="ledgerMonthMove(-1)" style="background:none;border:none;font-size:1.3rem;color:var(--text2);cursor:pointer;padding:4px 10px;">‹</button>
+      <span id="ledger-month-label-sales" onclick="ledgerMonthToday()" title="탭하면 이번 달로" style="font-weight:700;cursor:pointer;min-width:7em;text-align:center;">2026년 7월</span>
+      <button type="button" onclick="ledgerMonthMove(1)" style="background:none;border:none;font-size:1.3rem;color:var(--text2);cursor:pointer;padding:4px 10px;">›</button>
+    </div>
     <div class="sec-title" style="justify-content:space-between;">등록 내역 <span id="sales-sum" style="font-size:0.8rem;font-weight:700;color:var(--sales);"></span></div>
     <div class="ledger-list" id="sales-list">
       <div class="empty">아직 등록된 매출이 없어요. 위에서 첫 건을 추가해 보세요.</div>
@@ -425,6 +430,11 @@ input,select,textarea{font-family:inherit;font-size:15px;}
       </div>
     </div>
 
+    <div class="month-nav" style="display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 10px;">
+      <button type="button" onclick="ledgerMonthMove(-1)" style="background:none;border:none;font-size:1.3rem;color:var(--text2);cursor:pointer;padding:4px 10px;">‹</button>
+      <span id="ledger-month-label-expense" onclick="ledgerMonthToday()" title="탭하면 이번 달로" style="font-weight:700;cursor:pointer;min-width:7em;text-align:center;">2026년 7월</span>
+      <button type="button" onclick="ledgerMonthMove(1)" style="background:none;border:none;font-size:1.3rem;color:var(--text2);cursor:pointer;padding:4px 10px;">›</button>
+    </div>
     <div class="sec-title" style="justify-content:space-between;">지출 내역 <span id="expense-sum" style="font-size:0.8rem;font-weight:700;color:var(--expense);"></span></div>
     <div class="ledger-list" id="expense-list">
       <div class="empty">아직 등록된 매입이 없어요.</div>
@@ -651,6 +661,8 @@ let salesAcct = 'A';    // 매출 폼 계좌 선택 (화면에서만)
 let expenseAcct = 'A';  // 매입 폼 계좌 선택 (화면에서만)
 let editingSalesId = null;    // 매출 편집 중인 건 id (null이면 신규 등록)
 let editingExpenseId = null;  // 매입 편집 중인 건 id
+let ledgerY = new Date().getFullYear();     // 목록에 지금 보여줄 연도
+let ledgerM = new Date().getMonth()+1;      // 목록에 지금 보여줄 월(1~12)
 
 /* ── 탭 전환 ── */
 function showTab(name){
@@ -812,9 +824,11 @@ function addSales(){
     arr.unshift(rec);
   }
   saveLedger(LKEY_SALES, arr);
+  { const ym=normDate(paydate); ledgerY=Number(ym.slice(0,4)); ledgerM=Number(ym.slice(5,7)); } // 방금 등록한 건의 월로 자동 이동
 
   clearSalesForm();
   renderSales();
+  renderExpense();
 }
 
 /* ── 매입 등록 ── */
@@ -845,9 +859,11 @@ function addExpense(){
     arr.unshift(rec);
   }
   saveLedger(LKEY_EXPENSE, arr);
+  { const ym=normDate(date); ledgerY=Number(ym.slice(0,4)); ledgerM=Number(ym.slice(5,7)); } // 방금 등록한 건의 월로 자동 이동
 
   clearExpenseForm();
   renderExpense();
+  renderSales();
 }
 
 /* ── 표시용 라벨 ── */
@@ -864,8 +880,16 @@ function renderSales(){
   const box=document.getElementById('sales-list');
   const arr=loadLedger(LKEY_SALES);
   updateMonthSum('sales-sum', arr, 'paydate');
-  if(!arr.length){ box.innerHTML='<div class="empty">아직 등록된 매출이 없어요. 위에서 첫 건을 추가해 보세요.</div>'; return; }
-  const sorted=arr.slice().sort((a,b)=> normDate(b.paydate).localeCompare(normDate(a.paydate))); // 입금일 최신순 (형식 통일 후 비교)
+  updateMonthLabels();
+  const ym=currentYm();
+  const monthArr=arr.filter(r=> normDate(r.paydate).slice(0,7)===ym);
+  if(!monthArr.length){
+    box.innerHTML= arr.length
+      ? `<div class="empty">${ledgerM}월엔 등록된 매출이 없어요. 위 ‹ › 로 다른 달을 볼 수 있어요.</div>`
+      : '<div class="empty">아직 등록된 매출이 없어요. 위에서 첫 건을 추가해 보세요.</div>';
+    return;
+  }
+  const sorted=monthArr.slice().sort((a,b)=> normDate(b.paydate).localeCompare(normDate(a.paydate))); // 입금일 최신순 (형식 통일 후 비교)
   box.innerHTML=sorted.map(r=>{
     const acctPill=r.acct==='B'?'<span class="pill b">계좌B</span>':'<span class="pill a">계좌A</span>';
     const cs=readClassSettings()[r.studentId]||{};
@@ -908,8 +932,16 @@ function renderExpense(){
   const box=document.getElementById('expense-list');
   const arr=loadLedger(LKEY_EXPENSE);
   updateMonthSum('expense-sum', arr, 'date');
-  if(!arr.length){ box.innerHTML='<div class="empty">아직 등록된 매입이 없어요.</div>'; return; }
-  const sorted=arr.slice().sort((a,b)=> normDate(b.date).localeCompare(normDate(a.date))); // 날짜 최신순 (형식 통일 후 비교)
+  updateMonthLabels();
+  const ym=currentYm();
+  const monthArr=arr.filter(r=> normDate(r.date).slice(0,7)===ym);
+  if(!monthArr.length){
+    box.innerHTML= arr.length
+      ? `<div class="empty">${ledgerM}월엔 등록된 매입이 없어요. 위 ‹ › 로 다른 달을 볼 수 있어요.</div>`
+      : '<div class="empty">아직 등록된 매입이 없어요.</div>';
+    return;
+  }
+  const sorted=monthArr.slice().sort((a,b)=> normDate(b.date).localeCompare(normDate(a.date))); // 날짜 최신순 (형식 통일 후 비교)
   box.innerHTML=sorted.map(r=>{
     const acctPill=r.acct==='B'?'<span class="pill b">계좌B</span>':'<span class="pill a">계좌A</span>';
     const ok=OK_PROOFS.includes(r.proof);
@@ -934,15 +966,32 @@ function renderExpense(){
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* ── 월별 보기 (매출·매입 공용 — 앞으로 계속 쌓일 데이터를 월 단위로 끊어 봄) ── */
+function currentYm(){ return ledgerY+'-'+String(ledgerM).padStart(2,'0'); }
+function ledgerMonthMove(dir){
+  ledgerM+=dir;
+  if(ledgerM>12){ ledgerM=1; ledgerY++; }
+  if(ledgerM<1){ ledgerM=12; ledgerY--; }
+  renderSales(); renderExpense();
+}
+function ledgerMonthToday(){
+  const t=new Date(); ledgerY=t.getFullYear(); ledgerM=t.getMonth()+1;
+  renderSales(); renderExpense();
+}
+function updateMonthLabels(){
+  const txt=ledgerY+'년 '+ledgerM+'월';
+  const a=document.getElementById('ledger-month-label-sales'); if(a) a.textContent=txt;
+  const b=document.getElementById('ledger-month-label-expense'); if(b) b.textContent=txt;
+}
+
 /* ── 이달 합계 ── */
 function updateMonthSum(spanId, arr, dateField){
   const el=document.getElementById(spanId);
   if(!el) return;
-  const t=new Date();
-  const ym=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0'); // YYYY-MM
+  const ym=currentYm();
   const sum=arr.filter(r=>normDate(r[dateField]).slice(0,7)===ym)
                .reduce((s,r)=>s+Number(r.amount||0),0);
-  el.textContent='이달 '+fmtWon(sum);
+  el.textContent=ledgerM+'월 '+fmtWon(sum);
 }
 
 /* ── 편집 UI 헬퍼 ── */

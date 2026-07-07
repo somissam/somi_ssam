@@ -1232,8 +1232,7 @@ function renderTeacherCalendar(pid) {
     // 선생님 도장 — 도장을 직접 클릭하면 삭제 모달(코멘트 표시)
     if(teacherStamps[tk]){
       const ts2=document.createElement('div');
-      ts2.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;cursor:pointer;';
-      ts2.title='도장/코멘트 보기·삭제';
+      ts2.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;pointer-events:none;';
       const savedStamp=teacherStamps[tk].stamp;
       const manualFinal=teacherStamps[tk].manualFinal===true;
       // 레슨완 4종: 출석계열(파랑/빨강) vs 결석계열(회색/회색동그라미)
@@ -1268,7 +1267,16 @@ function renderTeacherCalendar(pid) {
           ts2.appendChild(badge);
         }
       }
-      ts2.onclick=(e)=>{
+      div.appendChild(ts2);
+
+      // 도장 실제 표시 크기·위치에 맞춘 클릭 히트박스 (칸 전체가 아니라 도장 그림 자리만 클릭되게)
+      const L = (typeof somiStampLayout==='function') ? somiStampLayout(showStamp) : {size:100,x:0,y:0};
+      const hit=document.createElement('div');
+      const hs=(L.size==null?100:L.size), hx=(L.x||0), hy=(L.y||0);
+      hit.style.cssText='position:absolute;left:'+(50+hx)+'%;top:'+(50+hy)+'%;width:'+hs+'%;height:'+hs+'%;'
+        +'transform:translate(-50%,-50%);z-index:6;cursor:pointer;';
+      hit.title='도장/코멘트 보기·삭제';
+      hit.onclick=(e)=>{
         e.stopPropagation();   // 날짜 셀 클릭으로 전파되지 않게
         showStampDeleteModal(ds, ()=>{
           delete teacherStamps[tk];
@@ -1288,7 +1296,7 @@ function renderTeacherCalendar(pid) {
           if(ta) ta.focus();
         });
       };
-      div.appendChild(ts2);
+      div.appendChild(hit);
     }
     // 학생 도장 (연습한 날) — 학생이 고른 것만, 안 골랐으면 검은 선 원(자동)
     if(has){
