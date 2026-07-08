@@ -307,6 +307,19 @@ window.__SOMI_LOAD_HIDDEN = true;</script>
     <!-- 학생 관리 탭 -->
     <div id="tab-student">
       <div class="section-desc" style="margin-bottom:16px;">학생을 클릭하면 상세 기록을 볼 수 있어요</div>
+      <!-- ── 전체 공지 (로드맵 D) — 학생 홈 상단에 표시되는 공지 관리 ── -->
+      <div class="settings-box" id="notice-compose-box" style="margin-bottom:16px;">
+        <h4>📢 전체 공지 (학생 홈 상단에 표시)</h4>
+        <textarea id="notice-text" rows="1" placeholder="공지 내용을 입력하세요" style="width:100%;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:0.88rem;line-height:1.6;resize:vertical;overflow:hidden;margin-bottom:8px;min-height:42px;"></textarea>
+        <div class="settings-row" style="align-items:center;gap:8px;">
+          <span style="font-size:0.8rem;color:var(--text2);flex-shrink:0;">종료일</span>
+          <input type="text" class="settings-input" id="notice-end" style="flex:1;min-width:0;">
+          <button class="settings-save" id="notice-add-btn" onclick="publishNotice()">공지 추가</button>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text2);margin-top:8px;">종료일을 비우면 내릴 때까지 계속 표시돼요. 종료일 당일까지 보이고 다음 날 자동으로 사라져요.</div>
+        <!-- 게시된 공지 목록 (개별 수정·내리기·삭제) -->
+        <div id="notice-list" style="margin-top:14px;"></div>
+      </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">전체 학생</div><div class="stat-value a1" id="t-total">0</div></div>
         <div class="stat-card"><div class="stat-label">오늘 접속</div><div class="stat-value a2" id="t-today">0</div></div>
@@ -772,7 +785,8 @@ async function teacherRefresh() {
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_student_day_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+    window._somiServerRead=async(key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
+    const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_student_day_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log','somi_notice'];
     await Promise.all(KEYS.map(async k=>{
       const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
     }));
@@ -838,15 +852,24 @@ function detectDeviceName() {
   if(/Windows/.test(ua)) return '🖥️ Windows · 브라우저';
   return '📱 알 수 없는 기기';
 }
+// 기기 영구 식별자 — 로그아웃해도 안 지워짐(자동로그인 토큰과 분리, index.html과 동일 로직)
+function getDeviceUid(){
+  try{
+    let uid=localStorage.getItem('somi_device_uid');
+    if(!uid){ uid='dev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2); localStorage.setItem('somi_device_uid',uid); }
+    return uid;
+  }catch(e){ return 'dev_fallback'; }
+}
 
 function registerThisDevice() {
   const existing = loadData(TEACHER_AUTO_KEY, null);
   const token = existing?.token || (Date.now().toString(36)+'_'+Math.random().toString(36).slice(2));
+  const deviceUid = getDeviceUid();
   const deviceName = detectDeviceName();
-  const entry = {token, deviceName, registeredAt: new Date().toISOString()};
+  const entry = {token, deviceName, registeredAt: new Date().toISOString(), deviceUid};
   saveData(TEACHER_AUTO_KEY, entry);
   let devices = loadData('somi_teacher_devices', []);
-  const idx = devices.findIndex(d=>d.token===token);
+  const idx = devices.findIndex(d=> d.deviceUid ? d.deviceUid===deviceUid : d.token===token);
   if(idx>=0) devices[idx]=entry; else devices.push(entry);
   saveData('somi_teacher_devices', devices);
 }
@@ -855,13 +878,14 @@ function renderDeviceManager() {
   const container = document.getElementById('device-list'); if(!container) return;
   container.innerHTML='';
   let devices = loadData('somi_teacher_devices', []);
+  const myUid = getDeviceUid();
   const myToken = loadData(TEACHER_AUTO_KEY, null)?.token || null;
   if(!devices.length){
     container.innerHTML='<p style="font-size:0.82rem;color:var(--text2);">등록된 기기가 없어요. 로그인할 때 "자동 로그인" 체크하면 등록됩니다.</p>';
     return;
   }
   devices.forEach((d,i)=>{
-    const isCurrent = d.token === myToken;
+    const isCurrent = d.deviceUid ? d.deviceUid===myUid : d.token===myToken;
     const card = document.createElement('div');
     card.className = 'device-card' + (isCurrent?' current':'');
     const dateStr = d.registeredAt ? new Date(d.registeredAt).toLocaleDateString('ko-KR',{year:'2-digit',month:'2-digit',day:'2-digit'}) : '';
@@ -896,9 +920,157 @@ function deleteDevice(idx){
   const deleted = devices[idx];
   devices.splice(idx,1);
   saveData('somi_teacher_devices', devices);
-  const myToken = loadData(TEACHER_AUTO_KEY, null)?.token;
-  if(myToken && deleted?.token === myToken) localStorage.removeItem(TEACHER_AUTO_KEY);
+  const myUid = getDeviceUid();
+  const isMe = deleted && (deleted.deviceUid ? deleted.deviceUid===myUid : deleted.token===loadData(TEACHER_AUTO_KEY, null)?.token);
+  if(isMe) localStorage.removeItem(TEACHER_AUTO_KEY);
   renderDeviceManager();
+}
+
+/* ════════════════════════════════════════════════
+   【 전체 공지 】 (로드맵 D) — 학생 홈 상단 배너 관리 (여러 개 지원)
+   - 데이터: somi_notice (목록형, common_core 모듈 N과 짝)
+   - 항목: { id, text, active, endDate('YYYY-MM-DD'|''), createdAt }
+   - 입력칸에서 [공지 추가] → 목록에 쌓임. 목록에서 각 공지 개별 수정/내리기/삭제.
+════════════════════════════════════════════════ */
+function _noticeArr(){ let a=loadData('somi_notice',[]); return Array.isArray(a)?a:[]; }
+let _noticeEditId=null;  // 수정 중인 공지 id (없으면 새 공지 추가)
+
+// 오늘+1일을 YYYY-MM-DD로
+function _tomorrowISO(){ const d=new Date(); d.setDate(d.getDate()+1); return toDateStr(d); }
+
+// textarea 자동 높이 (1줄 시작 → 내용 늘면 확장)
+function _autoGrowNotice(){
+  const ta=document.getElementById('notice-text'); if(!ta) return;
+  ta.style.height='auto';
+  ta.style.height=Math.min(ta.scrollHeight,240)+'px';
+}
+
+function renderNoticeCompose(){
+  const box=document.getElementById('notice-compose-box'); if(!box) return;
+  const inp=document.getElementById('notice-end');
+  if(inp && !inp._numAttached){ attachNumericDate(inp); inp._numAttached=true; }
+  const ta=document.getElementById('notice-text');
+  if(ta && !ta._growBound){
+    ta.addEventListener('input',_autoGrowNotice);
+    ta._growBound=true;
+  }
+  // 종료일 기본값: 비어 있으면 오늘+1일로 채움 (선생님이 고칠 수 있음)
+  if(inp && inp.setISODate && !inp.getISODate()){ inp.setISODate(_tomorrowISO()); }
+  _autoGrowNotice();
+  renderNoticeList();
+}
+
+// 입력칸을 "새 공지 추가" 상태로 되돌림
+function _resetNoticeInput(){
+  _noticeEditId=null;
+  const ta=document.getElementById('notice-text'); if(ta) ta.value='';
+  const inp=document.getElementById('notice-end'); if(inp && inp.setISODate) inp.setISODate(_tomorrowISO());
+  const btn=document.getElementById('notice-add-btn'); if(btn) btn.textContent='공지 추가';
+  _autoGrowNotice();
+}
+
+// 게시된 공지 목록 렌더 (개별 수정·내리기/올리기·삭제)
+function renderNoticeList(){
+  const wrap=document.getElementById('notice-list'); if(!wrap) return;
+  const arr=_noticeArr();
+  if(!arr.length){ wrap.innerHTML='<div style="font-size:0.78rem;color:var(--text2);padding:6px 2px;">아직 등록된 공지가 없어요.</div>'; return; }
+  const today=toDateStr(new Date());
+  wrap.innerHTML='<div style="font-size:0.75rem;color:var(--text2);font-weight:700;margin:4px 0 8px;">등록된 공지</div>'
+    + arr.map((n,i)=>{
+      const expired = n.endDate && String(n.endDate)<today;
+      let stateLbl, stateColor;
+      if(!n.active){ stateLbl='내려둠'; stateColor='var(--text2)'; }
+      else if(expired){ stateLbl='종료일 지남(자동 숨김)'; stateColor='#c8730a'; }
+      else { stateLbl='게시 중'; stateColor='var(--accent3)'; }
+      const endTxt = n.endDate ? ('~'+n.endDate.replace(/-/g,'.')) : '종료일 없음';
+      const preview = escapeHtmlSafe(n.text).replace(/\n/g,' ').slice(0,60) + (n.text.length>60?'…':'');
+      const toggleBtn = n.active
+        ? `<button onclick="toggleNotice('${n.id}')" style="padding:5px 10px;border-radius:8px;border:1px solid #f76a6a;background:transparent;color:#f76a6a;font-size:0.76rem;font-weight:600;cursor:pointer;">내리기</button>`
+        : `<button onclick="toggleNotice('${n.id}')" style="padding:5px 10px;border-radius:8px;border:1px solid var(--accent3);background:transparent;color:var(--accent3);font-size:0.76rem;font-weight:600;cursor:pointer;">올리기</button>`;
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="font-size:0.72rem;font-weight:700;color:${stateColor};">● ${stateLbl}</span>
+          <span style="font-size:0.72rem;color:var(--text2);">${endTxt}</span>
+        </div>
+        <div style="font-size:0.85rem;color:var(--text);line-height:1.5;margin-bottom:9px;word-break:break-word;">${preview||'<span style=\"color:var(--text2)\">(내용 없음)</span>'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button onclick="editNotice('${n.id}')" style="padding:5px 10px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:0.76rem;font-weight:600;cursor:pointer;">수정</button>
+          ${toggleBtn}
+          <button onclick="deleteNotice('${n.id}')" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:0.76rem;font-weight:600;cursor:pointer;">삭제</button>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+// HTML 이스케이프 (common_core somiEscapeHtml 우선, 없으면 로컬)
+function escapeHtmlSafe(s){
+  if(typeof somiEscapeHtml==='function') return somiEscapeHtml(s);
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// [공지 추가] 또는 [수정 저장]
+function publishNotice(){
+  const ta=document.getElementById('notice-text');
+  const inp=document.getElementById('notice-end');
+  const text=(ta?ta.value:'').trim();
+  if(!text){ alert('공지 내용을 입력해주세요'); return; }
+  let endDate='';
+  if(inp){
+    const raw=(inp.value||'').replace(/[^0-9]/g,'');
+    if(raw.length>0){
+      endDate=inp.getISODate?inp.getISODate():'';
+      if(!endDate){ alert('종료일 날짜가 올바르지 않아요 (예: 2026.08.15)'); return; }
+      const today=toDateStr(new Date());
+      if(endDate<today){
+        if(!confirm('종료일('+endDate.replace(/-/g,'.')+')이 오늘보다 이전이에요.\n이대로 두면 학생 화면에는 바로 안 보여요.\n연도를 잘못 넣진 않았나요?\n\n그래도 저장할까요?')) return;
+      }
+    }
+  }
+  const arr=_noticeArr();
+  if(_noticeEditId){
+    // 수정 저장 — 게시 상태(active)는 건드리지 않고 내용·종료일만 갱신
+    const t=arr.find(x=>x.id===_noticeEditId);
+    if(t){ t.text=text; t.endDate=endDate; }
+    saveData('somi_notice',arr);
+    _resetNoticeInput();
+    renderNoticeList();
+    alert('공지를 수정했어요.');
+  } else {
+    // 새 공지 추가 — 맨 위에 쌓음, 바로 게시 상태
+    arr.unshift({id:'n'+Date.now(),text:text,endDate:endDate,active:true,createdAt:Date.now()});
+    saveData('somi_notice',arr);
+    _resetNoticeInput();
+    renderNoticeList();
+    alert('공지를 추가했어요! 학생들이 앱을 열면 홈 상단에 보여요.');
+  }
+}
+
+// 수정 시작 — 입력칸에 해당 공지 내용을 불러옴
+function editNotice(id){
+  const n=_noticeArr().find(x=>x.id===id); if(!n) return;
+  _noticeEditId=id;
+  const ta=document.getElementById('notice-text'); if(ta) ta.value=n.text||'';
+  const inp=document.getElementById('notice-end'); if(inp && inp.setISODate) inp.setISODate(n.endDate||'');
+  const btn=document.getElementById('notice-add-btn'); if(btn) btn.textContent='수정 저장';
+  _autoGrowNotice();
+  const box=document.getElementById('notice-compose-box'); if(box) box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// 내리기 ↔ 올리기 토글
+function toggleNotice(id){
+  const arr=_noticeArr(); const n=arr.find(x=>x.id===id); if(!n) return;
+  n.active=!n.active;
+  saveData('somi_notice',arr);
+  renderNoticeList();
+}
+
+// 삭제 (완전 제거)
+function deleteNotice(id){
+  if(!confirm('이 공지를 삭제할까요? 되돌릴 수 없어요.')) return;
+  const arr=_noticeArr().filter(x=>x.id!==id);
+  saveData('somi_notice',arr);
+  if(_noticeEditId===id) _resetNoticeInput();
+  renderNoticeList();
 }
 
 /* ════════════════════════════════════════════════
@@ -906,6 +1078,7 @@ function deleteDevice(idx){
 ════════════════════════════════════════════════ */
 function renderTeacher() {
   patternData = loadPatternData();
+  renderNoticeCompose();  // 공지 칸 상태 갱신 (전체 공지)
 
   // 머릿수: 종료·테스터는 본수 제외, 휴식·테스터는 괄호로 따로 표기
   const _clsOf = (p)=> (classSettings[p.id]||{}).voClass || null;
@@ -1079,6 +1252,30 @@ function showStudentDetail(idx) {
   document.getElementById('teacher-detail').style.display='block';
   ['tab-student','tab-pattern','tab-settings'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   renderDetailContent(p);
+  _refreshStudentLogs(p.id); // B-1: 이 학생 연습기록을 서버에서 다시 받아 최신화(누락·지연 방지)
+}
+/* B-1 — 특정 학생의 연습기록만 서버에서 조용히 다시 받아 화면 갱신.
+   전체를 안 받고 그 학생 것만 반영하므로 다른 학생 기록에 영향 없음(병합). 실패해도 조용히 무시. */
+let _refreshingLogs=false;
+async function _refreshStudentLogs(pid){
+  if(_refreshingLogs || typeof window._somiServerRead!=='function' || !pid) return;
+  _refreshingLogs=true;
+  try{
+    const raw=await window._somiServerRead('somi_logs');
+    if(raw){
+      const remote=JSON.parse(raw)||{};
+      // 서버본에서 이 학생 기록만 로컬에 반영(다른 학생은 로컬 유지 — 통째 덮어쓰기 안 함)
+      if(remote[pid]!==undefined){
+        practiceLogs[pid]=remote[pid];
+        try{ const disk=JSON.parse(localStorage.getItem('somi_logs')||'{}')||{}; disk[pid]=remote[pid]; localStorage.setItem('somi_logs',JSON.stringify(disk)); }catch(e){}
+        if(teacherDetailProfileId===pid){
+          const p=profiles.find(x=>x.id===pid);
+          if(p){ renderDetailContent(p); renderTeacherCalendar(pid); }
+        }
+      }
+    }
+  }catch(e){ /* 오프라인 — 로컬 데이터로 계속 */ }
+  _refreshingLogs=false;
 }
 
 function renderDetailContent(p) {
@@ -2660,7 +2857,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
       const fsDb=getFirestore(fbApp);
       window._fsSet=async(key,json)=>{ try{await setDoc(doc(fsDb,'somi_data',key),{value:json});}catch(e){} };
-      const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_student_day_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log'];
+      window._somiServerRead=async(key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
+      const KEYS=['somi_profiles','somi_logs','somi_teacher_pw','somi_teacher_stamps','somi_student_day_stamps','somi_teacher_checks','somi_class_settings','somi_rest_start_dates','somi_lesson_starts','somi_pattern_locks','somi_pattern_locks_backup','somi_pattern_levels','somi_level_settings','somi_accounts','somi_teacher_devices','somi_access_log','somi_notice'];
       await Promise.all(KEYS.map(async k=>{
         const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
       }));

@@ -191,6 +191,16 @@ let profiles=[];
 let _fsSet=null;
 let _fbHandle=null;  // {db, doc, getDoc, setDoc} — 안전가드용 Firebase 핸들 보관
 const teacherPw=()=>loadData('somi_teacher_pw','1');
+// 기기 영구 식별자 — 로그아웃해도 지워지지 않음(자동로그인 토큰과 분리).
+// 자동로그인 토큰은 로그아웃 때마다 사라져서, 토큰만으로 "같은 기기"를 구분하면
+// 로그아웃→재로그인할 때마다 새 기기로 오인식돼 목록에 중복 쌓이는 문제가 있었음.
+function getDeviceUid(){
+  try{
+    let uid=localStorage.getItem('somi_device_uid');
+    if(!uid){ uid='dev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2); localStorage.setItem('somi_device_uid',uid); }
+    return uid;
+  }catch(e){ return 'dev_fallback'; }
+}
 
 /* ── 자동 로그인 키 ── */
 const STUDENT_AUTO_KEY='somi_student_auto_login';  // 학생: {name, id}
@@ -251,9 +261,13 @@ async function checkLogin(){
       else if(/Macintosh/.test(ua)) deviceName='💻 MacBook · Safari';
       else if(/Windows.*Chrome/.test(ua)) deviceName='🖥️ Windows · Chrome';
       else if(/Windows/.test(ua)) deviceName='🖥️ Windows · 브라우저';
-      const token=Date.now().toString(36)+'_'+Math.random().toString(36).slice(2);
-      saveData(TEACHER_AUTO_KEY,{token,deviceName,registeredAt:new Date().toISOString()});
-      await registerTeacherDevice(token,deviceName);
+      // 이미 이 기기에 등록된 토큰이 있으면 재사용 — 없을 때만 새로 발급
+      // (매번 새 토큰을 만들면 같은 기기가 재로그인할 때마다 "새 기기"로 중복 등록됨 — 버그 원인)
+      const existingAuto=loadData(TEACHER_AUTO_KEY,null);
+      const token=existingAuto?.token || (Date.now().toString(36)+'_'+Math.random().toString(36).slice(2));
+      const deviceUid=getDeviceUid();
+      saveData(TEACHER_AUTO_KEY,{token,deviceName,registeredAt:new Date().toISOString(),deviceUid});
+      await registerTeacherDevice(deviceUid,token,deviceName);
     }
     localStorage.setItem('somi_role','teacher');
     window.location.href='somi_ssam_home.html?mode=teacher';
@@ -307,14 +321,16 @@ async function checkLogin(){
   window.location.href='somi_ssam_student.html';
 }
 
-async function registerTeacherDevice(token,deviceName){
+async function registerTeacherDevice(deviceUid,token,deviceName){
   if(!_fsSet) return;
   try{
     const devicesJson=localStorage.getItem('somi_teacher_devices')||'[]';
     let devices=JSON.parse(devicesJson);
-    const existing=devices.findIndex(d=>d.token===token);
-    if(existing>=0) devices[existing]={token,deviceName,registeredAt:new Date().toISOString()};
-    else devices.push({token,deviceName,registeredAt:new Date().toISOString()});
+    // deviceUid로 우선 매칭. 예전 데이터(과도기, deviceUid 없음)는 token으로 폴백 매칭.
+    const existing=devices.findIndex(d=>d.deviceUid?d.deviceUid===deviceUid:d.token===token);
+    const entry={deviceUid,token,deviceName,registeredAt:new Date().toISOString()};
+    if(existing>=0) devices[existing]=entry;
+    else devices.push(entry);
     const json=JSON.stringify(devices);
     localStorage.setItem('somi_teacher_devices',json);
     await _fsSet('somi_teacher_devices',json);

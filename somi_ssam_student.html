@@ -58,6 +58,15 @@ button{font-family:inherit;cursor:pointer;}
   grid-area:detail;display:block;min-width:0;align-self:start;position:sticky;top:80px;
 }
 .home-content.split-active #inline-day-log{display:none;}
+/* ── 공지 배너 (로드맵 D) — 공지가 있을 때만 has-notice가 붙어 그리드에 공지 줄이 생김.
+     공지 없으면 기존 2줄 그리드 그대로(영향 0). ── */
+.home-content.split-active.has-notice{
+  grid-template-areas:
+    "notice   notice"
+    "card     summary"
+    "calendar detail";
+}
+.home-content.split-active.has-notice #notice-banner-area{grid-area:notice;min-width:0;}
 /* ── 오늘의 요약 ── */
 .today-summary{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;margin-bottom:24px;}
 .today-summary h3{font-size:0.8rem;color:var(--text2);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;}
@@ -175,6 +184,7 @@ button{font-family:inherit;cursor:pointer;}
   </div>
   <div id="stab-home" class="home-content">
     <div class="home-main">
+    <div id="notice-banner-area" style="display:none;"></div>
     <div class="today-summary">
       <h3>오늘의 연습 성과</h3>
       <div class="summary-stats">
@@ -333,7 +343,7 @@ async function studentRefresh() {
     const APP_NAME='somi-student-v2';
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
-    const ALL_KEYS=['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_lesson_starts','somi_access_log','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates'];
+    const ALL_KEYS=['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_lesson_starts','somi_access_log','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates','somi_notice'];
     await Promise.all(ALL_KEYS.map(async k=>{
       const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
     }));
@@ -526,9 +536,30 @@ function goToChapter(tab){
 function renderStudentHome(){
   const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
   renderClassInfo();updateSummary();renderCalendar();
+  renderNoticeBanner();  // 공지 배너 (로드맵 D) — 카드보다 나중에 호출해 맨 위 고정
   // 홈 렌더 시마다 도장 SVG 재주입 — Firebase 재렌더 타이밍 보정
   _reinjectStampSVGs();
   document.querySelectorAll('.stamp-opt').forEach(el=>el.classList.toggle('active',el.getAttribute('data-stamp')===currentStamp));
+}
+/* ── 공지 배너 (로드맵 D) — 홈 최상단, 소미쌤이 게시한 공지 표시 ──
+   내용·필터링은 common_core 모듈 N(공용 그릇) 사용. 여러 개면 세로로 쌓임.
+   class-info-box가 자기를 firstChild로 끼워넣으므로, 여기서 배너를 다시 맨 위로 옮겨 고정. */
+function renderNoticeBanner(){
+  const area=document.getElementById('notice-banner-area');
+  if(!area) return;
+  const hc=document.getElementById('stab-home');
+  const notices=(typeof somiGetActiveNotices==='function')?somiGetActiveNotices():[];
+  if(notices.length){
+    area.innerHTML=somiNoticeBannerHTML(notices);
+    area.style.display='block';
+    if(hc) hc.classList.add('has-notice');
+    const hm=document.querySelector('#stab-home .home-main');
+    if(hm && hm.firstChild!==area) hm.insertBefore(area,hm.firstChild);
+  } else {
+    area.innerHTML='';
+    area.style.display='none';
+    if(hc) hc.classList.remove('has-notice');
+  }
 }
 function renderClassInfo(){
   classSettings=loadData('somi_class_settings',{});lessonStarts=loadData('somi_lesson_starts',{});
@@ -851,12 +882,13 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp({apiKey:"AIzaSyCgCdb1pNtcTxEp7APdUW-aeOsJ33v1IhI",authDomain:"somi-ssam.firebaseapp.com",projectId:"somi-ssam",storageBucket:"somi-ssam.firebasestorage.app",messagingSenderId:"841594074779",appId:"1:841594074779:web:c37fd00db5a8883cf0f83e"},APP_NAME);
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
+    window._somiServerRead = async (key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
     _fbHandle={db:fsDb, doc, getDoc, setDoc, onSnapshot};  // 안전가드용 핸들 보관
     // ── [캐싱·안전] 데이터를 두 그룹으로 분리 (선생님 홈 somi_sync_meta 방식 독립 적용) ──
     //  · CACHED_KEYS : home의 _SYNC_WATCH_KEYS로 ts가 갱신되는 묶음 → ts 같으면 생략
     //  · ALWAYS_KEYS : ts 갱신 대상이 아니거나 자주 바뀌어 학생이 꼭 봐야 하는 묶음 → 매번 수신
     const CACHED_KEYS=['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings'];
-    const ALWAYS_KEYS=['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_lesson_starts','somi_access_log'];
+    const ALWAYS_KEYS=['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_lesson_starts','somi_access_log','somi_notice'];
     let _skipCached=false, _remoteTs=0;
     try{
       const metaSnap=await getDoc(doc(fsDb,'somi_data','somi_sync_meta'));
@@ -959,7 +991,7 @@ async function _studentLightResync(){
   _studentResyncing=true;
   try{
     const {db,doc,getDoc}=_fbHandle;
-    const LIVE_KEYS=['somi_teacher_stamps','somi_logs','somi_student_day_stamps','somi_profiles'];
+    const LIVE_KEYS=['somi_teacher_stamps','somi_logs','somi_student_day_stamps','somi_profiles','somi_notice'];
     await Promise.all(LIVE_KEYS.map(async k=>{
       try{ const s=await getDoc(doc(db,'somi_data',k)); if(s.exists()) localStorage.setItem(k,s.data().value); }catch(e){}
     }));

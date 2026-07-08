@@ -1479,6 +1479,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if(_offlineForced) return;
     _fsDb = fsDb; _fsDoc = doc; _fsGetDoc = getDoc; // 복귀 시 재동기화에 재사용
+    window._somiServerRead = async (key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
     window._fsSet = async (k, j) => { try { await setDoc(doc(fsDb, "somi_data", k), { value: j }); } catch(e) {} };
 
     // 2단계: 잠금+레벨+연습기록+메타 동기화 (모든 키 성공할 때까지 재시도)

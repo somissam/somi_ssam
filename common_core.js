@@ -199,6 +199,28 @@ window._readSyncTs = function(){
      → 저장이 실제 반영됐는지 확인 후, 실패 시 콘솔 경고+플래그 되돌림(흠② 수정).
 
    반환: 저장하면 true, 중복/무효/실패로 안 했으면 false. */
+/* 연습기록 서버 병합 저장 (C작업 — 여러 학생이 somi_logs 한 덩어리를 공유하므로
+   통째 덮어쓰기하면 다른 학생의 방금 기록이 서버에서 지워질 수 있다. 그래서
+   ① 서버 최신본을 읽어 ② 내 학생(profileId) 기록만 이번 1건 추가한 것으로 교체하고
+   ③ 다른 학생 기록은 서버 것 그대로 둔 뒤 올린다. 학생 도장에 쓴 방식과 동일.)
+   - window._somiServerRead(key) : 페이지가 연결해준 서버 읽기 함수(있을 때만 동작).
+   - 실패/오프라인이어도 로컬 저장은 이미 됐으므로 화면은 정상. 다음 접속 때 병합됨. */
+window._mergeLogsToServer = async function(profileId){
+  try{
+    if(typeof window._somiServerRead !== 'function' || !window._fsSet) return;
+    var remoteRaw = await window._somiServerRead('somi_logs');
+    var remote = {};
+    try{ remote = remoteRaw ? (JSON.parse(remoteRaw)||{}) : {}; }catch(e){ remote = {}; }
+    var localAll = {};
+    try{ localAll = JSON.parse(localStorage.getItem('somi_logs')||'{}')||{}; }catch(e){ localAll = {}; }
+    // 서버본을 기준으로, 내 학생 기록만 로컬(방금 추가분 포함)로 교체
+    remote[profileId] = Array.isArray(localAll[profileId]) ? localAll[profileId] : [];
+    var mj = JSON.stringify(remote);
+    localStorage.setItem('somi_logs', mj);   // 로컬도 병합본으로 맞춤(다른 학생 기록까지 최신 유지)
+    window._fsSet('somi_logs', mj);
+  }catch(e){ /* 오프라인 — 로컬엔 이미 저장됨, 다음 접속 때 병합 */ }
+};
+
 window._appendPracticeLog = function(profileId, chapter, exercise, duration){
   if (!profileId) return false;
   if (window.__SOMI_LOGGED_THIS_RUN) return false; // 이번 재생분 이미 저장됨 — 중복 방지
@@ -230,6 +252,8 @@ window._appendPracticeLog = function(profileId, chapter, exercise, duration){
       console.warn('[_appendPracticeLog] 연습기록이 저장소에 반영되지 않음');
       return false;
     }
+    // C작업 — 서버엔 통째 덮어쓰기 대신 "내 학생만 병합"해서 다시 올림(다른 학생 기록 유실 방지)
+    if (typeof window._mergeLogsToServer === 'function') { window._mergeLogsToServer(profileId); }
     return true;
   } catch(e) {
     console.warn('[_appendPracticeLog] 연습기록 저장 실패:', e);
@@ -566,4 +590,47 @@ window.somiAutoStampSVG = function(){
   return '<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">'
        + '<circle cx="40" cy="40" r="30" fill="none" stroke="#B4B2A9" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round"/>'
        + '</svg>';
+};
+
+/* ══════════════════════════════════════════════════════════════
+   모듈 N: 전체 공지 (로드맵 D, 2026-07-08)
+   - 데이터 그릇: somi_notice = 공지 목록(배열).
+     지금은 선생님 화면에서 1개만 관리하지만, 나중에 여러 개로 늘려도
+     데이터를 갈아엎지 않도록 처음부터 목록으로 저장한다.
+     항목 모양: { id, text, active(게시중 여부), endDate('YYYY-MM-DD' 또는 ''), createdAt }
+   - somiGetActiveNotices(): 게시 중이고 종료일이 안 지난 것만 반환.
+     종료일 당일까지 표시, 다음 날부터 자동 숨김. 종료일 비면 무기한.
+   - somiNoticeBannerHTML(): 학생홈 상단 배너 HTML. 여러 개면 세로로 쌓임.
+   ══════════════════════════════════════════════════════════════ */
+window.somiEscapeHtml = function(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+};
+window.somiGetActiveNotices = function(){
+  var arr = window.loadData('somi_notice', []);
+  if(!Array.isArray(arr)) arr = [];
+  var today = window.toDateStr(new Date());
+  return arr.filter(function(n){
+    if(!n || !n.active || !n.text) return false;
+    if(n.endDate && String(n.endDate) < today) return false;  // 종료일 다음 날부터 자동 숨김
+    return true;
+  });
+};
+window.somiNoticeBannerHTML = function(notices){
+  if(!notices || !notices.length) return '';
+  // 연한 파스텔 3색(주황·핑크·다홍) — 여러 개면 순서대로 번갈아 칠해 구분.
+  // 다크/아이보리 테마 모두에서 글자가 읽히도록 반투명 배경 + 진한 글자색.
+  var palette = [
+    {bg:'rgba(247,180,120,0.18)', bd:'rgba(247,150,80,0.55)',  fg:'#c8730a'}, // 주황
+    {bg:'rgba(247,140,190,0.18)', bd:'rgba(240,95,160,0.55)',  fg:'#c23b7a'}, // 핑크
+    {bg:'rgba(240,110,100,0.18)', bd:'rgba(230,80,70,0.55)',   fg:'#c2382f'}  // 다홍
+  ];
+  return notices.map(function(n, i){
+    var c = palette[i % palette.length];
+    var body = window.somiEscapeHtml(n.text).replace(/\n/g,'<br>');
+    return '<div style="background:'+c.bg+';border:1px solid '+c.bd+';border-radius:12px;padding:9px 14px;margin-bottom:9px;display:flex;align-items:flex-start;gap:8px;">'
+         + '<span style="flex-shrink:0;font-size:0.9rem;line-height:1.55;">📢</span>'
+         + '<span style="flex-shrink:0;font-size:0.88rem;color:'+c.fg+';font-weight:700;line-height:1.55;">공지</span>'
+         + '<span style="font-size:0.88rem;color:'+c.fg+';font-weight:400;line-height:1.55;word-break:break-word;">'+body+'</span>'
+         + '</div>';
+  }).join('');
 };
