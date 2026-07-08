@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="소미쌤">
-<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="apple-touch-icon" href="./icon180.png">
 <title>호흡 · somi_ssam</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
@@ -811,6 +811,8 @@ function timerFrame(ts) {
 ════════════════════════════════════════════════ */
 function startExercise(id) {
   if (isLocked(id)) return;
+  // 스크롤 위치 저장 (뒤로 갔을 때 복원용)
+  sessionStorage.setItem('somi_breath_scroll', String(window.scrollY));
   initAudio(); EX = id;
   const pat = currentPat(); if (!pat) return;
 
@@ -823,6 +825,7 @@ function startExercise(id) {
   buildPracticeUI();
   document.getElementById('pattern-select').style.display = 'none';
   document.getElementById('practice-screen').style.display = 'flex';
+  somiScrollTop();  // 연습화면 진입 시 맨 위로
   // 화면이 보인 뒤(폭이 잡힌 뒤) 자동 맞춤 실행
   requestAnimationFrame(() => requestAnimationFrame(fitAllBreath));
 }
@@ -831,6 +834,9 @@ function closePractice() {
   stopExercise();
   document.getElementById('practice-screen').style.display = 'none';
   document.getElementById('pattern-select').style.display = 'block';
+  // 뒤로가기 시 스크롤 위치 복원
+  const savedY = sessionStorage.getItem('somi_breath_scroll');
+  if (savedY) requestAnimationFrame(() => window.scrollTo(0, parseInt(savedY) || 0));
 }
 
 function buildPracticeUI() {

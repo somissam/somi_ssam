@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="소미쌤">
-<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="apple-touch-icon" href="./icon180.png">
 <title>소미쌤 · 관리</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
@@ -166,6 +166,8 @@ button{font-family:inherit;cursor:pointer;}
 .toggle input{opacity:0;width:0;height:0;position:absolute;}
 .pm-checkbox{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;border-radius:4px;}
 .pm-checkbox:disabled{opacity:0.3;cursor:default;}
+/* 레벨분류 표 체크박스: Shift클릭 시 포커스 테두리 안 보이게(패턴표와 동일) */
+.lv-checkbox:focus,.lv-checkbox:focus-visible{outline:none;box-shadow:none;}
 
 .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
 .filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:0.76rem;transition:all 0.15s;cursor:pointer;}
@@ -975,19 +977,23 @@ function renderNoticeList(){
   const arr=_noticeArr();
   if(!arr.length){ wrap.innerHTML='<div style="font-size:0.78rem;color:var(--text2);padding:6px 2px;">아직 등록된 공지가 없어요.</div>'; return; }
   const today=toDateStr(new Date());
+  const _pink = window.SOMI_NOTICE_PINK || {bg:'rgba(247,140,190,0.18)',bd:'rgba(240,95,160,0.55)',fg:'#c23b7a'};
   wrap.innerHTML='<div style="font-size:0.75rem;color:var(--text2);font-weight:700;margin:4px 0 8px;">등록된 공지</div>'
     + arr.map((n,i)=>{
       const expired = n.endDate && String(n.endDate)<today;
+      const liveNow = n.active && !expired;  // 실제 학생에게 보이는 상태(게시 중)
       let stateLbl, stateColor;
       if(!n.active){ stateLbl='내려둠'; stateColor='var(--text2)'; }
       else if(expired){ stateLbl='종료일 지남(자동 숨김)'; stateColor='#c8730a'; }
       else { stateLbl='게시 중'; stateColor='var(--accent3)'; }
       const endTxt = n.endDate ? ('~'+n.endDate.replace(/-/g,'.')) : '종료일 없음';
       const preview = escapeHtmlSafe(n.text).replace(/\n/g,' ').slice(0,60) + (n.text.length>60?'…':'');
+      // 게시 중인 공지 카드는 학생 배너와 같은 핑크 배경, 나머지는 기본 배경
+      const cardBg = liveNow ? `background:${_pink.bg};border:1px solid ${_pink.bd};` : 'background:var(--surface2);border:1px solid var(--border);';
       const toggleBtn = n.active
         ? `<button onclick="toggleNotice('${n.id}')" style="padding:5px 10px;border-radius:8px;border:1px solid #f76a6a;background:transparent;color:#f76a6a;font-size:0.76rem;font-weight:600;cursor:pointer;">내리기</button>`
         : `<button onclick="toggleNotice('${n.id}')" style="padding:5px 10px;border-radius:8px;border:1px solid var(--accent3);background:transparent;color:var(--accent3);font-size:0.76rem;font-weight:600;cursor:pointer;">올리기</button>`;
-      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:11px 13px;margin-bottom:8px;">
+      return `<div style="${cardBg}border-radius:12px;padding:11px 13px;margin-bottom:8px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
           <span style="font-size:0.72rem;font-weight:700;color:${stateColor};">● ${stateLbl}</span>
           <span style="font-size:0.72rem;color:var(--text2);">${endTxt}</span>
@@ -1252,6 +1258,7 @@ function showStudentDetail(idx) {
   document.getElementById('teacher-detail').style.display='block';
   ['tab-student','tab-pattern','tab-settings'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   renderDetailContent(p);
+  somiScrollTop();  // 상세 열면 학생 카드(맨 위)부터 보이게
   _refreshStudentLogs(p.id); // B-1: 이 학생 연습기록을 서버에서 다시 받아 최신화(누락·지연 방지)
 }
 /* B-1 — 특정 학생의 연습기록만 서버에서 조용히 다시 받아 화면 갱신.
@@ -2029,14 +2036,13 @@ function makeToggle(checked, onChange, patternId) {
     if(e.shiftKey && _lastCheckedPmId && myPid && _lastCheckedPmId!==myPid){
       const allPidBoxes=[...document.querySelectorAll('.pm-checkbox[data-pid]:not(:disabled)')];
       const allPids=allPidBoxes.map(cb=>cb.dataset.pid);
-      const fromIdx=allPids.indexOf(_lastCheckedPmId);
-      const toIdx=allPids.indexOf(myPid);
-      if(fromIdx>=0 && toIdx>=0 && fromIdx!==toIdx){
-        const [lo,hi]=[Math.min(fromIdx,toIdx),Math.max(fromIdx,toIdx)];
+      // 공용 계산기: 직전 클릭 ID·이번 클릭 ID를 순번으로 바꿔 범위 [lo..hi] 산출
+      const r=somiRangeIndices(allPids.length, allPids.indexOf(_lastCheckedPmId), allPids.indexOf(myPid));
+      if(r){
         const val=inp.checked;
         // dispatchEvent('change')는 onChange→renderPatternTable()을 반복 호출해 DOM 재생성.
         // 범위 내 _pmOnChange(데이터 갱신)만 일괄 호출하고 렌더는 마지막 1번만.
-        allPidBoxes.slice(lo, hi+1).forEach(cb=>{
+        allPidBoxes.slice(r.lo, r.hi+1).forEach(cb=>{
           if(cb._pmOnChange) cb._pmOnChange(val);
         });
         renderPatternTable();
@@ -2119,7 +2125,7 @@ function renderLevelClassifier() {
   };
 
   const selected = new Set();
-  let lastCheckedIdx = -1;
+  let _lastCheckedLvId = null;  // 패턴ID로 기억(패턴표와 동일 방식) — 순번 대신 이름표로
   let isDragging = false, dragValue = null;
   const allCheckboxes = [];
 
@@ -2259,20 +2265,24 @@ function renderLevelClassifier() {
 
         // 체크박스
         const cbTd=document.createElement('td'); cbTd.style.cssText='padding:5px 2px;border-bottom:1px solid var(--border);width:28px;';
-        const cb=document.createElement('input'); cb.type='checkbox';
-        cb.style.cssText='width:14px;height:14px;accent-color:var(--counting);cursor:pointer;';
+        const cb=document.createElement('input'); cb.type='checkbox'; cb.className='lv-checkbox';
+        cb.style.cssText='width:14px;height:14px;accent-color:var(--counting);cursor:pointer;outline:none;';
         cb.onclick=(e)=>{
-          if(e.shiftKey && lastCheckedIdx>=0 && lastCheckedIdx!==allCheckboxes.indexOf(cb)){
-            const a=Math.min(lastCheckedIdx,allCheckboxes.indexOf(cb));
-            const b2=Math.max(lastCheckedIdx,allCheckboxes.indexOf(cb));
-            for(let i=a;i<=b2;i++){
-              allCheckboxes[i].checked=cb.checked;
-              const pid2=allCheckboxes[i].getAttribute('data-pat-id');
-              if(cb.checked) selected.add(pid2); else selected.delete(pid2);
+          const myPatId=cb.getAttribute('data-pat-id')||null;
+          if(e.shiftKey && _lastCheckedLvId && myPatId && _lastCheckedLvId!==myPatId){
+            // 패턴ID를 순번으로 바꿔 공용 계산기로 범위 산출 (패턴표와 동일 방식)
+            const allIds=allCheckboxes.map(x=>x.getAttribute('data-pat-id'));
+            const r=somiRangeIndices(allIds.length, allIds.indexOf(_lastCheckedLvId), allIds.indexOf(myPatId));
+            if(r){
+              for(let i=r.lo;i<=r.hi;i++){
+                allCheckboxes[i].checked=cb.checked;
+                const pid2=allCheckboxes[i].getAttribute('data-pat-id');
+                if(cb.checked) selected.add(pid2); else selected.delete(pid2);
+              }
             }
           }
           if(cb.checked) selected.add(p.id); else selected.delete(p.id);
-          lastCheckedIdx=allCheckboxes.indexOf(cb);
+          _lastCheckedLvId=myPatId;
         };
         cb.setAttribute('data-pat-id',p.id);
         allCheckboxes.push(cb);
@@ -2598,13 +2608,8 @@ function renderProfileManage() {
       classDd.style.cssText='display:none;position:absolute;top:110%;left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:50;min-width:110px;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
       classDd.className='pm-dropdown';
 
-      // ── [3번] 드롭다운 토글: 이미 열린 것 다시 클릭하면 닫기 ──
-      classBtn.onclick=(e)=>{
-        e.stopPropagation();
-        const isOpen=classDd.style.display!=='none';
-        document.querySelectorAll('.pm-dropdown').forEach(d=>d.style.display='none');
-        if(!isOpen) classDd.style.display='block';
-      };
+      // ── [3번] 반 선택 드롭다운 토글 (공용 somiAttachDropdown 사용) ──
+      somiAttachDropdown(classBtn, classDd);
 
       [null,'취미반','전문반','입시반','단기반','숨고르기','테스터','종료반'].forEach(cls=>{
         const opt=document.createElement('button'); const isSel=ci.voClass===cls;
@@ -2620,7 +2625,7 @@ function renderProfileManage() {
           // 계좌: 수동지정 안 했고 아직 계좌 없을 때만 기본 배정. 기존 계좌는 어떤 반으로 옮겨도 유지.
           if(!pending[p.id]._accountManual && !pending[p.id].account)
             pending[p.id].account=cls==='입시반'?'B':(cls?'A':null);
-          classDd.style.display='none'; rebuildRows();
+          classDd.style.display='none'; rebuildRowsKeepScroll();
         };
         classDd.appendChild(opt);
       });
@@ -2640,7 +2645,7 @@ function renderProfileManage() {
           if(!pending[p.id].extras) pending[p.id].extras=[];
           const idx=pending[p.id].extras.indexOf(tag);
           if(idx>=0) pending[p.id].extras.splice(idx,1); else pending[p.id].extras.push(tag);
-          rebuildRows();
+          rebuildRowsKeepScroll();
         };
         toggleGroup.appendChild(tb);
       });
@@ -2684,13 +2689,8 @@ function renderProfileManage() {
       delOpt.onclick=(e)=>{ e.stopPropagation(); if(confirm(p.name+'을 삭제할까요?')) deleteProfile(profiles.indexOf(p)); };
       menuDd.appendChild(delOpt);
 
-      // ── [3번] ··· 드롭다운도 토글 ──
-      menuBtn.onclick=(e)=>{
-        e.stopPropagation();
-        const isOpen=menuDd.style.display!=='none';
-        document.querySelectorAll('.pm-dropdown').forEach(d=>d.style.display='none');
-        if(!isOpen) menuDd.style.display='block';
-      };
+      // ── [3번] ··· 메뉴 드롭다운 토글 (공용 somiAttachDropdown 사용) ──
+      somiAttachDropdown(menuBtn, menuDd);
       menuWrap.appendChild(menuBtn); menuWrap.appendChild(menuDd);
       // 레슨 시작일 (2줄로 이동)
       const dateWrap=document.createElement('div'); dateWrap.style.cssText='position:relative;flex-shrink:0;';
@@ -2717,7 +2717,7 @@ function renderProfileManage() {
       birthSave.onclick=()=>{
         p.birth=_birthVal||'';
         saveProfiles();
-        rebuildRows();
+        rebuildRowsKeepScroll();
       };
       birthEditWrap.appendChild(birthLabel); birthEditWrap.appendChild(birthInp); birthEditWrap.appendChild(birthSave);
 
@@ -2741,17 +2741,12 @@ function renderProfileManage() {
             e.stopPropagation();
             if(!pending[p.id]) pending[p.id]={voClass:ci.voClass,extras:[],account:acc};
             pending[p.id].account=acc; pending[p.id]._accountManual=true;
-            accDd.style.display='none'; rebuildRows();
+            accDd.style.display='none'; rebuildRowsKeepScroll();
           };
           accDd.appendChild(opt);
         });
-        // ── [3번] 계좌 드롭다운도 토글 ──
-        accBtn.onclick=(e)=>{
-          e.stopPropagation();
-          const isOpen=accDd.style.display!=='none';
-          document.querySelectorAll('.pm-dropdown').forEach(d=>d.style.display='none');
-          if(!isOpen) accDd.style.display='block';
-        };
+        // ── [3번] 계좌 드롭다운 토글 (공용 somiAttachDropdown 사용) ──
+        somiAttachDropdown(accBtn, accDd);
         accWrap.appendChild(accBtn); accWrap.appendChild(accDd); toggleGroup.appendChild(accWrap);
       }
       line2.appendChild(toggleGroup); line2.appendChild(dateWrap);
@@ -2763,6 +2758,8 @@ function renderProfileManage() {
     updateProfileSaveBtnState();
   }
   rebuildRows();
+  // 계좌·반 선택 등 옵션 클릭 재렌더용: 스크롤 자리 유지 버전
+  function rebuildRowsKeepScroll(){ somiPreserveScroll(rebuildRows); }
   document.addEventListener('click',()=>{ document.querySelectorAll('.pm-dropdown').forEach(d=>d.style.display='none'); });
 }
 

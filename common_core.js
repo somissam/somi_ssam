@@ -615,17 +615,13 @@ window.somiGetActiveNotices = function(){
     return true;
   });
 };
+// 공지 핑크 색상 (학생 배너 · 선생님 홈 활성공지 공용 1벌) — 여기만 고치면 양쪽 반영.
+window.SOMI_NOTICE_PINK = {bg:'rgba(247,140,190,0.18)', bd:'rgba(240,95,160,0.55)', fg:'#c23b7a'};
 window.somiNoticeBannerHTML = function(notices){
   if(!notices || !notices.length) return '';
-  // 연한 파스텔 3색(주황·핑크·다홍) — 여러 개면 순서대로 번갈아 칠해 구분.
-  // 다크/아이보리 테마 모두에서 글자가 읽히도록 반투명 배경 + 진한 글자색.
-  var palette = [
-    {bg:'rgba(247,180,120,0.18)', bd:'rgba(247,150,80,0.55)',  fg:'#c8730a'}, // 주황
-    {bg:'rgba(247,140,190,0.18)', bd:'rgba(240,95,160,0.55)',  fg:'#c23b7a'}, // 핑크
-    {bg:'rgba(240,110,100,0.18)', bd:'rgba(230,80,70,0.55)',   fg:'#c2382f'}  // 다홍
-  ];
-  return notices.map(function(n, i){
-    var c = palette[i % palette.length];
+  // 공지는 모두 같은 핑크 계열. 반투명 배경이라 다크/아이보리 테마 모두에서 읽힘.
+  var c = window.SOMI_NOTICE_PINK;
+  return notices.map(function(n){
     var body = window.somiEscapeHtml(n.text).replace(/\n/g,'<br>');
     return '<div style="background:'+c.bg+';border:1px solid '+c.bd+';border-radius:12px;padding:9px 14px;margin-bottom:9px;display:flex;align-items:flex-start;gap:8px;">'
          + '<span style="flex-shrink:0;font-size:0.9rem;line-height:1.55;">📢</span>'
@@ -633,4 +629,68 @@ window.somiNoticeBannerHTML = function(notices){
          + '<span style="font-size:0.88rem;color:'+c.fg+';font-weight:400;line-height:1.55;word-break:break-word;">'+body+'</span>'
          + '</div>';
   }).join('');
+};
+
+/* ══════════════════════════════════════════════════════════════
+   [공통 모듈] 커스텀 드롭다운 토글 (somiAttachDropdown) — E-③
+   ────────────────────────────────────────────────────────────────
+   반복되던 뼈대만 공용화: "버튼 누르면 열림 → 다른 pm-dropdown 다 닫힘
+   → 이미 열려있으면 닫힘". 옵션 내용·색·클릭동작은 호출측이 그대로 만든다.
+   (날짜 함수처럼: 껍데기는 공용, 알맹이는 인자)
+   사용:
+     menu.className = 'pm-dropdown';   // 목록 div (position:absolute 등 스타일은 호출측)
+     somiAttachDropdown(button, menu); // 버튼 클릭 토글을 이 함수가 담당
+   - button, menu는 이미 만들어 넘긴다. 바깥클릭 닫기는 기존 document 리스너가 담당(그대로 둠).
+   ════════════════════════════════════════════════════════════════ */
+window.somiAttachDropdown = function(button, menu){
+  if(!button || !menu) return;
+  button.onclick = function(e){
+    e.stopPropagation();
+    var isOpen = menu.style.display !== 'none' && menu.style.display !== '';
+    document.querySelectorAll('.pm-dropdown').forEach(function(d){ d.style.display='none'; });
+    if(!isOpen) menu.style.display='block';
+  };
+};
+
+/* ══════════════════════════════════════════════════════════════
+   [공통 모듈] 스크롤 제어 (somiScrollTop / somiPreserveScroll) — E 화면공통
+   ────────────────────────────────────────────────────────────────
+   이 앱은 페이지 전체(window)가 스크롤된다. 두 가지 기본 동작을 공용화:
+   ① somiScrollTop()  : 화면/탭 전환 시 맨 위로. (전환하면 위부터 보이는 게 기본)
+   ② somiPreserveScroll(fn) : 목록을 통째로 다시 그리는 동안 스크롤 자리 유지.
+        재렌더(fn) 실행 전 스크롤 위치를 저장 → fn 실행 → 위치 복원.
+        (계좌·반 선택처럼 "고쳐도 그 자리에 머물러야" 하는 재렌더에 사용)
+   ════════════════════════════════════════════════════════════════ */
+window.somiScrollTop = function(smooth){
+  try{ window.scrollTo({top:0, behavior: smooth ? 'smooth' : 'auto'}); }
+  catch(e){ window.scrollTo(0,0); }  // 구형 브라우저 폴백
+};
+window.somiPreserveScroll = function(fn){
+  var y = window.scrollY || window.pageYOffset || 0;
+  try{ fn(); }
+  finally{
+    // 재렌더 직후 높이가 아직 안 잡힐 수 있어 다음 프레임에 복원(있으면), 즉시도 1번
+    window.scrollTo(0, y);
+    if(typeof requestAnimationFrame==='function'){
+      requestAnimationFrame(function(){ window.scrollTo(0, y); });
+    }
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   [공통 모듈] Shift 범위선택 — 범위 계산 코어 (somiRangeIndices) — E-②
+   ────────────────────────────────────────────────────────────────
+   Shift+클릭으로 "사이 전부 선택"할 때, 직전 위치~지금 위치 범위만 계산.
+   순수 계산만 함 — DOM·데이터는 안 만짐(호출측이 처리). 날짜 parseNumericDate와 같은 결.
+   - total  : 전체 체크박스 개수
+   - fromIdx: 직전 클릭이 몇 번째인지 (없으면 -1)
+   - toIdx  : 이번 클릭이 몇 번째인지
+   → 유효하면 {lo, hi} (작은 값~큰 값, 양방향 정렬), 무효면 null
+   ════════════════════════════════════════════════════════════════ */
+window.somiRangeIndices = function(total, fromIdx, toIdx){
+  if(typeof fromIdx!=='number' || typeof toIdx!=='number') return null;
+  if(fromIdx<0 || toIdx<0) return null;
+  if(fromIdx>=total || toIdx>=total) return null;
+  if(fromIdx===toIdx) return null;
+  return { lo: Math.min(fromIdx,toIdx), hi: Math.max(fromIdx,toIdx) };
 };

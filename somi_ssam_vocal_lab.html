@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="소미쌤">
-<link rel="apple-touch-icon" href="./icon-180.png">
+<link rel="apple-touch-icon" href="./icon180.png">
 <title>보컬랩(여성) · somi_ssam</title>
 <script>
 (function(){
@@ -107,12 +107,10 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 #vb-lbls-row-7th .vlabel-item.kor{font-size:1.05rem;}
 #vb-lbls-row-chroma .vlabel-item.kor{font-size:1.05rem;}
 #vb-lbls-row-chroma .vlabel-item.eng{font-size:1.1rem;letter-spacing:-0.02em;}
-/* ── C-9: 다크모드에서 음절 라벨박스만 아이보리톤으로 (어두운 배경에 글씨가 안 보이는 문제 해결) ──
-   밝은 모드(theme-ivory)는 원래 잘 보이므로 다크일 때만 적용. */
-html:not(.theme-ivory) .vocal-label-box{background:#f0ebe0;border-color:#d8cfc0;}
-html:not(.theme-ivory) .vocal-label-box .vlabel-item{color:#9a8f82;}
-html:not(.theme-ivory) .vocal-label-box .vlabel-item.lit{color:#e05fa0;text-shadow:0 0 8px #e05fa0;}
-html:not(.theme-ivory) .vocal-label-box .vkp-dir{color:#7a6e60;}
+/* ── C-9: 다크모드에서 비활성(안 켜진) 발음 글자만 밝게. 활성(.lit)은 원래 핑크 하이라이트 그대로 ──
+   비활성 기본색 var(--border)=#2a2a3d가 어두운 배경에 묻혀 안 보였던 문제만 해결.
+   :not(.lit)로 켜진 글자는 제외 → 아이보리 설계와 동일하게 비활성=회보라 / 활성=핑크글로우. */
+html:not(.theme-ivory) .vocal-label-box .vlabel-item:not(.lit){color:#9a94c0;}
 .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;text-align:center;width:100%;max-width:440px;min-height:96px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;}
 .info-box.vocal-mode{min-height:125px;height:auto;padding:16px 24px;}
 .info-action{font-size:2.1rem;font-weight:700;transition:all 0.2s;line-height:1.2;}
