@@ -110,7 +110,7 @@ button{font-family:inherit;cursor:pointer;-webkit-appearance:none;-moz-appearanc
 /* ── C-9: 다크모드에서 음절 라벨박스만 아이보리톤으로 (어두운 배경에 글씨가 안 보이는 문제 해결) ──
    밝은 모드(theme-ivory)는 원래 잘 보이므로 다크일 때만 적용. */
 html:not(.theme-ivory) .vocal-label-box{background:#f0ebe0;border-color:#d8cfc0;}
-html:not(.theme-ivory) .vocal-label-box .vlabel-item{color:#5a5048;}
+html:not(.theme-ivory) .vocal-label-box .vlabel-item{color:#9a8f82;}
 html:not(.theme-ivory) .vocal-label-box .vlabel-item.lit{color:#e05fa0;text-shadow:0 0 8px #e05fa0;}
 html:not(.theme-ivory) .vocal-label-box .vkp-dir{color:#7a6e60;}
 .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;text-align:center;width:100%;max-width:440px;min-height:96px;height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;}
@@ -146,16 +146,18 @@ html:not(.theme-ivory) .vocal-label-box .vkp-dir{color:#7a6e60;}
 .basic-key-btn.selected{background:rgba(106,247,200,0.18);border-color:var(--accent3);box-shadow:0 0 0 1px var(--accent3);color:var(--accent3);font-weight:700;}
 .basic-key-btn.sharp{color:var(--accent);}
 .basic-key-btn.sharp.selected{background:rgba(124,106,247,0.18);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--accent);}
-.key-grid-wrap{width:100%;max-width:480px;margin:0 auto;}
+.key-grid-wrap{width:100%;max-width:364px;margin:0 auto;}
 .key-grid-label{font-size:0.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;font-weight:600;}
 .key-grid{display:flex;flex-wrap:wrap;gap:6px;}
 /* ── 음 버튼 균등분할: 모든 화면에서 컨테이너 폭(라벨박스 폭)에 꽉 차게 정렬 ──
    inner=somi-keygrid(폭 100%·max 480), row=somi-keyrow(가로 꽉), 버튼=flex:1로 균등.
    고정 px 대신 폭 비례라 좁은 폰에서도 한 줄 정렬 유지(노트북 비율 재현). */
-.somi-keygrid{width:100%!important;max-width:480px;align-items:stretch!important;}
+.somi-keygrid{width:100%!important;max-width:364px;align-items:stretch!important;}
 .somi-keyrow{display:flex!important;width:100%;}
 .somi-keyrow > button{flex:1 1 0!important;min-width:0!important;width:auto!important;}
-.somi-keyrow > .somi-key-spacer{flex:1 1 0;min-width:0;}
+.somi-keyrow > .somi-key-spacer{flex:1 1 0!important;min-width:0!important;}
+/* 기본모드 상/하행: grid 균등분할이라 버튼 개수 달라도 칸 폭 동일. 버튼 자체 min-width 무력화. */
+.somi-basicrow > button{min-width:0!important;width:auto!important;}
 .key-grid-btn{padding:5px 0;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace;font-size:0.72rem;cursor:pointer;transition:all 0.15s;width:36px;text-align:center;flex-shrink:0;}
 @media(hover:hover){.key-grid-btn:hover{border-color:var(--accent3);color:var(--accent3);}}
 .key-grid-btn.selected{background:rgba(106,247,200,0.18);border-color:var(--accent3);box-shadow:0 0 0 1px var(--accent3);color:var(--accent3);font-weight:700;}
@@ -2918,9 +2920,13 @@ function buildBasicKeyUI(body){
     return row;
   }
   // 두 행을 grid로 묶어 화살표 컬럼 정렬
-  const rowsWrap=document.createElement('div');rowsWrap.style.cssText='display:grid;grid-template-columns:14px 1fr;gap:5px 4px;align-items:center;width:100%;max-width:480px;';
+  const rowsWrap=document.createElement('div');rowsWrap.style.cssText='display:grid;grid-template-columns:14px 1fr;gap:5px 4px;align-items:center;width:100%;max-width:382px;';
+  // 상·하행 버튼 수가 달라도 버튼 폭이 정확히 같아지도록, 각 행을 _maxCols칸 grid로 균등분할.
+  // (flex는 버튼 콘텐츠·패딩 때문에 스페이서와 폭이 미세하게 달라짐 → grid로 칸 자체를 균등화)
+  const _maxCols=Math.max(upEntries.length,downEntries.length);
   [makeRow(upEntries,'▲'),makeRow(downEntries,'▼')].forEach(row=>{
-    const arrowEl=row.firstChild;const btnsEl=document.createElement('div');btnsEl.className='somi-keyrow';btnsEl.style.cssText='display:flex;gap:4px;';
+    const arrowEl=row.firstChild;const btnsEl=document.createElement('div');btnsEl.className='somi-basicrow';
+    btnsEl.style.cssText='display:grid;grid-template-columns:repeat('+_maxCols+',1fr);gap:4px;';
     while(row.children.length>1)btnsEl.appendChild(row.children[1]);
     rowsWrap.appendChild(arrowEl);rowsWrap.appendChild(btnsEl);
   });
