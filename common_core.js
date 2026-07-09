@@ -291,14 +291,14 @@ window.toDateStr = function(d){
   background:rgba(10,10,15,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:1;transition:opacity 0.35s ease;}
 .theme-ivory .somi-load-overlay{background:rgba(245,240,232,0.85);}
 .somi-load-overlay.hide{opacity:0;pointer-events:none;}
-.somi-load-img-slot{width:84px;height:84px;display:flex;align-items:center;justify-content:center;}
+.somi-load-img-slot{width:100px;height:100px;display:flex;align-items:center;justify-content:center;}
 .somi-load-img-slot img{width:100%;height:100%;object-fit:contain;border-radius:20px;}
-.somi-load-spinner{width:52px;height:52px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;}
+.somi-load-spinner{width:80px;height:80px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center;}
 /* 회전은 가상요소 링만 담당 → 안쪽 아이콘은 고정 */
-.somi-load-spinner::before{content:"";position:absolute;inset:0;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+.somi-load-spinner::before{content:"";position:absolute;inset:0;border:5px solid var(--border);border-top:5px solid var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
 /* 회전 링 안쪽에 정지된 웹앱 아이콘을 틈 없이 딱 맞게 겹침
-   (링 안지름 = 52 - 4*2 = 44px). 링만 회전, 아이콘은 고정. */
-.somi-load-spinner .somi-load-icon{position:relative;width:44px;height:44px;border-radius:50%;object-fit:cover;}
+   (링 안지름 = 80 - 5*2 = 70px). 링만 회전, 아이콘은 고정. */
+.somi-load-spinner .somi-load-icon{position:relative;width:70px;height:70px;border-radius:50%;object-fit:cover;}
 .somi-load-text{color:var(--text);font-size:0.95rem;font-weight:600;letter-spacing:0.5px;}
 .somi-load-sub{color:var(--text2);font-size:0.8rem;margin-top:-8px;}
 .somi-load-slow{color:var(--counting);font-size:0.8rem;display:none;text-align:center;line-height:1.6;max-width:280px;}
