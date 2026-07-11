@@ -172,8 +172,8 @@ input,select,textarea{font-family:inherit;font-size:15px;}
 /* 등록·취소 버튼 묶음: 평소엔 세로, 수정 모드일 땐 한 줄 좌우 분할 */
 .form-btns{display:flex;flex-direction:column;gap:8px;}
 .form-btns.editing{flex-direction:row;}
-.form-btns.editing .btn-cancel{order:1;flex:0 0 40%;}   /* 취소 = 왼쪽 40% */
-.form-btns.editing .btn-primary{order:2;flex:1 1 auto;}  /* 완료 = 오른쪽 나머지 */
+.form-btns.editing .btn-cancel{order:1;flex:1 1 0;}   /* 취소 = 왼쪽 절반 */
+.form-btns.editing .btn-primary{order:2;flex:1 1 0;}  /* 완료 = 오른쪽 절반 */
 
 /* ── 내보내기 구역 ── */
 .export-box{border-radius:14px;padding:16px 15px;margin-bottom:16px;}
@@ -444,21 +444,6 @@ input,select,textarea{font-family:inherit;font-size:15px;}
   <!-- ══════════ 내보내기 ══════════ -->
   <div class="panel" id="panel-export">
 
-    <div class="form-card" style="border:1px solid var(--acctB);">
-      <div class="sec-title" style="margin-bottom:8px;">🏦 사업자 통장 개설일 <span class="sec-hint">(계좌 자동 추천 기준)</span></div>
-      <div style="font-size:0.76rem;color:var(--text2);margin-bottom:10px;line-height:1.5;">
-        이 날짜 <b>이후</b> 입금 건은 계좌B로 자동 추천됩니다. (추천일 뿐, 등록할 때 언제든 A/B로 바꿀 수 있어요.)<br>
-        아직 통장이 없으면 <b>비워 두세요</b> → 전부 계좌A로 추천됩니다.
-      </div>
-      <div class="field-row" style="align-items:flex-end;">
-        <div class="field" style="margin-bottom:0;">
-          <label>개설일</label>
-          <input type="text" id="biz-date" inputmode="numeric" placeholder="예: 2026-08-01 (없으면 비움)">
-        </div>
-        <button type="button" onclick="saveBizDate()" style="padding:10px 16px;border-radius:9px;border:1px solid var(--acctB);background:var(--surface2);color:var(--text);font-weight:700;white-space:nowrap;">저장</button>
-      </div>
-    </div>
-
     <div class="period">
       <input type="text" id="ex-from" inputmode="numeric" placeholder="시작일 2026-01-01">
       <span style="color:var(--text2)">~</span>
@@ -501,7 +486,6 @@ input,select,textarea{font-family:inherit;font-size:15px;}
 /* ── 저장소 (독립) ── */
 const LKEY_SALES   = 'somi_ledger_sales';
 const LKEY_EXPENSE = 'somi_ledger_expense';
-const LKEY_BIZDATE = 'somi_ledger_biz_account_date';  // 사업자 통장 개설일 (YYYY-MM-DD)
 
 function loadLedger(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
 
@@ -574,21 +558,14 @@ async function initLedgerSync(){
         localStorage.setItem(key, JSON.stringify(merged));
       }catch(e){}
     }
-    // 3) 개설일: 로컬에 없고 서버에 있으면 받아옴 (로컬 값이 항상 우선 — 저장 시 즉시 서버로 가므로)
-    try{
-      if(!getBizDate()){
-        const snap=await getDoc(doc(db,'somi_data',LKEY_BIZDATE));
-        if(snap.exists()&&snap.data().value) localStorage.setItem(LKEY_BIZDATE, JSON.parse(snap.data().value));
-      }
-    }catch(e){}
-    // 4) 연결 확정 → 밀린 저장 올리고, 병합된 최신본도 서버에 반영
+    // 3) 연결 확정 → 밀린 저장 올리고, 병합된 최신본도 서버에 반영
     _ledgerFs={db,doc,getDoc,setDoc};
     _ledgerPendingPush.add(LKEY_SALES); _ledgerPendingPush.add(LKEY_EXPENSE); _ledgerPendingPush.add(LKEY_DELETED);
     const pend=[..._ledgerPendingPush]; _ledgerPendingPush.clear();
     pend.forEach(k=>_ledgerPush(k));
-    // 5) 병합 결과로 화면 갱신
+    // 4) 병합 결과로 화면 갱신
     renderSales(); renderExpense();
-    setDateVal('biz-date', getBizDate());
+    recommendSalesAcct(); recommendExpenseAcct();
   }catch(e){ /* 오프라인 — 로컬 데이터로 계속 사용, 다음 접속 때 자동 병합 */ }
 }
 
@@ -610,14 +587,14 @@ function setSelectedSubjects(list){
 /* 학생 고르면 그 학생의 현재 과목·반·계좌를 폼에 불러옴 (프로필 읽기) */
 function onStudentPick(){
   const pid=document.getElementById('s-student').value;
-  if(!pid){ setSelectedSubjects([]); document.getElementById('s-class').value=''; return; }
+  if(!pid){ setSelectedSubjects([]); document.getElementById('s-class').value=''; setSalesAcct('A'); return; }
   const cs=readClassSettings()[pid]||{};
   // 과목: extras에 저장 (리듬베이직=리베로 표기)
   const extras=(cs.extras||[]).map(e=> e==='리듬베이직'?'리베':e);
   setSelectedSubjects(extras);
   document.getElementById('s-class').value=cs.voClass||'';
-  // 계좌도 프로필 기준으로 초기 추천 (있으면)
-  if(cs.account) setSalesAcct(cs.account);
+  // 계좌: 그 학생이 직전에 등록한 내용 기준으로 추천
+  recommendSalesAcct();
 }
 /* 등록 시 프로필 반영 (C안 확인창). 취소하면 프로필 안 건드림. */
 function applyToProfile(pid, subjects, klass, acct){
@@ -673,34 +650,28 @@ function showTab(name){
 }
 
 /* ── 앱으로 돌아가기 ── */
-/* ── 사업자 통장 개설일 ── */
-function getBizDate(){ try{ return localStorage.getItem(LKEY_BIZDATE)||''; }catch(e){ return ''; } }
-function saveBizDate(){
-  const v=getDateVal('biz-date');
-  // 비우면 삭제(=통장 없음), 값 있으면 저장
-  try{
-    if(v){ localStorage.setItem(LKEY_BIZDATE, v); alert('개설일 저장 완료: '+v+'\n이 날짜 이후 입금 건은 계좌B로 추천됩니다.'); }
-    else { localStorage.removeItem(LKEY_BIZDATE); alert('개설일을 비웠어요. 전부 계좌A로 추천됩니다.'); }
-    if(_ledgerFs){ try{ _ledgerFs.setDoc(_ledgerFs.doc(_ledgerFs.db,'somi_data',LKEY_BIZDATE),{value:JSON.stringify(v||'')}).catch(()=>{}); }catch(e){} }
-  }catch(e){ alert('저장 실패'); }
-  // 열려있는 폼의 추천 갱신
-  recommendSalesAcct();
-  recommendExpenseAcct();
-}
-/* 날짜문자열 비교: 입금일 >= 개설일 이면 B 추천 (개설일 없으면 무조건 A) */
-function recommendAcct(payDateStr){
-  const biz=getBizDate();
-  if(!biz) return 'A';
-  // YYYY-MM-DD 문자열 비교로 충분 (형식 통일 가정)
-  return (payDateStr && payDateStr >= biz) ? 'B' : 'A';
+/* ── 계좌 자동 추천: "직전 등록 내용" 기준 ──
+   매출: 그 학생이 마지막으로 등록한 건의 계좌를 그대로 추천.
+         (그 학생 기록이 아직 없으면 프로필에 저장된 계좌 → 그것도 없으면 A)
+   매입: 마지막으로 등록한 매입 건의 계좌를 추천 (없으면 A)                     */
+function _latestRec(arr){
+  let best=null;
+  (arr||[]).forEach(r=>{ if(!best || (r.createdAt||0) >= (best.createdAt||0)) best=r; });
+  return best;
 }
 function recommendSalesAcct(){
-  const d=getDateVal('s-paydate');
-  setSalesAcct(recommendAcct(d));
+  const pid=document.getElementById('s-student').value;
+  let acct='';
+  if(pid){
+    const last=_latestRec(loadLedger(LKEY_SALES).filter(r=>r.studentId===pid));
+    if(last && last.acct) acct=last.acct;
+    if(!acct){ const cs=readClassSettings()[pid]||{}; if(cs.account) acct=cs.account; }
+  }
+  setSalesAcct(acct||'A');
 }
 function recommendExpenseAcct(){
-  const d=getDateVal('e-date');
-  setExpenseAcct(recommendAcct(d));
+  const last=_latestRec(loadLedger(LKEY_EXPENSE));
+  setExpenseAcct((last&&last.acct)||'A');
 }
 
 /* ── 계좌 토글 ── */
@@ -1217,7 +1188,7 @@ function today(){
   renderExpense();
 
   // 날짜칸: 숫자만 치면 . 자동 (공통모듈). 실제값은 getISODate()로 꺼냄. (프리필보다 먼저 붙임)
-  ['s-paydate','s-firstclass','e-date','biz-date','ex-from','ex-to'].forEach(id=>{
+  ['s-paydate','s-firstclass','e-date','ex-from','ex-to'].forEach(id=>{
     const el=document.getElementById(id);
     if(el && window.attachNumericDate) attachNumericDate(el);
   });
@@ -1229,17 +1200,12 @@ function today(){
   setDateVal('s-firstclass', todayISO);
   setDateVal('e-date', todayISO);
 
-  // 저장된 개설일 표시
-  setDateVal('biz-date', getBizDate());
-  // 입금일/지출일 바뀌면 계좌 자동 추천 갱신
-  document.getElementById('s-paydate').addEventListener('input', recommendSalesAcct);
-  document.getElementById('e-date').addEventListener('input', recommendExpenseAcct);
   // 학생 고르면 그 학생 현재 과목·반·계좌 자동 로드
   document.getElementById('s-student').addEventListener('change', onStudentPick);
   // 금액칸 실시간 천단위 콤마
   document.getElementById('s-amount').addEventListener('input', function(){ formatAmountInput(this); });
   document.getElementById('e-amount').addEventListener('input', function(){ formatAmountInput(this); });
-  // 초기 추천 적용 (오늘 날짜 기준)
+  // 초기 추천 적용 (직전 등록 내용 기준)
   recommendSalesAcct();
   recommendExpenseAcct();
   document.getElementById('s-proof').value = defaultProofForAcct(salesAcct);

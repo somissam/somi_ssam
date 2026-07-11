@@ -618,6 +618,7 @@ const VOCAL_PATTERNS = [
     cardDesc: "이아이아이아이 · 4분음표 · 도미솔도솔미도",
     pracTitle: "iaiaiai(이아이아이아이) · 4beat (1358531)",
     baseTempo: 70,
+    advScale7: true,
     pattern5:   [1,3,5,3,1],
     engLabels5: ['i','a','i','a','i'],
     korLabels5: ['이','아','이','아','이'],
@@ -1090,6 +1091,8 @@ function getModeScale(mode){
   if(mode===MODE_WARMUP_3)return SCALE_7TONE;
   // 으어2(이에아오우으어)는 목풀기2·심화 등 모든 모드에서 항상 7음(7글자) 유지
   {const p=currentPat();if(p&&/ieaoueueo/.test(p.id))return SCALE_7TONE;}
+  // advScale7 플래그가 붙은 카드는 심화에서도 7음(도미솔도솔미도, 6박) 유지 — 이 카드에만 적용
+  if(mode===MODE_ADVANCED_1){const p=currentPat();if(p&&p.advScale7)return SCALE_7TONE;}
   return SCALE_5TONE;
 }
 
