@@ -384,6 +384,23 @@ input,select,textarea{font-family:inherit;font-size:15px;}
           </select>
         </div>
         <div class="field">
+          <label>거래처 <span class="sec-hint">(선택)</span></label>
+          <input type="text" id="e-vendor" placeholder="예: OO악기">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>결제수단<span class="req">*</span> <span class="sec-hint">(사실대로)</span></label>
+          <select id="e-paymethod" onchange="onExpensePaymethodChange()">
+            <option value="biz_card">사업자카드</option>
+            <option value="personal_card">개인카드</option>
+            <option value="personal_acct">개인계좌</option>
+            <option value="biz_acct">사업용계좌</option>
+            <option value="cash">현금</option>
+          </select>
+        </div>
+        <div class="field">
           <label>증빙 종류<span class="req">*</span></label>
           <select id="e-proof">
             <optgroup label="적격 ✅ (비용 인정)">
@@ -400,25 +417,10 @@ input,select,textarea{font-family:inherit;font-size:15px;}
         </div>
       </div>
 
-      <div class="field-row">
-        <div class="field">
-          <label>결제수단<span class="req">*</span> <span class="sec-hint">(사실대로)</span></label>
-          <select id="e-paymethod">
-            <option value="personal_card">개인카드</option>
-            <option value="personal_acct">개인계좌</option>
-            <option value="biz_acct">사업용계좌</option>
-            <option value="cash">현금</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>거래처 <span class="sec-hint">(선택)</span></label>
-          <input type="text" id="e-vendor" placeholder="예: OO악기">
-        </div>
-      </div>
-
-      <div class="field">
-        <label>지출 계좌 <span class="sec-hint">(화면에서만)</span></label>
+      <div class="field" id="e-acct-field">
+        <label>지출 계좌 <span class="sec-hint">(현금·이체일 때 · 화면용)</span></label>
         <div class="acct-toggle">
+          <button type="button" class="acct-btn" id="e-acct-none" onclick="setExpenseAcct('')">선택 안 함</button>
           <button type="button" class="acct-btn sel-a" id="e-acct-a" onclick="setExpenseAcct('A')">A · 일반</button>
           <button type="button" class="acct-btn" id="e-acct-b" onclick="setExpenseAcct('B')">B · 사업용</button>
         </div>
@@ -670,8 +672,10 @@ function recommendSalesAcct(){
   setSalesAcct(acct||'A');
 }
 function recommendExpenseAcct(){
-  const last=_latestRec(loadLedger(LKEY_EXPENSE));
-  setExpenseAcct((last&&last.acct)||'A');
+  const now=new Date();
+  const bizCardDefault = (now.getFullYear()>2026) || (now.getFullYear()===2026 && (now.getMonth()+1)>=8);
+  document.getElementById('e-paymethod').value = bizCardDefault ? 'biz_card' : 'personal_card';
+  onExpensePaymethodChange(); // 카드전표 증빙 + 계좌 '선택 안 함' 자동 적용
 }
 
 /* ── 계좌 토글 ── */
@@ -693,8 +697,23 @@ function setSalesAcct(a){
 }
 function setExpenseAcct(a){
   expenseAcct=a;
+  const bn=document.getElementById('e-acct-none');
+  if(bn) bn.className='acct-btn'+(a===''?' sel-a':'');
   document.getElementById('e-acct-a').className='acct-btn'+(a==='A'?' sel-a':'');
   document.getElementById('e-acct-b').className='acct-btn'+(a==='B'?' sel-b':'');
+}
+// 카드 계열 결제수단 (계좌 안 씀 · 증빙은 카드전표)
+const CARD_METHODS=['biz_card','personal_card'];
+// 결제수단이 바뀌면: 카드면 증빙을 카드전표로 맞추고 계좌를 '선택 안 함'으로,
+//                    카드가 아니면(현금·이체·계좌) 계좌를 기본 A로 되돌림
+function onExpensePaymethodChange(){
+  const m=document.getElementById('e-paymethod').value;
+  if(CARD_METHODS.includes(m)){
+    document.getElementById('e-proof').value='card';
+    setExpenseAcct('');
+  } else {
+    if(!expenseAcct) setExpenseAcct('A');
+  }
 }
 
 /* ── 학생 드롭다운 채우기 (프로필 읽기 전용) ── */
@@ -844,7 +863,7 @@ const CAT_LABEL={rent:'월세',gear:'악기·장비',audio:'음향장비',book:'
 const OK_PROOFS=['tax_invoice','card','cash_receipt']; // 매입 적격증빙
 const SALES_PROOF_LABEL={cash_receipt_num:'현금영수증(학생)',cash_receipt_parent:'현금영수증(부모)',cash_receipt_1234:'현금영수증(자진발급)',none:'미발급',card:'카드결제'};
 const EXP_PROOF_LABEL={tax_invoice:'세금계산서',card:'카드전표',cash_receipt:'현금영수증',receipt:'간이영수증',transfer_only:'이체내역만',none:'증빙없음'};
-const PAYMETHOD_LABEL={personal_card:'개인카드',personal_acct:'개인계좌',biz_acct:'사업용계좌',cash:'현금'};
+const PAYMETHOD_LABEL={biz_card:'사업자카드',personal_card:'개인카드',personal_acct:'개인계좌',biz_acct:'사업용계좌',cash:'현금'};
 
 /* ── 매출 목록 렌더 ── */
 function renderSales(){
@@ -886,8 +905,8 @@ function renderSales(){
     return `<div class="row"${editing?' style="border-color:var(--accent);border-width:2px;"':''}>
       <div style="min-width:0;flex:1;">
         <div style="font-weight:700;font-size:0.88rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${esc(r.studentName)} ${kindPill}${metaTxt?`<span style="color:var(--text2);font-weight:400;font-size:0.78rem;">${metaTxt}</span>`:''}${editing?' <span class="pill" style="background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--accent);">수정 중</span>':''}</div>
-        <div style="font-size:0.73rem;color:var(--text2);margin-top:2px;">${fmtDate(r.paydate)} · ${esc(r.payer)} · ${METHOD_LABEL[r.method]||''} ${acctPill}</div>
-        ${roundPill?`<div style="margin-top:4px;">${roundPill}</div>`:''}
+        <div style="font-size:0.73rem;color:var(--text2);margin-top:4px;">${fmtDate(r.paydate)} · ${esc(r.payer)} · ${METHOD_LABEL[r.method]||''}</div>
+        <div style="margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;">${roundPill}${r.proof?'<span class="pill">'+(SALES_PROOF_LABEL[r.proof]||r.proof)+'</span>':''}${acctPill}</div>
       </div>
       <div class="amt in">+${fmtWon(r.amount)}</div>
       <div class="row-actions">
@@ -916,15 +935,17 @@ function renderExpense(){
   box.innerHTML=sorted.map(r=>{
     const acctPill=r.acct==='B'?'<span class="pill b">계좌B</span>':'<span class="pill a">계좌A</span>';
     const ok=OK_PROOFS.includes(r.proof);
-    const proofPill=ok?'<span class="pill ok">적격</span>':'<span class="pill warn">증빙부족</span>';
-    // 3만원 초과 + 증빙부족 강조
-    const bigNoProof=(!ok && r.amount>30000);
+    const proofName=r.proof?(EXP_PROOF_LABEL[r.proof]||r.proof):'';
+    // 적격이면 '적격 · 종류', 증빙부족이면 '증빙부족 · 종류' 로 결론+근거 한 뱃지에 병기
+    const proofPill=ok
+      ? `<span class="pill ok">적격${proofName?' · '+proofName:''}</span>`
+      : `<span class="pill warn">증빙부족${proofName?' · '+proofName:''}</span>`;
     const payLabel=r.paymethod?(PAYMETHOD_LABEL[r.paymethod]||r.paymethod):'';
     const editingE=(r.id===editingExpenseId);
     return `<div class="row"${editingE?' style="border-color:var(--accent);border-width:2px;"':''}>
       <div style="min-width:0;flex:1;">
         <div style="font-weight:700;font-size:0.88rem;">${CAT_LABEL[r.category]||'기타'} <span style="color:var(--text2);font-weight:400;font-size:0.78rem;">${r.vendor?'· '+esc(r.vendor):''}</span>${editingE?' <span class="pill" style="background:rgba(124,106,247,0.18);border-color:var(--accent);color:var(--accent);">수정 중</span>':''}</div>
-        <div style="font-size:0.73rem;color:var(--text2);margin-top:2px;">${fmtDate(r.date)} ${proofPill}${payLabel?' <span class="pill">'+payLabel+'</span>':''} ${acctPill}${bigNoProof?' <span class="pill warn">3만원↑ 인정 어려움</span>':''}</div>
+        <div style="font-size:0.73rem;color:var(--text2);margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;">${fmtDate(r.date)}${proofPill}${payLabel?'<span class="pill">'+payLabel+'</span>':''}${(r.paymethod!=='biz_card'&&r.paymethod!=='personal_card'&&r.acct)?acctPill:''}</div>
       </div>
       <div class="amt out">−${fmtWon(r.amount)}</div>
       <div class="row-actions">
@@ -998,7 +1019,16 @@ function clearSalesForm(){
 function clearExpenseForm(){
   ['e-amount','e-vendor'].forEach(id=>document.getElementById(id).value='');
   { const t=new Date(); setDateVal('e-date', t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')); }
-  setExpenseAcct('A');
+  // 2026-08부터는 사업자카드를 기본 결제수단으로 (증빙=카드전표, 계좌=선택 안 함 자동)
+  const now=new Date();
+  const bizCardDefault = (now.getFullYear()>2026) || (now.getFullYear()===2026 && (now.getMonth()+1)>=8);
+  if(bizCardDefault){
+    document.getElementById('e-paymethod').value='biz_card';
+    onExpensePaymethodChange();
+  } else {
+    document.getElementById('e-paymethod').value='personal_card';
+    onExpensePaymethodChange();
+  }
 }
 
 /* ── 삭제·수정 ── */
@@ -1063,7 +1093,7 @@ function editExpense(id){
   document.getElementById('e-proof').value=r.proof||'tax_invoice';
   document.getElementById('e-paymethod').value=r.paymethod||'personal_card';
   document.getElementById('e-vendor').value=r.vendor||'';
-  setExpenseAcct(r.acct||'A');
+  setExpenseAcct(r.acct||'');
   editingExpenseId=id;
   showCancelBtn('expense');
   renderExpense();
