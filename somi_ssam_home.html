@@ -987,7 +987,11 @@ function renderNoticeList(){
       else if(expired){ stateLbl='종료일 지남(자동 숨김)'; stateColor='#c8730a'; }
       else { stateLbl='게시 중'; stateColor='var(--accent3)'; }
       const endTxt = n.endDate ? ('~'+n.endDate.replace(/-/g,'.')) : '종료일 없음';
-      const preview = escapeHtmlSafe(n.text).replace(/\n/g,' ').slice(0,60) + (n.text.length>60?'…':'');
+      // 본문은 학생이 실제로 보는 배너 모양 그대로 보여준다(공통 somiNoticeBannerHTML 재사용).
+      //   → 모양은 common_core 1벌에서만 관리. 자르기/줄바꿈 뭉개기 없이 학생 화면과 동일.
+      const bannerInner = (typeof somiNoticeBannerHTML==='function')
+        ? somiNoticeBannerHTML([n], {bare:true})
+        : `<div style="font-size:0.85rem;color:var(--text);line-height:1.5;word-break:break-word;">${escapeHtmlSafe(n.text).replace(/\n/g,'<br>')}</div>`;
       // 게시 중인 공지 카드는 학생 배너와 같은 핑크 배경, 나머지는 기본 배경
       const cardBg = liveNow ? `background:${_pink.bg};border:1px solid ${_pink.bd};` : 'background:var(--surface2);border:1px solid var(--border);';
       const toggleBtn = n.active
@@ -998,7 +1002,7 @@ function renderNoticeList(){
           <span style="font-size:0.72rem;font-weight:700;color:${stateColor};">● ${stateLbl}</span>
           <span style="font-size:0.72rem;color:var(--text2);">${endTxt}</span>
         </div>
-        <div style="font-size:0.85rem;color:var(--text);line-height:1.5;margin-bottom:9px;word-break:break-word;">${preview||'<span style=\"color:var(--text2)\">(내용 없음)</span>'}</div>
+        <div style="margin-bottom:9px;">${n.text ? bannerInner : '<span style="font-size:0.85rem;color:var(--text2)">(내용 없음)</span>'}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button onclick="editNotice('${n.id}')" style="padding:5px 10px;border-radius:8px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:0.76rem;font-weight:600;cursor:pointer;">수정</button>
           ${toggleBtn}

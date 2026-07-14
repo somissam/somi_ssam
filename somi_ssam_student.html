@@ -550,7 +550,9 @@ function renderNoticeBanner(){
   const hc=document.getElementById('stab-home');
   const notices=(typeof somiGetActiveNotices==='function')?somiGetActiveNotices():[];
   if(notices.length){
-    area.innerHTML=somiNoticeBannerHTML(notices);
+    // collapsible:true — 학생홈에서만 접기 동작. 처음 보는 공지는 펼쳐서 다 보이고,
+    //   학생이 헤더를 눌러 접으면 첫 줄만. 선생님이 내용을 수정하면 다시 펼쳐진다.
+    area.innerHTML=somiNoticeBannerHTML(notices,{collapsible:true});
     area.style.display='block';
     if(hc) hc.classList.add('has-notice');
     const hm=document.querySelector('#stab-home .home-main');
@@ -561,6 +563,8 @@ function renderNoticeBanner(){
     if(hc) hc.classList.remove('has-notice');
   }
 }
+// 공통 배너의 접기 토글(somiToggleNotice)이 다시 그릴 수 있도록 노출
+window.renderNoticeBanner = renderNoticeBanner;
 function renderClassInfo(){
   classSettings=loadData('somi_class_settings',{});lessonStarts=loadData('somi_lesson_starts',{});
   const ci=getClassInfo(currentProfile.id),voClass=ci.voClass||'(반 미설정)',extras=ci.extras||[],days=getDaysSinceLesson(currentProfile.id);

@@ -631,16 +631,92 @@ window.somiGetActiveNotices = function(){
 };
 // 공지 핑크 색상 (학생 배너 · 선생님 홈 활성공지 공용 1벌) — 여기만 고치면 양쪽 반영.
 window.SOMI_NOTICE_PINK = {bg:'rgba(247,140,190,0.18)', bd:'rgba(240,95,160,0.55)', fg:'#c23b7a'};
-window.somiNoticeBannerHTML = function(notices){
+// 공지 본문 글자색(빨강) · 글꼴(고딕) — 배너 1벌에서만 관리
+window.SOMI_NOTICE_BODY_COLOR = '#e02020';
+window.SOMI_NOTICE_FONT = "'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+/* 공지 게시 시각 표기 — createdAt(밀리초) → "7월 15일 오전 1:08"
+   숫자만 붙인 표기(260715 AM1:08)보다 읽기 쉽게. 값이 없거나 깨졌으면 '' 반환(줄 자체를 생략). */
+window.somiNoticeTimeText = function(createdAt){
+  var t = Number(createdAt);
+  if(!t || isNaN(t)) return '';
+  try{
+    var d = new Date(t);
+    if(isNaN(d.getTime())) return '';
+    var h = d.getHours();
+    var ampm = h < 12 ? '오전' : '오후';
+    var h12 = h % 12; if(h12 === 0) h12 = 12;
+    return (d.getMonth()+1)+'월 '+d.getDate()+'일 '+ampm+' '+h12+':'+String(d.getMinutes()).padStart(2,'0');
+  }catch(e){ return ''; }
+};
+/* ── 공지 접기 상태 (학생 기기별) ─────────────────────────────────
+   저장형태: { 공지id: 접을당시_본문 }  ← 본문을 같이 기억하는 이유:
+     선생님이 공지를 "수정"하면 내용이 달라지므로, 접어뒀더라도 다시 펼쳐서
+     새 내용을 보게 한다. (id는 그대로라 id만으론 수정을 알 수 없음)
+   처음 보는 공지는 목록에 없으므로 자동으로 펼침 = "무조건 다 뜸". */
+window.somiNoticeCollapsedMap = function(){
+  var m = window.loadData('somi_notice_collapsed', {});
+  return (m && typeof m === 'object' && !Array.isArray(m)) ? m : {};
+};
+window.somiIsNoticeCollapsed = function(n){
+  if(!n || !n.id) return false;
+  var m = window.somiNoticeCollapsedMap();
+  var saved = m[n.id];
+  if(typeof saved !== 'string') return false;   // 처음 보는 공지 → 펼침
+  return saved === String(n.text||'');          // 내용이 바뀌었으면 → 다시 펼침
+};
+// 접기/펼치기 토글 (배너의 헤더를 누르면 호출됨)
+window.somiToggleNotice = function(id){
+  var notices = window.somiGetActiveNotices();
+  var n = notices.filter(function(x){ return x && x.id === id; })[0];
+  if(!n) return;
+  var m = window.somiNoticeCollapsedMap();
+  if(window.somiIsNoticeCollapsed(n)) delete m[id];        // 접혀있음 → 펼침
+  else m[id] = String(n.text||'');                          // 펼쳐있음 → 접음(그때 본문 기억)
+  window.saveData('somi_notice_collapsed', m);
+  if(typeof window.renderNoticeBanner === 'function') window.renderNoticeBanner();
+};
+/* 학생홈 상단 공지 배너 HTML (선생님 홈 목록도 같은 모양을 재사용 — 모양은 여기 1벌).
+   구조: ① 📢 공지 라벨 + 접기화살표  ② 본문(가운데·빨강·고딕)  ③ 게시 시각(우측 하단)
+   opts.bare=true       : 카드 배경/테두리 없이 알맹이만(선생님 홈이 자기 카드에 끼울 때)
+   opts.collapsible=true: 접기 동작 켜기(학생홈 전용. 선생님 홈은 항상 펼쳐 보여야 함) */
+window.somiNoticeBannerHTML = function(notices, opts){
   if(!notices || !notices.length) return '';
-  // 공지는 모두 같은 핑크 계열. 반투명 배경이라 다크/아이보리 테마 모두에서 읽힘.
+  var o = opts || {};
   var c = window.SOMI_NOTICE_PINK;
+  var FONT = window.SOMI_NOTICE_FONT;
+  var BODY = window.SOMI_NOTICE_BODY_COLOR;
   return notices.map(function(n){
-    var body = window.somiEscapeHtml(n.text).replace(/\n/g,'<br>');
-    return '<div style="background:'+c.bg+';border:1px solid '+c.bd+';border-radius:12px;padding:9px 14px;margin-bottom:9px;display:flex;align-items:flex-start;gap:8px;">'
-         + '<span style="flex-shrink:0;font-size:0.9rem;line-height:1.55;">📢</span>'
-         + '<span style="flex-shrink:0;font-size:0.88rem;color:'+c.fg+';font-weight:700;line-height:1.55;">공지</span>'
-         + '<span style="font-size:0.88rem;color:'+c.fg+';font-weight:400;line-height:1.55;word-break:break-word;">'+body+'</span>'
+    var raw = String(n.text||'');
+    var collapsed = o.collapsible ? window.somiIsNoticeCollapsed(n) : false;
+    // 접힘: 첫 줄만. 펼침: 전체(줄바꿈 유지)
+    var shown = collapsed ? raw.split('\n')[0] : raw;
+    var body = window.somiEscapeHtml(shown).replace(/\n/g,'<br>');
+    var timeTxt = window.somiNoticeTimeText(n.createdAt);
+    // ① 라벨 줄 — 접기 가능하면 전체가 버튼처럼 눌림 + 화살표 표시
+    var arrow = o.collapsible
+      ? '<span style="margin-left:auto;font-size:0.72rem;color:'+c.fg+';opacity:0.75;">'+(collapsed?'▾ 펼치기':'▴ 접기')+'</span>'
+      : '';
+    var headStyle = 'display:flex;align-items:center;gap:5px;margin-bottom:'+(collapsed?'3px':'5px')+';'
+      + (o.collapsible ? 'cursor:pointer;user-select:none;' : '');
+    var headClick = o.collapsible ? ' onclick="somiToggleNotice(\''+n.id+'\')"' : '';
+    var inner =
+        '<div style="'+headStyle+'"'+headClick+'>'
+      +   '<span style="font-size:0.82rem;line-height:1;">📢</span>'
+      +   '<span style="font-size:0.72rem;color:'+c.fg+';font-weight:800;letter-spacing:0.04em;font-family:'+FONT+';">공지</span>'
+      +   arrow
+      + '</div>'
+        // ② 본문 — 가운데 정렬 · 빨강 · 고딕. 접히면 한 줄로 말줄임.
+      + '<div style="font-size:0.95rem;color:'+BODY+';font-weight:700;line-height:1.55;text-align:center;font-family:'+FONT+';word-break:break-word;'
+      +   (collapsed ? 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' : '')
+      + '">'+body+'</div>'
+        // ③ 게시 시각 — 우측 하단, 작고 흐리게 (접힘 상태에선 숨겨 한 줄 유지)
+      + ((timeTxt && !collapsed)
+          ? '<div style="margin-top:5px;text-align:right;font-size:0.7rem;color:'+c.fg+';opacity:0.6;font-weight:500;font-family:'+FONT+';">'+timeTxt+'</div>'
+          : '');
+    if(o.bare) return inner;  // 선생님 홈: 자기 카드 안에 알맹이만 끼움
+    // 바깥 여백 최소화: 패딩을 줄이고 배너 사이 간격도 좁힘
+    return '<div style="background:'+c.bg+';border:1px solid '+c.bd+';border-radius:12px;padding:7px 10px 6px;margin-bottom:6px;">'
+         + inner
          + '</div>';
   }).join('');
 };
