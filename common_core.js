@@ -213,8 +213,22 @@ window._mergeLogsToServer = async function(profileId){
     try{ remote = remoteRaw ? (JSON.parse(remoteRaw)||{}) : {}; }catch(e){ remote = {}; }
     var localAll = {};
     try{ localAll = JSON.parse(localStorage.getItem('somi_logs')||'{}')||{}; }catch(e){ localAll = {}; }
-    // 서버본을 기준으로, 내 학생 기록만 로컬(방금 추가분 포함)로 교체
-    remote[profileId] = Array.isArray(localAll[profileId]) ? localAll[profileId] : [];
+    // 서버본 기준으로, 내 학생 기록만 "서버 ∪ 로컬" 병합해서 넣는다.
+    //   (교체하면, 로컬이 서버보다 적은 순간 — 서버연결 불안정·비상구 진입·로컬 빈
+    //    기기(카톡/기기변경) — 에 저장이 일어나면 서버의 온전한 기록이 덮여 유실된다.
+    //    병합하면 서버에 있던 기록이 보존되고 로컬의 새 기록만 더해진다.
+    //    중복 판정은 _mergeLogs와 동일: date|time|exercise|duration. 다른 학생 칸은 불변.)
+    var _sv = Array.isArray(remote[profileId]) ? remote[profileId] : [];
+    var _lc = Array.isArray(localAll[profileId]) ? localAll[profileId] : [];
+    var _seen = {}, _merged = [];
+    for(var _i=0;_i<_sv.length+_lc.length;_i++){
+      var _rec = _i < _sv.length ? _sv[_i] : _lc[_i - _sv.length];
+      if(!_rec) continue;
+      var _key = (_rec.date||'')+'|'+(_rec.time||'')+'|'+(_rec.exercise||'')+'|'+(_rec.duration||'');
+      if(_seen[_key]) continue;
+      _seen[_key] = 1; _merged.push(_rec);
+    }
+    remote[profileId] = _merged;
     var mj = JSON.stringify(remote);
     localStorage.setItem('somi_logs', mj);   // 로컬도 병합본으로 맞춤(다른 학생 기록까지 최신 유지)
     window._fsSet('somi_logs', mj);
