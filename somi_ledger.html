@@ -405,7 +405,7 @@ input,select,textarea{font-family:inherit;font-size:15px;}
           <select id="e-proof">
             <optgroup label="적격 ✅ (비용 인정)">
               <option value="tax_invoice">세금계산서 / 계산서</option>
-              <option value="card">신용카드 전표</option>
+              <option value="card">카드 전표</option>
               <option value="cash_receipt">현금영수증(지출증빙용)</option>
             </optgroup>
             <optgroup label="부족 ⚠️">
@@ -437,6 +437,7 @@ input,select,textarea{font-family:inherit;font-size:15px;}
       <span id="ledger-month-label-expense" onclick="ledgerMonthToday()" title="탭하면 이번 달로" style="font-weight:700;cursor:pointer;min-width:7em;text-align:center;">2026년 7월</span>
       <button type="button" onclick="ledgerMonthMove(1)" style="background:none;border:none;font-size:1.3rem;color:var(--text2);cursor:pointer;padding:4px 10px;">›</button>
     </div>
+    <div id="expense-mismatch"></div>
     <div class="sec-title" style="justify-content:space-between;">지출 내역 <span id="expense-sum" style="font-size:0.8rem;font-weight:700;color:var(--expense);"></span></div>
     <div class="ledger-list" id="expense-list">
       <div class="empty">아직 등록된 매입이 없어요.</div>
@@ -671,11 +672,25 @@ function recommendSalesAcct(){
   }
   setSalesAcct(acct||'A');
 }
+/* ── 직전 입력값 기억 (매입 폼: 날짜·결제수단) ──
+   기본 셋팅이 아니라 '방금 직전에 등록한 것'을 다음 입력의 시작값으로 재사용.
+   결제수단을 세팅한 뒤에는 반드시 onExpensePaymethodChange()로 증빙·계좌를 맞춘다. */
+const LKEY_LAST_EXP='somi_last_expense';
+function saveLastExpenseInput(date, paymethod){
+  try{ localStorage.setItem(LKEY_LAST_EXP, JSON.stringify({date, paymethod})); }catch(e){}
+}
+function readLastExpenseInput(){
+  try{ return JSON.parse(localStorage.getItem(LKEY_LAST_EXP)||'null'); }catch(e){ return null; }
+}
 function recommendExpenseAcct(){
-  const now=new Date();
-  const bizCardDefault = (now.getFullYear()>2026) || (now.getFullYear()===2026 && (now.getMonth()+1)>=8);
-  document.getElementById('e-paymethod').value = bizCardDefault ? 'biz_card' : 'personal_card';
-  onExpensePaymethodChange(); // 카드전표 증빙 + 계좌 '선택 안 함' 자동 적용
+  const last=readLastExpenseInput();
+  const validPay=['biz_card','personal_card','personal_acct','biz_acct','cash'];
+  // 직전 결제수단이 있으면 그걸, 없으면 기본 사업자카드
+  const pay=(last && validPay.includes(last.paymethod)) ? last.paymethod : 'biz_card';
+  document.getElementById('e-paymethod').value = pay;
+  onExpensePaymethodChange(); // 증빙·계좌 자동 매칭
+  // 직전 날짜가 있으면 그 날짜로 (없으면 호출한 쪽이 오늘로 세팅)
+  if(last && last.date) setDateVal('e-date', last.date);
 }
 
 /* ── 계좌 토글 ── */
@@ -704,13 +719,22 @@ function setExpenseAcct(a){
 }
 // 카드 계열 결제수단 (계좌 안 씀 · 증빙은 카드전표)
 const CARD_METHODS=['biz_card','personal_card'];
-// 결제수단이 바뀌면: 카드면 증빙을 카드전표로 맞추고 계좌를 '선택 안 함'으로,
-//                    카드가 아니면(현금·이체·계좌) 계좌를 기본 A로 되돌림
+// 결제수단이 바뀌면 증빙·계좌를 사실관계에 맞는 기본값으로 자동 세팅:
+//  · 카드(사업자/개인)   → 증빙=카드 전표,   계좌=선택 안 함
+//  · 개인계좌            → 증빙=현금영수증,   계좌=A (개인)
+//  · 사업용계좌          → 증빙=세금계산서,   계좌=B (사업용)
+//  · 현금                → 계좌=A (기본)
 function onExpensePaymethodChange(){
   const m=document.getElementById('e-paymethod').value;
   if(CARD_METHODS.includes(m)){
     document.getElementById('e-proof').value='card';
     setExpenseAcct('');
+  } else if(m==='personal_acct'){
+    document.getElementById('e-proof').value='cash_receipt';
+    setExpenseAcct('A');
+  } else if(m==='biz_acct'){
+    document.getElementById('e-proof').value='tax_invoice';
+    setExpenseAcct('B');
   } else {
     if(!expenseAcct) setExpenseAcct('A');
   }
@@ -849,6 +873,7 @@ function addExpense(){
     arr.unshift(rec);
   }
   saveLedger(LKEY_EXPENSE, arr);
+  saveLastExpenseInput(date, paymethod); // 직전 입력값 기억 (날짜·결제수단)
   { const ym=normDate(date); ledgerY=Number(ym.slice(0,4)); ledgerM=Number(ym.slice(5,7)); } // 방금 등록한 건의 월로 자동 이동
 
   clearExpenseForm();
@@ -862,7 +887,7 @@ const METHOD_LABEL={transfer:'계좌이체',card:'카드',cash:'현금'};
 const CAT_LABEL={rent:'월세',gear:'악기·장비',audio:'음향장비',book:'교재·악보',production:'음원·편곡',subscription:'구독',transport:'교통·출장',styling:'의상·헤어',ad:'광고·홍보',comm:'통신',meal:'식대',opening:'개업준비',etc:'기타'};
 const OK_PROOFS=['tax_invoice','card','cash_receipt']; // 매입 적격증빙
 const SALES_PROOF_LABEL={cash_receipt_num:'현금영수증(학생)',cash_receipt_parent:'현금영수증(부모)',cash_receipt_1234:'현금영수증(자진발급)',none:'미발급',card:'카드결제'};
-const EXP_PROOF_LABEL={tax_invoice:'세금계산서',card:'카드전표',cash_receipt:'현금영수증',receipt:'간이영수증',transfer_only:'이체내역만',none:'증빙없음'};
+const EXP_PROOF_LABEL={tax_invoice:'세금계산서',card:'카드 전표',cash_receipt:'현금영수증',receipt:'간이영수증',transfer_only:'이체내역만',none:'증빙없음'};
 const PAYMETHOD_LABEL={biz_card:'사업자카드',personal_card:'개인카드',personal_acct:'개인계좌',biz_acct:'사업용계좌',cash:'현금'};
 
 /* ── 매출 목록 렌더 ── */
@@ -929,6 +954,7 @@ function renderExpense(){
     box.innerHTML= arr.length
       ? `<div class="empty">${ledgerM}월엔 등록된 매입이 없어요. 위 ‹ › 로 다른 달을 볼 수 있어요.</div>`
       : '<div class="empty">아직 등록된 매입이 없어요.</div>';
+    renderExpenseMismatch();
     return;
   }
   const sorted=monthArr.slice().sort((a,b)=> normDate(b.date).localeCompare(normDate(a.date))); // 날짜 최신순 (형식 통일 후 비교)
@@ -954,9 +980,70 @@ function renderExpense(){
       </div>
     </div>`;
   }).join('');
+  renderExpenseMismatch();
 }
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ── 과거 매입 어긋남 점검 (자동 수정 안 함 · 찾아서 보여주기만) ──
+   새 규칙:  개인계좌→현금영수증·A / 사업용계좌→세금계산서·B / 카드→카드전표
+   현금은 상황마다 달라 판정에서 제외.  결과는 지출 내역 위 배너로 안내. */
+function expenseMismatchReason(r){
+  const m=r.paymethod;
+  if(CARD_METHODS.includes(m)){
+    if(r.proof!=='card') return '카드 결제인데 증빙이 카드 전표가 아니에요';
+  } else if(m==='personal_acct'){
+    if(r.proof!=='cash_receipt' && r.acct!=='A') return '개인계좌인데 증빙·계좌가 현금영수증·A가 아니에요';
+    if(r.proof!=='cash_receipt') return '개인계좌인데 증빙이 현금영수증이 아니에요';
+    if(r.acct!=='A') return '개인계좌인데 계좌가 A가 아니에요';
+  } else if(m==='biz_acct'){
+    if(r.proof!=='tax_invoice' && r.acct!=='B') return '사업용계좌인데 증빙·계좌가 세금계산서·B가 아니에요';
+    if(r.proof!=='tax_invoice') return '사업용계좌인데 증빙이 세금계산서가 아니에요';
+    if(r.acct!=='B') return '사업용계좌인데 계좌가 B가 아니에요';
+  }
+  return '';
+}
+let expenseMismatchOpen=false;
+function toggleExpenseMismatch(){ expenseMismatchOpen=!expenseMismatchOpen; renderExpenseMismatch(); }
+// 어긋난 건이 있는 달로 이동해서 그 건을 바로 수정 흐름에 태움
+function jumpToExpense(id){
+  const r=loadLedger(LKEY_EXPENSE).find(x=>x.id===id);
+  if(!r) return;
+  const ym=normDate(r.date); ledgerY=Number(ym.slice(0,4)); ledgerM=Number(ym.slice(5,7));
+  renderExpense();
+  editExpense(id);
+  const el=document.getElementById('e-paymethod'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function renderExpenseMismatch(){
+  const box=document.getElementById('expense-mismatch');
+  if(!box) return;
+  const bad=loadLedger(LKEY_EXPENSE)
+    .map(r=>({r, reason:expenseMismatchReason(r)}))
+    .filter(x=>x.reason)
+    .sort((a,b)=> normDate(b.r.date).localeCompare(normDate(a.r.date)));
+  if(!bad.length){ box.innerHTML=''; return; }
+  const header=`<div onclick="toggleExpenseMismatch()" style="cursor:pointer;background:rgba(247,194,106,0.14);border:1px solid var(--expense);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:0.82rem;font-weight:700;">
+    <span>⚠ 새 규칙과 안 맞는 과거 매입 ${bad.length}건</span>
+    <span style="margin-left:auto;color:var(--text2);font-weight:400;">${expenseMismatchOpen?'접기 ▲':'펼쳐보기 ▼'}</span>
+  </div>`;
+  let body='';
+  if(expenseMismatchOpen){
+    body='<div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">'+bad.map(x=>{
+      const r=x.r;
+      const payLabel=r.paymethod?(PAYMETHOD_LABEL[r.paymethod]||r.paymethod):'';
+      const proofName=r.proof?(EXP_PROOF_LABEL[r.proof]||r.proof):'없음';
+      return `<div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;">
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:0.8rem;font-weight:700;">${fmtDate(r.date)} · ${CAT_LABEL[r.category]||'기타'}${r.vendor?' · '+esc(r.vendor):''} <span style="color:var(--text2);font-weight:400;">${fmtWon(r.amount)}</span></div>
+          <div style="font-size:0.72rem;color:var(--text2);margin-top:3px;">현재: ${payLabel} · ${proofName} · 계좌${r.acct||'없음'}</div>
+          <div style="font-size:0.72rem;color:var(--expense);margin-top:2px;">${esc(x.reason)}</div>
+        </div>
+        <button onclick="jumpToExpense('${r.id}')" style="flex:none;background:var(--expense);color:#3a2a00;border:none;border-radius:8px;padding:6px 10px;font-size:0.75rem;font-weight:700;cursor:pointer;">고치러 가기</button>
+      </div>`;
+    }).join('')+'</div><div style="font-size:0.7rem;color:var(--text2);margin-top:6px;">※ 실제로 그렇게 처리한 건이면 그냥 두셔도 됩니다. 자동으로 바꾸지 않아요.</div>';
+  }
+  box.innerHTML=header+body;
+}
 
 /* ── 월별 보기 (매출·매입 공용 — 앞으로 계속 쌓일 데이터를 월 단위로 끊어 봄) ── */
 function currentYm(){ return ledgerY+'-'+String(ledgerM).padStart(2,'0'); }
@@ -1018,17 +1105,9 @@ function clearSalesForm(){
 }
 function clearExpenseForm(){
   ['e-amount','e-vendor'].forEach(id=>document.getElementById(id).value='');
+  // 오늘 날짜를 먼저 넣고, 직전 값(날짜·결제수단)이 있으면 recommendExpenseAcct가 그걸로 덮음
   { const t=new Date(); setDateVal('e-date', t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')); }
-  // 2026-08부터는 사업자카드를 기본 결제수단으로 (증빙=카드전표, 계좌=선택 안 함 자동)
-  const now=new Date();
-  const bizCardDefault = (now.getFullYear()>2026) || (now.getFullYear()===2026 && (now.getMonth()+1)>=8);
-  if(bizCardDefault){
-    document.getElementById('e-paymethod').value='biz_card';
-    onExpensePaymethodChange();
-  } else {
-    document.getElementById('e-paymethod').value='personal_card';
-    onExpensePaymethodChange();
-  }
+  recommendExpenseAcct(); // 직전 결제수단·날짜 우선 + 증빙·계좌 자동 매칭
 }
 
 /* ── 삭제·수정 ── */
@@ -1091,7 +1170,7 @@ function editExpense(id){
   document.getElementById('e-amount').value=r.amount?Number(r.amount).toLocaleString('ko-KR'):'';
   document.getElementById('e-category').value=r.category||'rent';
   document.getElementById('e-proof').value=r.proof||'tax_invoice';
-  document.getElementById('e-paymethod').value=r.paymethod||'personal_card';
+  document.getElementById('e-paymethod').value=r.paymethod||'biz_card';
   document.getElementById('e-vendor').value=r.vendor||'';
   setExpenseAcct(r.acct||'');
   editingExpenseId=id;
