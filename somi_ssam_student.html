@@ -343,9 +343,21 @@ async function studentRefresh() {
     const APP_NAME='somi-student-v2';
     const fbApp=getApps().find(a=>a.name===APP_NAME)||initializeApp(FB_CONFIG,APP_NAME);
     const fsDb=getFirestore(fbApp);
+/* ── 연습기록 안전 수신 (연습 페이지 4곳과 동일 규칙) ──
+   서버값으로 무조건 교체하면, 서버 전송이 실패해 로컬에만 있던 기록이 지워진다.
+   (실제 유실 사례: 2026-07-21 학생 기록) → somi_logs만 로컬∪서버 병합 후 저장. */
+function _safeReceiveLogs(serverRaw){
+  try{
+    if(window._mergeLogs){
+      let loc={};try{loc=JSON.parse(localStorage.getItem('somi_logs')||'{}')||{};}catch(e){}
+      let rem={};try{rem=JSON.parse(serverRaw||'{}')||{};}catch(e){}
+      localStorage.setItem('somi_logs',JSON.stringify(window._mergeLogs(loc,rem)));
+    } else localStorage.setItem('somi_logs',serverRaw);
+  }catch(e){}
+}
     const ALL_KEYS=['somi_profiles','somi_logs','somi_teacher_stamps','somi_student_day_stamps','somi_lesson_starts','somi_access_log','somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates','somi_notice'];
     await Promise.all(ALL_KEYS.map(async k=>{
-      const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
+      const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()){ if(k==='somi_logs')_safeReceiveLogs(snap.data().value); else localStorage.setItem(k,snap.data().value); }
     }));
     profiles=loadData('somi_profiles',[]);
     practiceLogs=loadData('somi_logs',{});
@@ -902,7 +914,7 @@ document.addEventListener('DOMContentLoaded',async function(){
       if(_remoteTs && _remoteTs===localTs && CACHED_KEYS.every(k=>localStorage.getItem(k)!==null)){ _skipCached=true; }
     }catch(e){ _skipCached=false; }
     // 자주 바뀌는 묶음은 항상 수신
-    await Promise.all(ALWAYS_KEYS.map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
+    await Promise.all(ALWAYS_KEYS.map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists()){if(k==='somi_logs')_safeReceiveLogs(snap.data().value);else localStorage.setItem(k,snap.data().value);}}));
     // 무거운 묶음은 변경됐을 때만 수신
     if(!_skipCached){
       await Promise.all(CACHED_KEYS.map(async k=>{const snap=await getDoc(doc(fsDb,"somi_data",k));if(snap.exists())localStorage.setItem(k,snap.data().value);}));
@@ -997,7 +1009,7 @@ async function _studentLightResync(){
     const {db,doc,getDoc}=_fbHandle;
     const LIVE_KEYS=['somi_teacher_stamps','somi_logs','somi_student_day_stamps','somi_profiles','somi_notice'];
     await Promise.all(LIVE_KEYS.map(async k=>{
-      try{ const s=await getDoc(doc(db,'somi_data',k)); if(s.exists()) localStorage.setItem(k,s.data().value); }catch(e){}
+      try{ const s=await getDoc(doc(db,'somi_data',k)); if(s.exists()){ if(k==='somi_logs')_safeReceiveLogs(s.data().value); else localStorage.setItem(k,s.data().value); } }catch(e){}
     }));
     // 메모리 갱신
     teacherStamps=loadData('somi_teacher_stamps',{});
