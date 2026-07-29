@@ -351,7 +351,7 @@ async function labRefresh() {
     const fsDb=getFirestore(fbApp);
     const KEYS=['somi_pattern_locks','somi_pattern_levels','somi_level_settings','somi_class_settings','somi_rest_start_dates','somi_logs'];
     await Promise.all(KEYS.map(async k=>{
-      const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()) localStorage.setItem(k,snap.data().value);
+      const snap=await getDoc(doc(fsDb,'somi_data',k)); if(snap.exists()){ if(k==='somi_logs'&&window._safeReceiveLogs) window._safeReceiveLogs(snap.data().value); else localStorage.setItem(k,snap.data().value); }
     }));
     renderPatternCards();
   } catch(e) {
@@ -1496,7 +1496,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       try{
         await Promise.all(KEYS.map(async k => {
           const snap = await getDoc(doc(fsDb, "somi_data", k));
-          if (snap.exists()) localStorage.setItem(k, snap.data().value);
+          if (snap.exists()){ if(k==='somi_logs'&&window._safeReceiveLogs) window._safeReceiveLogs(snap.data().value); else localStorage.setItem(k, snap.data().value); }
         }));
         _ok=true;
       }catch(e){
@@ -1505,6 +1505,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     }
     if(_offlineForced) return;
+    // 치유 업로드(2026-07-28) — 이 기기에만 남아있던 기록(전송 실패분)을 서버로 병합 전송
+    try{ if(currentProfileId && window._mergeLogsToServer) window._mergeLogsToServer(currentProfileId); }catch(e){}
     _afterSync(false);
   })();
 

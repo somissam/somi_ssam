@@ -103,6 +103,22 @@ window._mergeLogs = function(local, remote){
   });
   return out;
 };
+
+/* ── 연습기록 안전 수신 (공용 1벌 — 2026-07-28 유실 사건 수정) ──────────
+   서버값으로 localStorage를 무조건 교체하면, 서버 전송이 실패해(앱을 닫는
+   순간 저장된 기록 등) 로컬에만 있던 기록이 다음 접속 때 지워진다.
+   실제 유실 사례: 2026-07-21(student만 패치됨), 2026-07-28(쓰기 호흡·흐아 발성).
+   → somi_logs는 반드시 이 함수로 받는다: 로컬 ∪ 서버 병합 후 저장.
+   student.html의 _safeReceiveLogs와 동일 규칙을 연습 페이지 4곳이 공유. */
+window._safeReceiveLogs = function(serverRaw){
+  try{
+    var loc={}; try{ loc=JSON.parse(localStorage.getItem('somi_logs')||'{}')||{}; }catch(e){ loc={}; }
+    var rem={}; try{ rem=JSON.parse(serverRaw||'{}')||{}; }catch(e){ rem={}; }
+    localStorage.setItem('somi_logs', JSON.stringify(window._mergeLogs(loc, rem)));
+  }catch(e){
+    try{ if(serverRaw) localStorage.setItem('somi_logs', serverRaw); }catch(e2){}
+  }
+};
 window._readSyncTs = function(){
   try{
     const m = JSON.parse(localStorage.getItem('somi_sync_meta')||'{}');
