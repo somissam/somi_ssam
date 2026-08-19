@@ -1001,7 +1001,7 @@ function renderNoticeList(){
       // 본문은 학생이 실제로 보는 배너 모양 그대로 보여준다(공통 somiNoticeBannerHTML 재사용).
       //   → 모양은 common_core 1벌에서만 관리. 자르기/줄바꿈 뭉개기 없이 학생 화면과 동일.
       const bannerInner = (typeof somiNoticeBannerHTML==='function')
-        ? somiNoticeBannerHTML([n], {bare:true})
+        ? somiNoticeBannerHTML([n], {bare:true, collapsible:true})  // (2026-08-18) 선생님도 접기/펼치기 가능
         : `<div style="font-size:0.85rem;color:var(--text);line-height:1.5;word-break:break-word;">${escapeHtmlSafe(n.text).replace(/\n/g,'<br>')}</div>`;
       // 게시 중인 공지 카드는 학생 배너와 같은 핑크 배경, 나머지는 기본 배경
       const cardBg = liveNow ? `background:${_pink.bg};border:1px solid ${_pink.bd};` : 'background:var(--surface2);border:1px solid var(--border);';
@@ -1022,6 +1022,9 @@ function renderNoticeList(){
       </div>`;
     }).join('');
 }
+
+// 공통 배너의 접기 토글(somiToggleNotice)이 선생님 목록도 다시 그릴 수 있도록 노출
+window.renderNoticeList = renderNoticeList;
 
 // HTML 이스케이프 (common_core somiEscapeHtml 우선, 없으면 로컬)
 function escapeHtmlSafe(s){

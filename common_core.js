@@ -726,14 +726,22 @@ window.somiIsNoticeCollapsed = function(n){
 };
 // 접기/펼치기 토글 (배너의 헤더를 누르면 호출됨)
 window.somiToggleNotice = function(id){
-  var notices = window.somiGetActiveNotices();
-  var n = notices.filter(function(x){ return x && x.id === id; })[0];
+  // (2026-08-18) 선생님 화면에서도 접을 수 있게 확장.
+  //   예전엔 '게시 중' 공지만 찾아서, 내려둔 공지는 눌러도 반응이 없었다.
+  //   또 다시 그리는 함수가 학생홈 것뿐이라 선생님 목록은 갱신되지 않았다.
+  var n = window.somiGetActiveNotices().filter(function(x){ return x && x.id === id; })[0];
+  if(!n){
+    var all = window.loadData('somi_notice', []);
+    if(!Array.isArray(all)) all = [];
+    n = all.filter(function(x){ return x && x.id === id; })[0];
+  }
   if(!n) return;
   var m = window.somiNoticeCollapsedMap();
   if(window.somiIsNoticeCollapsed(n)) delete m[id];        // 접혀있음 → 펼침
   else m[id] = String(n.text||'');                          // 펼쳐있음 → 접음(그때 본문 기억)
   window.saveData('somi_notice_collapsed', m);
-  if(typeof window.renderNoticeBanner === 'function') window.renderNoticeBanner();
+  if(typeof window.renderNoticeBanner === 'function') window.renderNoticeBanner(); // 학생홈
+  if(typeof window.renderNoticeList === 'function') window.renderNoticeList();     // 선생님홈
 };
 /* 학생홈 상단 공지 배너 HTML (선생님 홈 목록도 같은 모양을 재사용 — 모양은 여기 1벌).
    ┌──────────────────────────────────┐
