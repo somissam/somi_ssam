@@ -351,6 +351,17 @@ window.__SOMI_LOAD_HIDDEN = true;</script>
         <h4>자동 로그인 기기 관리</h4>
         <div id="device-list"></div>
       </div>
+      <!-- ★ 전체 강제 로그아웃 (2026-08-18) -->
+      <div class="settings-box">
+        <h4>전체 학생 강제 로그아웃</h4>
+        <p style="font-size:0.8rem;color:var(--text2);margin:6px 0 10px;line-height:1.5;">
+          모든 학생 기기를 로그인 화면으로 내보냅니다. 학생은 다시 로그인해야 하며,
+          연습 기록은 지워지지 않습니다. (선생님 기기는 제외)
+        </p>
+        <button class="settings-save" id="force-logout-btn" onclick="runForceLogoutAll()"
+          style="width:100%;background:#FF4444;">전체 로그아웃 실행</button>
+        <div id="force-logout-msg" style="font-size:0.78rem;color:var(--text2);margin-top:8px;"></div>
+      </div>
       <div class="settings-box"><h4>계좌 A</h4>
         <div class="settings-row" style="margin-bottom:8px;"><input type="text" class="settings-input" id="account-a-name" placeholder="예금주"></div>
         <div class="settings-row"><input type="text" class="settings-input" id="account-a-number" placeholder="계좌번호"><button class="settings-save" onclick="saveAccountA()">저장</button></div>
@@ -1239,6 +1250,36 @@ function saveAccountB(){
     alert('계좌 B 저장됐어요!');
   }catch(e){}
 }
+/* ── 전체 학생 강제 로그아웃 (2026-08-18) ──────────────────────────────
+   서버에 "지금 시각" 도장을 찍는다. 학생 기기들은 페이지를 열거나 화면으로
+   돌아올 때 이 도장을 확인하고, 처음 보는 도장이면 스스로 로그아웃한다.
+   기록은 건드리지 않는다 — 로그인 상태만 푸는 호루라기. */
+async function runForceLogoutAll(){
+  const btn=document.getElementById('force-logout-btn');
+  const msg=document.getElementById('force-logout-msg');
+  if(!confirm('모든 학생을 로그아웃시킬까요?\n\n학생은 다시 로그인해야 합니다.\n연습 기록은 그대로 유지됩니다.')) return;
+  if(btn){ btn.disabled=true; btn.textContent='실행 중...'; }
+  if(msg){ msg.textContent=''; }
+  const stamp=new Date().toISOString();
+  let ok=false;
+  for(let i=0;i<30 && !ok;i++){                     // 서버 준비될 때까지 최대 약 4.5초 대기
+    if(window._fsSet){
+      try{ await window._fsSet('somi_force_logout_at', stamp); ok=true; }catch(e){}
+    }
+    if(!ok) await new Promise(r=>setTimeout(r,150));
+  }
+  if(ok){
+    // 선생님 기기는 대상 제외이므로, 이 도장은 이미 본 것으로 표시해 둔다
+    try{ localStorage.setItem('somi_force_logout_seen', stamp); }catch(e){}
+    if(msg){ msg.textContent='✅ 실행됨 — 학생들이 앱을 열거나 화면으로 돌아오는 즉시 로그아웃됩니다.'; }
+    alert('전체 로그아웃을 실행했어요.\n학생들이 앱을 열면 로그인 화면으로 이동합니다.');
+  }else{
+    if(msg){ msg.textContent='❌ 실패 — 네트워크를 확인하고 다시 눌러주세요.'; }
+    alert('실행 실패: 네트워크를 확인해주세요.');
+  }
+  if(btn){ btn.disabled=false; btn.textContent='전체 로그아웃 실행'; }
+}
+
 function changeTeacherPw() {
   const v=document.getElementById('new-teacher-pw').value; if(!v) return;
   teacherPw=v; saveTeacherPw(); alert('변경됐어요!'); document.getElementById('new-teacher-pw').value='';

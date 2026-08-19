@@ -433,7 +433,10 @@ function _isEndedClass(){ return _getProfileClass()==='종료반'; }
 
 // 잠금 여부: 종료반=전부잠금, 휴식반=원래열림∩단계허용 교집합, 그 외=기존 규칙
 function isLocked(patternId) {
-  if (!currentProfileId) return false;
+  // (2026-08-18) 이름표(프로필ID) 없으면 '전부 잠금'.
+  // 예전엔 false(=전부 열림)라, 중복로그인 강제 로그아웃으로 이름표가 지워지면
+  // 학생 폰에서 모든 패턴이 풀려버렸다(김본 사건). 모르는 사람에겐 안 열어준다.
+  if (!currentProfileId) return true;
   const pl = patternLocks[currentProfileId];
   const baseOpen = pl ? (pl[patternId]===true) : true; // 잠금데이터 없는 구버전=열림
   if(_isEndedClass()) return true;
@@ -655,6 +658,7 @@ function startEngine() {
   } else {
     const pat = currentPat();
     window.__SOMI_LOGGED_THIS_RUN = false; // 새 재생 시작 — 중복방지 플래그 초기화(공통)
+    try{ if(window._clearPendingRun) window._clearPendingRun(); }catch(e){} // 새 재생 → 옛 쪽지 폐기
     // 쓰기호흡: 카운팅 없이 바로 main 진입 (패턴 안에 카운팅이 내장되어 있음)
     if (pat && pat.scheduler === 'breathWrite') {
       seqPhase = 'main'; seqStep = 0; loopCount = 1;
@@ -1272,6 +1276,7 @@ function stopEngine() {
 }
 
 function stopExercise() {
+  try{ if(window._clearPendingRun) window._clearPendingRun(); }catch(e){} // 정상 종료 → 쪽지 폐기
   if (isPlaying || elapsedSeconds > 2) logPractice();
   stopEngine();
   elapsedSeconds = 0; isPaused = false; pausedElapsed = 0;
@@ -1432,6 +1437,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // student.html에서 넘어온 프로필 자동 로그인 (동기화 전에 먼저 확보)
   currentProfileId = localStorage.getItem('somi_current_profile_id') || null;
+  // (2026-08-18) 이름표 없으면 로그인 화면으로 — 중복로그인 강제 로그아웃 대응(공통 파수꾼)
+  try{ if(window._requireLogin && !window._requireLogin()) return; }catch(e){}
 
   // ── 로딩화면 표시 → 동기화 끝까지 완료 후 해제 ──
   // 연습기록(somi_logs)을 받기 전에 학생이 연습을 끝내면 기록이 덮여 유실되므로
@@ -1486,6 +1493,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     if(_offlineForced) return;
     _fsDb = fsDb; _fsDoc = doc; _fsGetDoc = getDoc; // 복귀 시 재동기화에 재사용
     window._somiServerRead = async (key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
+    // (2026-08-18) 선생님 전체 로그아웃 호루라기 확인
+    try{ if(window._checkForceLogout) window._checkForceLogout(); }catch(e){}
+    // (2026-08-18) 세션 파수꾼 — 다른 기기에서 로그인하면 이 기기 연결을 끊는다
+    try{ if(window._startSessionGuard) window._startSessionGuard(currentProfileId); }catch(e){}
     window._fsSet = async (k, j) => { try { await setDoc(doc(fsDb, "somi_data", k), { value: j }); } catch(e) {} };
 
     // 2단계: 잠금+레벨+연습기록+메타 동기화 (모든 키 성공할 때까지 재시도)
@@ -1514,6 +1525,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='hidden'){
       if(isPlaying||elapsedSeconds>2) logPractice();
+    try{ if(window._markPendingRun) window._markPendingRun(currentProfileId, mainStartWallTime, isPlaying); }catch(e){}
     }
     if(document.visibilityState==='visible'){
       _recordAccess();
@@ -1522,6 +1534,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
   window.addEventListener('pagehide',()=>{
     if(isPlaying||elapsedSeconds>2) logPractice();
+    try{ if(window._markPendingRun) window._markPendingRun(currentProfileId, mainStartWallTime, isPlaying); }catch(e){}
   });
   // 화면 회전/리사이즈 시 박자 숫자 재맞춤
   let _fitTimer;

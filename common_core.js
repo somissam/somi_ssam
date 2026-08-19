@@ -92,12 +92,22 @@ window._mergeLogs = function(local, remote){
   ids.forEach(id=>{
     const a = Array.isArray(local[id]) ? local[id] : [];
     const b = Array.isArray(remote[id]) ? remote[id] : [];
-    const seen = new Set(); const merged = [];
+    /* rid(고유표)가 있으면 rid로 짝지어 "연습시간이 긴 쪽"을 채택한다.
+       (2026-08-18) 이어하기 갱신 때문에 같은 기록이 60초/600초 두 벌로
+       남을 수 있어, duration을 키에 넣던 기존 방식만으론 중복이 생긴다.
+       rid 없는 옛 기록은 종전 방식 그대로 — 하위호환 유지. */
+    const seen = new Map(); const merged = [];
     [...a, ...b].forEach(rec=>{
       if(!rec) return;
-      const key = (rec.date||'')+'|'+(rec.time||'')+'|'+(rec.exercise||'')+'|'+(rec.duration||'');
-      if(seen.has(key)) return;
-      seen.add(key); merged.push(rec);
+      const key = rec.rid ? ('rid|'+rec.rid)
+        : ((rec.date||'')+'|'+(rec.time||'')+'|'+(rec.exercise||'')+'|'+(rec.duration||''));
+      if(seen.has(key)){
+        const prev = seen.get(key);
+        if((rec.duration||0) > (prev.duration||0)) prev.duration = rec.duration;
+        return;
+      }
+      const copy = Object.assign({}, rec);
+      seen.set(key, copy); merged.push(copy);
     });
     out[id] = merged;
   });
@@ -253,20 +263,40 @@ window._mergeLogsToServer = async function(profileId){
 
 window._appendPracticeLog = function(profileId, chapter, exercise, duration){
   if (!profileId) return false;
-  if (window.__SOMI_LOGGED_THIS_RUN) return false; // 이번 재생분 이미 저장됨 — 중복 방지
   try {
     // 디스크 최신본을 다시 읽어 병합(다른 기기/탭이 추가한 기록 유실 방지)
     var disk = {};
     try { disk = JSON.parse(localStorage.getItem('somi_logs') || '{}') || {}; } catch(e){ disk = {}; }
     if (!Array.isArray(disk[profileId])) disk[profileId] = [];
     var now = new Date();
-    disk[profileId].push({
-      date: now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'),
-      time: now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),
-      chapter: chapter,
-      exercise: exercise,
-      duration: Math.floor(duration),
-    });
+
+    /* ── 이어하기 갱신(2026-08-18 수정) ────────────────────────────────
+       예전엔 이번 재생분이 이미 저장됐으면 그냥 return false 했다.
+       그 탓에 "1분에 전화가 와서 화면 전환(→60초 저장) → 돌아와 10분까지
+       연습 → 종료" 하면 종료분이 통째로 버려져 1분만 기록됐다.
+       → 같은 재생분은 새로 추가하지 않고 duration만 큰 값으로 갱신한다.
+       기록마다 rid(고유표)를 달아 서버본과도 rid로 짝지어 갱신되게 한다. */
+    if (window.__SOMI_LOGGED_THIS_RUN) {
+      var rid = window.__SOMI_LOG_RUN_RID;
+      if (!rid) return false;
+      var arr = disk[profileId], tgt = null;
+      for (var i=0;i<arr.length;i++){ if(arr[i] && arr[i].rid===rid){ tgt=arr[i]; break; } }
+      if (!tgt) return false;
+      var nd = Math.floor(duration);
+      if (!(nd > (tgt.duration||0))) return true; // 늘어난 게 없으면 그대로 둠
+      tgt.duration = nd;
+    } else {
+      var newRid = 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+      disk[profileId].push({
+        rid: newRid,
+        date: now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'),
+        time: now.getHours()+':'+String(now.getMinutes()).padStart(2,'0'),
+        chapter: chapter,
+        exercise: exercise,
+        duration: Math.floor(duration),
+      });
+      window.__SOMI_LOG_RUN_RID = newRid;
+    }
     window.__SOMI_LOGGED_THIS_RUN = true; // 저장 완료 표시
     // 공용 saveData 경유 — localStorage + 서버 전송(깃발/목록 분기 포함)
     var j = JSON.stringify(disk);
@@ -837,3 +867,183 @@ window.somiRangeIndices = function(total, fromIdx, toIdx){
   if(fromIdx===toIdx) return null;
   return { lo: Math.min(fromIdx,toIdx), hi: Math.max(fromIdx,toIdx) };
 };
+
+/* ── 모듈 G: 로그인 파수꾼 (공용 1벌 — 2026-08-18 '전부 열림' 사건 수정) ──
+   중복로그인으로 강제 로그아웃되면 이름표(somi_current_profile_id)가 지워진다.
+   그런데 그 감시는 student.html에만 있어서, 연습 페이지에 머물던 기기는
+   안내도 못 받고 이름표만 사라진 채 남았다 → 잠금 판정이 무너져 전부 열림.
+   → 연습 페이지도 이름표가 없으면 즉시 로그인 화면으로 돌려보낸다.
+   선생님 기기(somi_role==='teacher')는 미리보기가 있으므로 예외. */
+/* ── 백그라운드 연습시간 이어받기 (2026-08-18) ────────────────────────
+   문제: 연습 시계는 "화면이 켜져 있을 때만 도는 톱니"로 굴러간다(브라우저가
+   화면이 꺼지면 멈춘다). 그래서 화면을 끈 채 그대로 끝내면 앱에 머문 시간까지만
+   기록되고, 끝나기 전에 돌아오면 벽시계를 보고 총 시간으로 점프했다.
+   같은 앱에 답이 두 개 있던 셈.
+   해결: 화면이 꺼질 때 "이 연습은 아직 진행 중"이라는 쪽지(재생 시작 벽시계
+   시각 + 기록 고유표)를 남긴다. 다음에 앱을 열거나 화면으로 돌아오면 그 쪽지를
+   보고 실제 흐른 시간으로 기록을 늘려준다(줄이지는 않는다).
+   과다 기록 방지 2단: ①화면이 꺼진 채 15분을 넘기면 '방치'로 보고 이어받지 않는다
+   (폰을 두고 잊은 경우). ②이어받더라도 연습 1회는 30분을 넘겨 인정하지 않는다. */
+window._PENDING_RUN_KEY = 'somi_pending_run';
+window._PENDING_CAP_SEC = 1800;      // 연습 1회 인정 상한 30분
+window._PENDING_DARK_SEC = 900;      // 화면 꺼진 채 15분 넘으면 '방치'로 판단
+
+window._markPendingRun = function(profileId, startWallMs, isPlaying){
+  try{
+    if(!profileId || !isPlaying || !startWallMs || startWallMs<=0) return;
+    var rid = window.__SOMI_LOG_RUN_RID;
+    if(!rid) return;
+    localStorage.setItem(window._PENDING_RUN_KEY, JSON.stringify({
+      pid: profileId, rid: rid, startWall: startWallMs, hideWall: Date.now()
+    }));
+  }catch(e){}
+};
+window._clearPendingRun = function(){
+  try{ localStorage.removeItem(window._PENDING_RUN_KEY); }catch(e){}
+};
+window._resumePendingRun = function(){
+  try{
+    var raw = localStorage.getItem(window._PENDING_RUN_KEY);
+    if(!raw) return false;
+    var p = null; try{ p = JSON.parse(raw); }catch(e){ window._clearPendingRun(); return false; }
+    window._clearPendingRun();
+    if(!p || !p.pid || !p.rid || !p.startWall) return false;
+
+    // ① 화면이 꺼져 있던 시간이 15분을 넘으면 '방치'로 보고 이어받지 않는다
+    var hide = p.hideWall || p.startWall;
+    var darkSec = (Date.now() - hide) / 1000;
+    if(darkSec > window._PENDING_DARK_SEC) return false;
+
+    // ② 이어받되 연습 1회 인정 상한(30분)을 넘지 않게 자른다
+    var elapsed = (Date.now() - p.startWall) / 1000;
+    if(elapsed <= 0) return false;
+    if(elapsed > window._PENDING_CAP_SEC) elapsed = window._PENDING_CAP_SEC;
+
+    var disk = {};
+    try{ disk = JSON.parse(localStorage.getItem('somi_logs')||'{}')||{}; }catch(e){ return false; }
+    var arr = disk[p.pid];
+    if(!Array.isArray(arr)) return false;
+    var tgt = null;
+    for(var i=0;i<arr.length;i++){ if(arr[i] && arr[i].rid===p.rid){ tgt=arr[i]; break; } }
+    if(!tgt) return false;
+    var nd = Math.floor(elapsed);
+    if(!(nd > (tgt.duration||0))) return false;                  // 늘어난 게 없으면 그대로
+    tgt.duration = nd;
+    localStorage.setItem('somi_logs', JSON.stringify(disk));
+    try{ if(window._mergeLogsToServer) window._mergeLogsToServer(p.pid); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+};
+/* 앱을 열 때 / 화면으로 돌아올 때 쪽지를 확인한다 */
+try{
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') window._resumePendingRun();
+  });
+}catch(e){}
+
+/* ── 세션 파수꾼 (2026-08-18) ─────────────────────────────────────────
+   "한 학생 = 한 기기" 원칙을 연습 페이지에서도 지킨다.
+   그동안 이 감시는 학생홈에만 있어서, 연습 페이지를 열어둔 기기는 다른 기기가
+   로그인해도 끊기지 않았다(김본 사건의 시작점).
+   방식: 서버에 저장된 그 학생의 '최신 로그인 표(token)'를 주기적으로 확인해,
+   내 표와 다르면 = 다른 기기가 새로 로그인한 것 → 이 기기를 로그아웃시킨다.
+   연습 페이지는 onSnapshot(실시간 구독)을 안 불러오므로 주기 확인 방식을 쓴다.
+   화면으로 돌아오는 순간에도 즉시 확인해서 체감 지연을 없앤다. */
+window._sessionGuardTimer = null;
+window._checkSessionToken = async function(profileId){
+  try{
+    if(!profileId) return false;
+    if(localStorage.getItem('somi_role')==='teacher') return false; // 선생님 제외
+    if(typeof window._somiServerRead !== 'function') return false;
+    var key = 'somi_student_session_' + profileId;
+    var mineRaw = localStorage.getItem(key);
+    if(!mineRaw) return false;                 // 내 표가 없으면 판단 보류(옛 로그인)
+    var mine = null;
+    try{ mine = JSON.parse(mineRaw); }catch(e){ return false; }
+    if(!mine || !mine.token) return false;
+    var raw = await window._somiServerRead(key);
+    if(!raw) return false;                     // 서버에 기록 없으면 건드리지 않음
+    var srv = null;
+    try{ srv = JSON.parse(String(raw)); }catch(e){ return false; }
+    if(!srv || !srv.token) return false;
+    if(srv.token === mine.token) return false; // 내가 최신 기기 — 통과
+    if(window.__SOMI_KICKED) return true;
+    window.__SOMI_KICKED = true;
+    if(window._sessionGuardTimer){ clearInterval(window._sessionGuardTimer); window._sessionGuardTimer=null; }
+    localStorage.removeItem('somi_current_profile_id');
+    localStorage.removeItem('somi_student_auto_login');
+    localStorage.removeItem(key);
+    try{ alert('다른 기기에서 로그인되어 자동으로 로그아웃되었습니다 😊'); }catch(e){}
+    window.location.href = 'index.html';
+    return true;
+  }catch(e){ return false; }
+};
+window._startSessionGuard = function(profileId, intervalMs){
+  try{
+    if(!profileId) return;
+    if(window._sessionGuardTimer) return;       // 이미 감시 중
+    var ms = intervalMs || 20000;               // 기본 20초마다
+    window._checkSessionToken(profileId);       // 시작하자마자 1회
+    window._sessionGuardTimer = setInterval(function(){
+      if(document.visibilityState === 'visible') window._checkSessionToken(profileId);
+    }, ms);
+    document.addEventListener('visibilitychange', function(){
+      if(document.visibilityState==='visible') window._checkSessionToken(profileId);
+    });
+    window.addEventListener('pagehide', function(){
+      if(window._sessionGuardTimer){ clearInterval(window._sessionGuardTimer); window._sessionGuardTimer=null; }
+    });
+  }catch(e){}
+};
+
+/* ── 전체 강제 로그아웃 "호루라기" (2026-08-18) ────────────────────────
+   선생님이 버튼 한 번 누르면 서버에 시각도장(somi_force_logout_at)이 찍힌다.
+   모든 페이지는 열릴 때/화면 복귀 때 그 도장을 확인해서, 자기가 마지막으로
+   확인한 도장보다 새 것이면 로그인 정보를 지우고 로그인 화면으로 나간다.
+   → 학생이 스스로 로그아웃할 필요 없이 선생님이 일괄로 내보낼 수 있다.
+   선생님 기기는 대상 제외(관리 중 튕기면 곤란). */
+window._checkForceLogout = async function(){
+  try{
+    if(typeof window._somiServerRead !== 'function') return false;
+    if(localStorage.getItem('somi_role')==='teacher') return false; // 선생님 제외
+    var raw = await window._somiServerRead('somi_force_logout_at');
+    if(!raw) return false;
+    var stamp = String(raw).replace(/^"|"$/g,'');
+    if(!stamp) return false;
+    var seen = localStorage.getItem('somi_force_logout_seen') || '';
+    if(seen === stamp) return false;               // 이미 이 호루라기엔 응했음
+    localStorage.setItem('somi_force_logout_seen', stamp);
+    if(!localStorage.getItem('somi_current_profile_id')) return false; // 이미 로그아웃 상태
+    if(window.__SOMI_KICKED) return true;
+    window.__SOMI_KICKED = true;
+    localStorage.removeItem('somi_current_profile_id');
+    localStorage.removeItem('somi_student_auto_login');
+    try{ alert('선생님이 전체 로그아웃을 실행했어요. 다시 로그인해주세요 😊'); }catch(e){}
+    window.location.href = 'index.html';
+    return true;
+  }catch(e){ return false; }
+};
+/* 화면 복귀 때도 확인 — 연습 중 켜둔 기기까지 잡는다 */
+try{
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') window._checkForceLogout();
+  });
+}catch(e){}
+
+window._requireLogin = function(){
+  try{
+    if(localStorage.getItem('somi_role')==='teacher') return true; // 선생님은 통과
+    if(localStorage.getItem('somi_current_profile_id')) return true; // 이름표 있음
+    if(window.__SOMI_KICKED) return false; // 안내창 1회만
+    window.__SOMI_KICKED = true;
+    try{ alert('로그인이 풀렸어요. 다시 로그인해주세요 😊'); }catch(e){}
+    window.location.href = 'index.html';
+    return false;
+  }catch(e){ return true; } // 판단 불가 시 화면은 건드리지 않음
+};
+/* 화면 복귀 때마다 재확인 — 다른 기기 로그인으로 이름표가 지워진 직후를 잡는다 */
+try{
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') window._requireLogin();
+  });
+}catch(e){}

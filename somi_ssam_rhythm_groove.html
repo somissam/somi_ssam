@@ -398,7 +398,8 @@ function _isRestClass(){ return _getProfileClass()==='숨고르기'; }
 function _isEndedClass(){ return _getProfileClass()==='종료반'; }
 
 function isLocked(patternId) {
-  if(!currentProfileId) return false;
+  // (2026-08-18) 이름표 없으면 전부 잠금 — 중복로그인 후 전부 열리던 문제 차단
+  if(!currentProfileId) return true;
   const pl=patternLocks[currentProfileId];
   // 원래(선생님 설정) 열림 여부
   const baseOpen = pl ? (pl[patternId]===true) : true; // 잠금데이터 없는 구버전 = 열림
@@ -687,6 +688,7 @@ function startEngine() {
     nextBeatTime=resumeAt; isPaused=false;
   } else {
     window.__SOMI_LOGGED_THIS_RUN=false; // 새 재생 시작 — 중복방지 플래그 초기화(공통)
+    try{ if(window._clearPendingRun) window._clearPendingRun(); }catch(e){} // 새 재생 → 옛 쪽지 폐기
     seqPhase='counting'; seqStep=0; loopCount=0;
     nextBeatTime=audioCtx.currentTime+0.05; mainStartWallTime=0;
   }
@@ -897,6 +899,7 @@ function stopEngine() {
 }
 function stopExercise() {
   if(isPlaying||elapsedSeconds>2) logPractice();
+  try{ if(window._clearPendingRun) window._clearPendingRun(); }catch(e){} // 정상 종료 → 쪽지 폐기
   stopEngine(); elapsedSeconds=0; isPaused=false; pausedElapsed=0;
   document.querySelectorAll('.beat-num').forEach(b=>b.className='beat-num');
   const tm=document.getElementById('timer-main'); if(tm){tm.textContent='00:00.00';tm.className='timer-main';}
@@ -960,6 +963,8 @@ function renderPatternCards() {
 document.addEventListener('DOMContentLoaded', function() {
   applyTheme();
   currentProfileId=localStorage.getItem('somi_current_profile_id')||null;
+  // (2026-08-18) 이름표 없으면 로그인 화면으로 — 중복로그인 강제 로그아웃 대응(공통 파수꾼)
+  try{ if(window._requireLogin && !window._requireLogin()) return; }catch(e){}
   patternLocks=loadData('somi_pattern_locks',{});
   patternLevelOverrides=loadData('somi_pattern_levels',{});
   levelSettings=loadData('somi_level_settings',null)||DEFAULT_LEVEL_SETTINGS.map(l=>({...l}));
@@ -1016,6 +1021,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if(_offlineForced) return;
     _fsDb=fsDb; _fsDoc=doc; _fsGetDoc=getDoc;
     window._somiServerRead = async (key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
+    // (2026-08-18) 선생님 전체 로그아웃 호루라기 확인
+    try{ if(window._checkForceLogout) window._checkForceLogout(); }catch(e){}
+    // (2026-08-18) 세션 파수꾼 — 다른 기기에서 로그인하면 이 기기 연결을 끊는다
+    try{ if(window._startSessionGuard) window._startSessionGuard(currentProfileId); }catch(e){}
     window._fsSet=async(k,j)=>{ try{ await setDoc(doc(fsDb,'somi_data',k),{value:j}); }catch(e){} };
 
     // 2단계: 잠금+레벨+연습기록 동기화 (모든 키 성공할 때까지 재시도)
@@ -1044,12 +1053,14 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='hidden'){
       if(isPlaying||elapsedSeconds>2) logPractice();
+    try{ if(window._markPendingRun) window._markPendingRun(currentProfileId, mainStartWallTime, isPlaying); }catch(e){}
     } else if(document.visibilityState==='visible'){
       if(isPlaying){ _resyncPending=true; } else { _checkAndResync(); }
     }
   });
   window.addEventListener('pagehide',()=>{
     if(isPlaying||elapsedSeconds>2) logPractice();
+    try{ if(window._markPendingRun) window._markPendingRun(currentProfileId, mainStartWallTime, isPlaying); }catch(e){}
   });
 });
 </script>

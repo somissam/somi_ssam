@@ -1376,6 +1376,7 @@ document.addEventListener('click',ensureAudio,{passive:true});
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     if(isPlaying||elapsedSeconds>2) logPractice();
+    try{ if(window._markPendingRun) window._markPendingRun(_currentProfileId, mainStartWallTime, isPlaying); }catch(e){}
   }
   if(document.visibilityState==='visible'){
     if(audioCtx){
@@ -1390,6 +1391,7 @@ document.addEventListener('visibilitychange',()=>{
 });
 window.addEventListener('pagehide',()=>{
   if(isPlaying||elapsedSeconds>2) logPractice();
+    try{ if(window._markPendingRun) window._markPendingRun(_currentProfileId, mainStartWallTime, isPlaying); }catch(e){}
 });
 function _isPhoneMobile(){
   // 폰 판별: 짧은 쪽이 480px 이하 (아이폰/갤럭시 계열)
@@ -1615,6 +1617,7 @@ function startEngine(){
     if(_awaitClock)_startClockWatchdog();return;}
   stopScheduled=false;beatQueue=[];mainStartWallTime=0;pausedElapsed=0;
   window.__SOMI_LOGGED_THIS_RUN=false; // 새 재생 시작 — 중복방지 플래그 초기화(공통 단일주체)
+    try{ if(window._clearPendingRun) window._clearPendingRun(); }catch(e){} // 새 재생 → 옛 쪽지 폐기
   activeBarType=BAR_TYPE_COUNTING;seqStep=0;loopCount=0;patStep=0;
   if(isGlissandoPat())_resetGlissandoSlider(true);
   _fn_onEngineStart();
@@ -1656,7 +1659,7 @@ function logPractice(){
   // ── 그릇: 중복방지·재병합·저장·전송은 공통 _appendPracticeLog 1벌이 담당 ──
   if(typeof window._appendPracticeLog==='function') window._appendPracticeLog(_currentProfileId, 'vocal', exercise, elapsedSeconds);
 }
-function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();stopEngine();elapsedSeconds=0;window.__SOMI_LOGGED_THIS_RUN=false;if(_resyncPending){_resyncPending=false;_checkAndResync();}clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
+function stopExercise(){if(isPlaying||elapsedSeconds>2)logPractice();try{if(window._clearPendingRun)window._clearPendingRun();}catch(e){}/* 정상 종료 → 쪽지 폐기 */stopEngine();elapsedSeconds=0;window.__SOMI_LOGGED_THIS_RUN=false;if(_resyncPending){_resyncPending=false;_checkAndResync();}clearVocalBeats();updateVocalLabelHighlight(-1);setInfoBox('시작 버튼을 눌러주세요','');const tm=document.getElementById('timer-main');if(tm){tm.textContent='00:00.00';tm.className='timer-main';}updateLoopCounter();_stopVibratoAnim();_resetGlissandoSlider();}
 function scheduleStop(time){if(stopScheduled)return;stopScheduled=true;stopAudioTime=time;}
 
 // 공용 비트 스케줄 패턴 — 모드별 함수에서 호출
@@ -3882,7 +3885,8 @@ function _isEndedClass(){ return _getProfileClass()==='종료반'; }
 function _isTesterClass(){ return _getProfileClass()==='테스터'; }
 
 function _isLocked(patternId){
-  if(!_currentProfileId) return false;
+  // (2026-08-18) 이름표 없으면 전부 잠금 — 중복로그인 후 전부 열리던 문제 차단
+  if(!_currentProfileId) return true;
   // 테스터 반: 모든 패턴 항상 활성화
   if(_isTesterClass()) return false;
   try{
@@ -4076,6 +4080,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // ── 2. 프로필 연결
   _currentProfileId = localStorage.getItem('somi_current_profile_id') || null;
+  // (2026-08-18) 이름표 없으면 로그인 화면으로 — 중복로그인 강제 로그아웃 대응(공통 파수꾼)
+  try{ if(window._requireLogin && !window._requireLogin()) return; }catch(e){}
 
   // ── 3. 패턴 목록 localStorage 저장 → home.html이 읽어서 자동 반영
   try{
@@ -4155,6 +4161,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(_offlineForced) return;
     _fsDb = fsDb; _fsDoc = doc; _fsGetDoc = getDoc; // 복귀 시 재동기화에 재사용
     window._somiServerRead = async (key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
+    // (2026-08-18) 선생님 전체 로그아웃 호루라기 확인
+    try{ if(window._checkForceLogout) window._checkForceLogout(); }catch(e){}
+    // (2026-08-18) 세션 파수꾼 — 다른 기기에서 로그인하면 이 기기 연결을 끊는다
+    try{ if(window._startSessionGuard) window._startSessionGuard(_currentProfileId); }catch(e){}
     window._fsSet = async(k,j)=>{ try{ await setDoc(doc(fsDb,'somi_data',k),{value:j}); }catch(e){} };
 
     // 5-2. 잠금+레벨+연습기록+메타 동기화 (모든 키 성공할 때까지 재시도)

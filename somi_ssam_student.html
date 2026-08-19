@@ -899,6 +899,8 @@ document.addEventListener('DOMContentLoaded',async function(){
     const fsDb=getFirestore(fbApp);
     window._fsSet=async(k,j)=>{try{await setDoc(doc(fsDb,"somi_data",k),{value:j});}catch(e){}};
     window._somiServerRead = async (key)=>{ try{ const s=await getDoc(doc(fsDb,'somi_data',key)); return s.exists()?s.data().value:null; }catch(e){ return null; } };
+    // (2026-08-18) 선생님 전체 로그아웃 호루라기 확인
+    try{ if(window._checkForceLogout) window._checkForceLogout(); }catch(e){}
     _fbHandle={db:fsDb, doc, getDoc, setDoc, onSnapshot};  // 안전가드용 핸들 보관
     // ── [캐싱·안전] 데이터를 두 그룹으로 분리 (선생님 홈 somi_sync_meta 방식 독립 적용) ──
     //  · CACHED_KEYS : home의 _SYNC_WATCH_KEYS로 ts가 갱신되는 묶음 → ts 같으면 생략
