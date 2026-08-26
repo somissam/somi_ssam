@@ -2082,8 +2082,18 @@ function adv_calcNextMidi(){
   // 기본: advRangeStartDir 방향으로 계속, 옥타브 자동 조정
   const iv=adv_getInterval();
   let next=adv_currentMidi+adv_rangeStartDir*iv;
-  if(adv_rangeStartDir===1){while(next>adv_rangeMax)next-=12;if(next<adv_rangeMin)next=adv_rangeMin;}
-  else{while(next<adv_rangeMin)next+=12;if(next>adv_rangeMax)next=adv_rangeMax;}
+  /* (2026-08-18) 끝음을 넘으면 '한 옥타브 내리기'가 아니라 '시작음으로 되돌아가기'.
+     예전 방식은 위 끝을 넘을 때마다 12만 내려서, 몇 바퀴 뒤엔 위쪽 한 옥타브에만
+     갇혀 같은 음역을 무한 반복했다(설정이 C3~C6인데 실제로는 D5~C6만 돌던 문제).
+     이제 끝까지 올라가면 다시 시작음부터 전 음역을 훑는다. */
+  if(adv_rangeStartDir===1){ if(next>adv_rangeMax) next=adv_rangeMin; }
+  else{ if(next<adv_rangeMin) next=adv_rangeMax; }
+  // 안전장치: 음역이 간격보다 좁아 제자리걸음이 되면 반음이라도 움직인다
+  if(next===adv_currentMidi && adv_rangeMax>adv_rangeMin){
+    next = adv_rangeStartDir===1
+      ? (adv_currentMidi+1>adv_rangeMax ? adv_rangeMin : adv_currentMidi+1)
+      : (adv_currentMidi-1<adv_rangeMin ? adv_rangeMax : adv_currentMidi-1);
+  }
   adv_pendingMidi=next;return next;
 }
 
